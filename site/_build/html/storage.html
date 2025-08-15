@@ -1,0 +1,439 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Storage settings &mdash; django-dbbackup 4.3.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=a17b270f"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Commands" href="commands.html" />
+    <link rel="prev" title="Database settings" href="databases.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            django-dbbackup
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="configuration.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="databases.html">Database settings</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Storage settings</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#file-system-storage">File system storage</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#setup">Setup</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#available-settings">Available settings</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#google-cloud-storage">Google cloud storage</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id1">Setup</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#amazon-s3">Amazon S3</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id2">Setup</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id3">Available settings</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#dropbox">Dropbox</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#setup-your-dropbox-account">Setup your Dropbox account</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#setup-your-django-project">Setup your Django project</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id4">Available settings</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#ftp">FTP</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id5">Setup</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#settings">Settings</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id6">Setup</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#sftp">SFTP</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id7">Setup</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id8">Available settings</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="commands.html">Commands</a></li>
+<li class="toctree-l1"><a class="reference internal" href="integration.html">Integration tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="changelog.html">Changelog</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">django-dbbackup</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Storage settings</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/storage.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="storage-settings">
+<h1>Storage settings<a class="headerlink" href="#storage-settings" title="Link to this heading"></a></h1>
+<p>One of the most helpful features of django-dbbackup is the ability to store
+and retrieve backups from a local or a remote storage. This functionality is
+mainly based on Django Storage API and extends its possibilities.</p>
+<p>You can choose your backup storage backend by setting <code class="docutils literal notranslate"><span class="pre">settings.STORAGES['dbbackup']</span></code>,
+it must be the full path of a storage class. For example:
+<code class="docutils literal notranslate"><span class="pre">django.core.files.storage.FileSystemStorage</span></code> to use file system storage.
+Below, we’ll list some of the available solutions and their options.</p>
+<p>The storage’s option are gathered in <code class="docutils literal notranslate"><span class="pre">settings.STORAGES['dbbackup']['OPTIONS']</span></code> which
+is a dictionary of keywords representing how to configure it.</p>
+<blockquote>
+<div><dl>
+<dt>STORAGES = {</dt><dd><dl class="simple">
+<dt>“default”: {</dt><dd><p>“BACKEND”: “django.core.files.storage.FileSystemStorage”,
+“OPTIONS”: {
+…your_options_here
+},</p>
+</dd>
+</dl>
+<p>},
+“staticfiles”: {</p>
+<blockquote>
+<div><p>…</p>
+</div></blockquote>
+<p>},</p>
+</dd>
+</dl>
+<p>}</p>
+</div></blockquote>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Do not configure backup storage with the same configuration as your media
+files as you’ll risk sharing backups inside public directories.</p>
+</div>
+<p>By default DBBackup uses the <a class="reference external" href="https://docs.djangoproject.com/en/stable/ref/files/storage/#the-filesystemstorage-class">built-in file system storage</a> to manage files on
+a local directory. Feel free to use any Django storage, you can find a variety
+of them at <a class="reference external" href="https://djangopackages.org/grids/g/storage-backends/">Django Packages</a>.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Storing backups to local disk may also be useful for Dropbox if you
+already have the official Dropbox client installed on your system.</p>
+</div>
+<section id="file-system-storage">
+<h2>File system storage<a class="headerlink" href="#file-system-storage" title="Link to this heading"></a></h2>
+<section id="setup">
+<h3>Setup<a class="headerlink" href="#setup" title="Link to this heading"></a></h3>
+<p>To store your backups on the local file system, simply setup the required
+settings below.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">STORAGES</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;dbbackup&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;BACKEND&quot;</span><span class="p">:</span> <span class="s2">&quot;django.core.files.storage.FileSystemStorage&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;OPTIONS&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;location&quot;</span><span class="p">:</span> <span class="s2">&quot;/my/backup/dir/&quot;</span><span class="p">,</span>
+        <span class="p">},</span>
+    <span class="p">},</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="available-settings">
+<h3>Available settings<a class="headerlink" href="#available-settings" title="Link to this heading"></a></h3>
+<p><strong>location</strong></p>
+<p>Absolute path to the directory that will hold the files.</p>
+<p><strong>file_permissions_mode</strong></p>
+<p>The file system permissions that the file will receive when it is saved.</p>
+<p><strong>directory_permissions_mode</strong></p>
+<p>The file system permissions that the directory will receive when it is saved.</p>
+<p>See <a class="reference external" href="https://docs.djangoproject.com/en/stable/ref/files/storage/#the-filesystemstorage-class">FileSystemStorage’s documentation</a> for a full list of available settings.</p>
+</section>
+</section>
+<section id="google-cloud-storage">
+<h2>Google cloud storage<a class="headerlink" href="#google-cloud-storage" title="Link to this heading"></a></h2>
+<p>Our backend for Google cloud storage uses django-storages.</p>
+<section id="id1">
+<h3>Setup<a class="headerlink" href="#id1" title="Link to this heading"></a></h3>
+<p>In order to backup to Google cloud storage, you’ll first need to create an account at google. Once that is complete, you can follow the required setup below.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">django</span><span class="o">-</span><span class="n">storages</span><span class="p">[</span><span class="n">google</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>Add the following to your project’s settings. Strictly speaking only <cite>bucket_name</cite> is required, but we’d recommend to add the other two as well. You can also find more settings in the readme for <a class="reference external" href="https://django-storages.readthedocs.io/en/latest/backends/gcloud.html">django-storages</a></p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">STORAGES</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;dbbackup&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;BACKEND&quot;</span><span class="p">:</span> <span class="s2">&quot;storages.backends.gcloud.GoogleCloudStorage&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;OPTIONS&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;bucket_name&quot;</span><span class="p">:</span> <span class="s2">&quot;your_bucket_name&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;project_id&quot;</span><span class="p">:</span> <span class="s2">&quot;your_project_id&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;blob_chunk_size&quot;</span><span class="p">:</span> <span class="mi">1024</span> <span class="o">*</span> <span class="mi">1024</span><span class="p">,</span>
+        <span class="p">},</span>
+    <span class="p">},</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="amazon-s3">
+<h2>Amazon S3<a class="headerlink" href="#amazon-s3" title="Link to this heading"></a></h2>
+<p>Our S3 backend uses Django Storages which uses <a class="reference external" href="https://boto3.amazonaws.com/v1/documentation/api/latest/index.html">boto3</a>.</p>
+<section id="id2">
+<h3>Setup<a class="headerlink" href="#id2" title="Link to this heading"></a></h3>
+<p>In order to backup to Amazon S3, you’ll first need to create an Amazon
+Webservices Account and setup your Amazon S3 bucket. Once that is
+complete, you can follow the required setup below.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">django</span><span class="o">-</span><span class="n">storages</span><span class="p">[</span><span class="n">boto3</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>Add the following to your project’s settings:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">STORAGES</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;dbbackup&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;BACKEND&quot;</span><span class="p">:</span> <span class="s2">&quot;storages.backends.s3boto3.S3Boto3Storage&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;OPTIONS&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;access_key&quot;</span><span class="p">:</span> <span class="s2">&quot;my_id&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;secret_key&quot;</span><span class="p">:</span> <span class="s2">&quot;my_secret&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;bucket_name&quot;</span><span class="p">:</span> <span class="s2">&quot;my_bucket_name&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;default_acl&quot;</span><span class="p">:</span> <span class="s2">&quot;private&quot;</span><span class="p">,</span>
+        <span class="p">},</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="id3">
+<h3>Available settings<a class="headerlink" href="#id3" title="Link to this heading"></a></h3>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>See the <a class="reference external" href="https://django-storages.readthedocs.io/en/latest/backends/amazon-S3.html">Django Storage S3 storage official documentation</a> for all options.</p>
+<p>The options listed here are a selection of dictionary keys returned by
+<code class="docutils literal notranslate"><span class="pre">get_default_settings</span></code> in django-storages’ <a class="reference external" href="https://github.com/jschneier/django-storages/blob/master/storages/backends/s3boto3.py#L293-L324">storages/backends/s3boto3.py</a>,
+which allows us to write nicer code compared to using the <code class="docutils literal notranslate"><span class="pre">AWS_</span></code> prefixed
+settings.</p>
+</div>
+<p><strong>access_key</strong> - Required</p>
+<p>Your AWS access key as string. This can be found on your <a class="reference external" href="https://console.aws.amazon.com/iam/home#security_credential">Amazon Account
+Security Credentials page</a>.</p>
+<p><strong>secret_key</strong> - Required</p>
+<p>Your Amazon Web Services secret access key, as a string.</p>
+<p><strong>bucket_name</strong> - Required</p>
+<p>Your Amazon Web Services storage bucket name, as a string. This directory must
+exist before attempting to create your first backup.</p>
+<p><strong>region_name</strong> - Optional</p>
+<p>Specify the Amazon region, e.g. <code class="docutils literal notranslate"><span class="pre">'us-east-1'</span></code>.</p>
+<p><strong>endpoint_url</strong> - Optional</p>
+<p>Set this to fully override the endpoint, e.g. to use an alternative S3 service,
+which is compatible with AWS S3.  The value must contain the protocol, e.g.
+<code class="docutils literal notranslate"><span class="pre">'https://compatible-s3-service.example.com'</span></code>.</p>
+<p>If setting this, it is mandatory to also configure <strong>region_name</strong>.</p>
+<p><strong>default_acl</strong> - Required</p>
+<p>This setting can either be <code class="docutils literal notranslate"><span class="pre">'private'</span></code> or <code class="docutils literal notranslate"><span class="pre">'public'</span></code>. Since you want your
+backups to be secure you’ll want to set <code class="docutils literal notranslate"><span class="pre">'default_acl'</span></code> to <code class="docutils literal notranslate"><span class="pre">'private'</span></code>.</p>
+<p><em>NOTE: This value will be removed in a future version of django-storages.</em>
+See their <a class="reference external" href="https://github.com/jschneier/django-storages/blob/master/CHANGELOG.rst">CHANGELOG</a> for details.</p>
+<p><strong>location</strong> - Optional</p>
+<p>If you want to store your backups inside a particular folder in your bucket you need to specify the <code class="docutils literal notranslate"><span class="pre">'location'</span></code>.
+The folder can be specified as <code class="docutils literal notranslate"><span class="pre">'folder_name/'</span></code>.
+You can specify a longer path with <code class="docutils literal notranslate"><span class="pre">'location':</span> <span class="pre">'root_folder/sub_folder/sub_sub_folder/'</span></code>.</p>
+</section>
+</section>
+<section id="dropbox">
+<h2>Dropbox<a class="headerlink" href="#dropbox" title="Link to this heading"></a></h2>
+<p>In order to backup to Dropbox, you’ll first need to create a Dropbox account
+and set it up to communicate with the Django-DBBackup application. Don’t
+worry, all instructions are below.</p>
+<section id="setup-your-dropbox-account">
+<h3>Setup your Dropbox account<a class="headerlink" href="#setup-your-dropbox-account" title="Link to this heading"></a></h3>
+<ol class="arabic simple">
+<li><p>Login to Dropbox and navigate to Developers » MyApps.
+<a class="reference external" href="https://www.dropbox.com/developers/apps">https://www.dropbox.com/developers/apps</a></p></li>
+<li><p>Click the button to create a new app and name it whatever you like.
+As an example, I named mine ‘Website Backups’.</p></li>
+<li><p>After your app is created, note the options button and more
+importantly the ‘App Key’ and ‘App Secret’ values inside. You’ll need
+those later.</p></li>
+</ol>
+</section>
+<section id="setup-your-django-project">
+<h3>Setup your Django project<a class="headerlink" href="#setup-your-django-project" title="Link to this heading"></a></h3>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">dropbox</span> <span class="n">django</span><span class="o">-</span><span class="n">storages</span>
+</pre></div>
+</div>
+<p>…And make sure you have the following required settings:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">STORAGES</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;dbbackup&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;BACKEND&quot;</span><span class="p">:</span> <span class="s2">&quot;storages.backends.dropbox.DropBoxStorage&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;OPTIONS&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;oauth2_access_token&quot;</span><span class="p">:</span> <span class="s2">&quot;my_token&quot;</span><span class="p">,</span>
+        <span class="p">},</span>
+    <span class="p">},</span>
+</pre></div>
+</div>
+</section>
+<section id="id4">
+<h3>Available settings<a class="headerlink" href="#id4" title="Link to this heading"></a></h3>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>See <a class="reference external" href="https://django-storages.readthedocs.io/en/latest/backends/dropbox.html">django-storages dropbox official documentation</a> for more details.</p>
+</div>
+<p><strong>oauth2_access_token</strong> - Required</p>
+<p>Your OAuth access token</p>
+<p><strong>root_path</strong></p>
+<p>Jail storage to this directory</p>
+</section>
+</section>
+<section id="ftp">
+<h2>FTP<a class="headerlink" href="#ftp" title="Link to this heading"></a></h2>
+<p>To store your database backups on a remote filesystem via [a]FTP, simply
+setup the required settings below.</p>
+<section id="id5">
+<h3>Setup<a class="headerlink" href="#id5" title="Link to this heading"></a></h3>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">django</span><span class="o">-</span><span class="n">storages</span>
+</pre></div>
+</div>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>This storage doesn’t use a private connection for communication so don’t use it
+if you’re not certain about the security of the link between the client and the server.</p>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">STORAGES</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;dbbackup&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;BACKEND&quot;</span><span class="p">:</span> <span class="s2">&quot;storages.backends.ftp.FTPStorage&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;OPTIONS&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;location&quot;</span><span class="p">:</span> <span class="s2">&quot;ftp://user:pass@server:21&quot;</span><span class="p">,</span>
+        <span class="p">},</span>
+    <span class="p">},</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="settings">
+<h3>Settings<a class="headerlink" href="#settings" title="Link to this heading"></a></h3>
+<p><strong>location</strong> -  Required</p>
+<p>A FTP URI with optional user, password and port. example: <code class="docutils literal notranslate"><span class="pre">'ftp://anonymous&#64;myftp.net'</span></code></p>
+</section>
+<section id="id6">
+<h3>Setup<a class="headerlink" href="#id6" title="Link to this heading"></a></h3>
+<p>We use FTP backend from Django-Storages (again).</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">django</span><span class="o">-</span><span class="n">storages</span>
+</pre></div>
+</div>
+<p>Here a simple configuration:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">STORAGES</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;dbbackup&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;BACKEND&quot;</span><span class="p">:</span> <span class="s2">&quot;storages.backends.ftp.FTPStorage&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;OPTIONS&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;location&quot;</span><span class="p">:</span> <span class="s2">&quot;ftp://myftpserver/&quot;</span><span class="p">,</span>
+        <span class="p">},</span>
+    <span class="p">},</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="sftp">
+<h2>SFTP<a class="headerlink" href="#sftp" title="Link to this heading"></a></h2>
+<p>To store your database backups on a remote filesystem via SFTP, simply
+setup the required settings below.</p>
+<section id="id7">
+<h3>Setup<a class="headerlink" href="#id7" title="Link to this heading"></a></h3>
+<p>This backend is from Django-Storages with the <a class="reference external" href="https://www.paramiko.org/">paramiko</a> backend.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">paramiko</span> <span class="n">django</span><span class="o">-</span><span class="n">storages</span>
+</pre></div>
+</div>
+<p>The following configuration grants SSH server access to the local user:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">STORAGES</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;dbbackup&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;BACKEND&quot;</span><span class="p">:</span> <span class="s2">&quot;storages.backends.sftpstorage.SFTPStorage&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;OPTIONS&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s1">&#39;host&#39;</span><span class="p">:</span> <span class="s1">&#39;myserver&#39;</span><span class="p">,</span>
+        <span class="p">},</span>
+    <span class="p">},</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="id8">
+<h3>Available settings<a class="headerlink" href="#id8" title="Link to this heading"></a></h3>
+<p><strong>host</strong> - Required</p>
+<p>Hostname or address of the SSH server</p>
+<p><strong>root_path</strong> - Default <code class="docutils literal notranslate"><span class="pre">~/</span></code></p>
+<p>Jail storage to this directory</p>
+<p><strong>params</strong> - Default <code class="docutils literal notranslate"><span class="pre">{}</span></code></p>
+<p>Argument used by method:<cite>paramikor.SSHClient.connect()</cite>.
+See <a class="reference external" href="https://docs.paramiko.org/en/latest/api/client.html#paramiko.client.SSHClient.connect">paramiko SSHClient.connect() documentation</a> for details.</p>
+<p><strong>interactive</strong> - Default <code class="docutils literal notranslate"><span class="pre">False</span></code></p>
+<p>A boolean indicating whether to prompt for a password if the connection cannot
+be made using keys, and there is not already a password in <code class="docutils literal notranslate"><span class="pre">params</span></code>.</p>
+<p><strong>file_mode</strong></p>
+<p>UID of the account that should be set as owner of the files on the remote.</p>
+<p><strong>dir_mode</strong></p>
+<p>GID of the group that should be set on the files on the remote host.</p>
+<p><strong>known_host_file</strong></p>
+<p>Absolute path of known_hosts file, if it isn’t set <code class="docutils literal notranslate"><span class="pre">&quot;~/.ssh/known_hosts&quot;</span></code> will be used.</p>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="databases.html" class="btn btn-neutral float-left" title="Database settings" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="commands.html" class="btn btn-neutral float-right" title="Commands" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright Mark Bakhit.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

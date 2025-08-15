@@ -1,4 +1,4 @@
-# Read the Docs configuration file for Sphinx projects
+# Read the Docs configuration file for MkDocs projects
 # See https://docs.readthedocs.io/en/stable/config-file/v2.html for details
 
 # Required
@@ -14,13 +14,12 @@ build:
         # rust: "1.70"
         # golang: "1.20"
 
-# Build documentation in the "docs/" directory with Sphinx
-sphinx:
-    configuration: docs/conf.py
-    # You can configure Sphinx to use a different builder, for instance use the dirhtml builder for simpler URLs
-    # builder: "dirhtml"
+# Build documentation with MkDocs
+mkdocs:
+    configuration: mkdocs.yml
     # Fail on all warnings to avoid broken references
     # fail_on_warning: true
+
 # Optionally build your docs in additional formats such as PDF and ePub
 # formats:
 #   - pdf

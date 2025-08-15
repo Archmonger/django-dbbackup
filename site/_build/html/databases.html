@@ -1,0 +1,389 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Database settings &mdash; django-dbbackup 4.3.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=a17b270f"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Storage settings" href="storage.html" />
+    <link rel="prev" title="Configuration" href="configuration.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            django-dbbackup
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="configuration.html">Configuration</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Database settings</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#common">Common</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#connector">CONNECTOR</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#exclude">EXCLUDE</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#extension">EXTENSION</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#command-connectors">Command connectors</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#dump-cmd">DUMP_CMD</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#restore-cmd">RESTORE_CMD</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#dump-prefix-and-restore-prefix">DUMP_PREFIX and RESTORE_PREFIX</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#dump-suffix-and-restore-suffix">DUMP_SUFFIX and RESTORE_SUFFIX</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#env-dump-env-and-restore-env">ENV, DUMP_ENV and RESTORE_ENV</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#use-parent-env">USE_PARENT_ENV</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#sqlite">SQLite</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#sqliteconnector">SqliteConnector</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#sqlitecpconnector">SqliteCPConnector</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#sqlitebackupconnector">SqliteBackupConnector</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#mysql">MySQL</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#postgresql">PostgreSQL</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#single-transaction">SINGLE_TRANSACTION</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#drop">DROP</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#if-exists">IF_EXISTS</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#postgis">PostGIS</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#psql-cmd">PSQL_CMD</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#password">PASSWORD</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#admin-user">ADMIN_USER</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#admin-password">ADMIN_PASSWORD</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#schemas">SCHEMAS</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#mongodb">MongoDB</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#object-check">OBJECT_CHECK</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id1">DROP</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#custom-connector">Custom connector</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#connecting-a-custom-connector">Connecting a Custom connector</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="storage.html">Storage settings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="commands.html">Commands</a></li>
+<li class="toctree-l1"><a class="reference internal" href="integration.html">Integration tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="changelog.html">Changelog</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">django-dbbackup</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Database settings</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/databases.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="database-settings">
+<h1>Database settings<a class="headerlink" href="#database-settings" title="Link to this heading"></a></h1>
+<p>The following databases are supported by this application:</p>
+<ul class="simple">
+<li><p>SQLite</p></li>
+<li><p>MySQL</p></li>
+<li><p>PostgreSQL</p></li>
+<li><p>MongoDB</p></li>
+<li><p>…and any other that you might implement</p></li>
+</ul>
+<p>By default, DBBackup will try to use your database settings in <code class="docutils literal notranslate"><span class="pre">DATABASES</span></code>
+to handle the database, but some databases require custom options so you might
+want to use different parameters for backups. That’s why we included a
+<code class="docutils literal notranslate"><span class="pre">DBBACKUP_CONNECTORS</span></code> setting; it follows the form of the django <code class="docutils literal notranslate"><span class="pre">DATABASES</span></code> setting:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">DBBACKUP_CONNECTORS</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;default&#39;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s1">&#39;USER&#39;</span><span class="p">:</span> <span class="s1">&#39;backupuser&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;PASSWORD&#39;</span><span class="p">:</span> <span class="s1">&#39;backuppassword&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;HOST&#39;</span><span class="p">:</span> <span class="s1">&#39;replica-for-backup&#39;</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>This configuration will allow you to use a replica with a different host and user,
+which is a great practice if you don’t want to overload your main database.</p>
+<p>DBBackup uses <code class="docutils literal notranslate"><span class="pre">Connectors</span></code> for creating and restoring backups; below you’ll see
+specific parameters for the built-in ones.</p>
+<section id="common">
+<h2>Common<a class="headerlink" href="#common" title="Link to this heading"></a></h2>
+<p>All connectors have the following parameters:</p>
+<section id="connector">
+<h3>CONNECTOR<a class="headerlink" href="#connector" title="Link to this heading"></a></h3>
+<p>Absolute path to a connector class by default is:</p>
+<ul class="simple">
+<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">dbbackup.db.sqlite.SqliteConnector</span></code> for <code class="docutils literal notranslate"><span class="pre">'django.db.backends.sqlite3'</span></code></p></li>
+<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">dbbackup.db.mysql.MysqlDumpConnector</span></code> for <code class="docutils literal notranslate"><span class="pre">django.db.backends.mysql</span></code></p></li>
+<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">dbbackup.db.postgresql.PgDumpConnector</span></code> for <code class="docutils literal notranslate"><span class="pre">django.db.backends.postgresql</span></code></p></li>
+<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">dbbackup.db.postgresql.PgDumpGisConnector</span></code> for <code class="docutils literal notranslate"><span class="pre">django.contrib.gis.db.backends.postgis</span></code></p></li>
+<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">dbbackup.db.mongodb.MongoDumpConnector</span></code> for <code class="docutils literal notranslate"><span class="pre">django_mongodb_engine</span></code></p></li>
+</ul>
+<p>All supported built-in connectors are described in more detail below.</p>
+<p>Following database wrappers from <code class="docutils literal notranslate"><span class="pre">django-prometheus</span></code> module are supported:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">django_prometheus.db.backends.postgresql</span></code> for <code class="docutils literal notranslate"><span class="pre">dbbackup.db.postgresql.PgDumpBinaryConnector</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">django_prometheus.db.backends.sqlite3</span></code> for <code class="docutils literal notranslate"><span class="pre">dbbackup.db.sqlite.SqliteConnector</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">django_prometheus.db.backends.mysql</span></code> for <code class="docutils literal notranslate"><span class="pre">dbbackup.db.mysql.MysqlDumpConnector</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">django_prometheus.db.backends.postgis</span></code> for <code class="docutils literal notranslate"><span class="pre">dbbackup.db.postgresql.PgDumpGisConnector</span></code></p></li>
+</ul>
+</section>
+<section id="exclude">
+<h3>EXCLUDE<a class="headerlink" href="#exclude" title="Link to this heading"></a></h3>
+<p>Tables to exclude from backup as list. This option may be unavailable for
+connectors when making snapshots.</p>
+</section>
+<section id="extension">
+<h3>EXTENSION<a class="headerlink" href="#extension" title="Link to this heading"></a></h3>
+<p>Extension of backup file name, default <code class="docutils literal notranslate"><span class="pre">'dump'</span></code>.</p>
+</section>
+</section>
+<section id="command-connectors">
+<h2>Command connectors<a class="headerlink" href="#command-connectors" title="Link to this heading"></a></h2>
+<p>Some connectors use a command line tool as a dump engine, <code class="docutils literal notranslate"><span class="pre">mysqldump</span></code> for
+example. These kinds of tools have common attributes:</p>
+<section id="dump-cmd">
+<h3>DUMP_CMD<a class="headerlink" href="#dump-cmd" title="Link to this heading"></a></h3>
+<p>Path to the command used to create a backup; default is the appropriate
+command supposed to be in your PATH, for example: <code class="docutils literal notranslate"><span class="pre">'mysqldump'</span></code> for MySQL.</p>
+<p>This setting is useful only for connectors using command line tools (children
+of <code class="xref py py-class docutils literal notranslate"><span class="pre">dbbackup.db.base.BaseCommandDBConnector</span></code>)</p>
+</section>
+<section id="restore-cmd">
+<h3>RESTORE_CMD<a class="headerlink" href="#restore-cmd" title="Link to this heading"></a></h3>
+<p>Same as <code class="docutils literal notranslate"><span class="pre">DUMP_CMD</span></code> but used when restoring.</p>
+</section>
+<section id="dump-prefix-and-restore-prefix">
+<h3>DUMP_PREFIX and RESTORE_PREFIX<a class="headerlink" href="#dump-prefix-and-restore-prefix" title="Link to this heading"></a></h3>
+<p>String to include as prefix of dump or restore command. It will be added with
+a space between the launched command and its prefix.</p>
+</section>
+<section id="dump-suffix-and-restore-suffix">
+<h3>DUMP_SUFFIX and RESTORE_SUFFIX<a class="headerlink" href="#dump-suffix-and-restore-suffix" title="Link to this heading"></a></h3>
+<p>String to include as suffix of dump or restore command. It will be added with
+a space between the launched command and its suffix.</p>
+</section>
+<section id="env-dump-env-and-restore-env">
+<h3>ENV, DUMP_ENV and RESTORE_ENV<a class="headerlink" href="#env-dump-env-and-restore-env" title="Link to this heading"></a></h3>
+<p>Environment variables used during command running, default are <code class="docutils literal notranslate"><span class="pre">{}</span></code>. <code class="docutils literal notranslate"><span class="pre">ENV</span></code>
+is used for every command, <code class="docutils literal notranslate"><span class="pre">DUMP_ENV</span></code> and <code class="docutils literal notranslate"><span class="pre">RESTORE_ENV</span></code>  override the
+values defined in <code class="docutils literal notranslate"><span class="pre">ENV</span></code> during the dedicated commands.</p>
+</section>
+<section id="use-parent-env">
+<h3>USE_PARENT_ENV<a class="headerlink" href="#use-parent-env" title="Link to this heading"></a></h3>
+<p>Specify if the connector will use its parent’s environment variables. By
+default it is <code class="docutils literal notranslate"><span class="pre">True</span></code> to keep <code class="docutils literal notranslate"><span class="pre">PATH</span></code>.</p>
+</section>
+</section>
+<section id="sqlite">
+<h2>SQLite<a class="headerlink" href="#sqlite" title="Link to this heading"></a></h2>
+<p>SQLite uses by default <code class="xref py py-class docutils literal notranslate"><span class="pre">dbbackup.db.sqlite.SqliteConnector</span></code>.</p>
+<section id="sqliteconnector">
+<h3>SqliteConnector<a class="headerlink" href="#sqliteconnector" title="Link to this heading"></a></h3>
+<p>It is in pure Python and copies the behavior of <code class="docutils literal notranslate"><span class="pre">.dump</span></code> command for creating a
+SQL dump.</p>
+</section>
+<section id="sqlitecpconnector">
+<h3>SqliteCPConnector<a class="headerlink" href="#sqlitecpconnector" title="Link to this heading"></a></h3>
+<p>You can also use <code class="xref py py-class docutils literal notranslate"><span class="pre">dbbackup.db.sqlite.SqliteCPConnector</span></code> for making a
+simple raw copy of your database file, like a snapshot.</p>
+<p>In-memory database aren’t dumpable with it.</p>
+</section>
+<section id="sqlitebackupconnector">
+<h3>SqliteBackupConnector<a class="headerlink" href="#sqlitebackupconnector" title="Link to this heading"></a></h3>
+<p>The <code class="xref py py-class docutils literal notranslate"><span class="pre">dbbackup.db.sqlite.SqliteBackupConnector</span></code> makes a copy of the SQLite database file using the <code class="docutils literal notranslate"><span class="pre">.backup</span></code> command, which is safe to execute while the database has ongoing/active connections. Additionally, it supports dumping in-memory databases by construction.</p>
+</section>
+</section>
+<section id="mysql">
+<h2>MySQL<a class="headerlink" href="#mysql" title="Link to this heading"></a></h2>
+<p>MySQL uses by default <code class="xref py py-class docutils literal notranslate"><span class="pre">dbbackup.db.mysql.MysqlDumpConnector</span></code>. It uses
+<code class="docutils literal notranslate"><span class="pre">mysqldump</span></code> and <code class="docutils literal notranslate"><span class="pre">mysql</span></code> for its job.</p>
+</section>
+<section id="postgresql">
+<h2>PostgreSQL<a class="headerlink" href="#postgresql" title="Link to this heading"></a></h2>
+<p>Postgres uses by default <code class="xref py py-class docutils literal notranslate"><span class="pre">dbbackup.db.postgresql.PgDumpConnector</span></code>, but
+we advise you to use <code class="xref py py-class docutils literal notranslate"><span class="pre">dbbackup.db.postgresql.PgDumpBinaryConnector</span></code>. The
+first one uses <code class="docutils literal notranslate"><span class="pre">pg_dump</span></code> and <code class="docutils literal notranslate"><span class="pre">pqsl</span></code> for its job, creating RAW SQL files.</p>
+<p>The second uses <code class="docutils literal notranslate"><span class="pre">pg_restore</span></code> with binary dump files.</p>
+<p>They can also use <code class="docutils literal notranslate"><span class="pre">psql</span></code> for launching administration command.</p>
+<section id="single-transaction">
+<h3>SINGLE_TRANSACTION<a class="headerlink" href="#single-transaction" title="Link to this heading"></a></h3>
+<p>When doing a restore, wrap everything in a single transaction, so errors
+cause a rollback.</p>
+<p>This corresponds to <code class="docutils literal notranslate"><span class="pre">--single-transaction</span></code> argument of <code class="docutils literal notranslate"><span class="pre">psql</span></code> and
+<code class="docutils literal notranslate"><span class="pre">pg_restore</span></code>.</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">True</span></code></p>
+</section>
+<section id="drop">
+<h3>DROP<a class="headerlink" href="#drop" title="Link to this heading"></a></h3>
+<p>With <code class="docutils literal notranslate"><span class="pre">PgDumpConnector</span></code>, it includes tables dropping statements in dump file.
+<code class="docutils literal notranslate"><span class="pre">PgDumpBinaryConnector</span></code> drops at restoring.</p>
+<p>This corresponds to <code class="docutils literal notranslate"><span class="pre">--clean</span></code> argument of <code class="docutils literal notranslate"><span class="pre">pg_dump</span></code> and <code class="docutils literal notranslate"><span class="pre">pg_restore</span></code>.</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">True</span></code></p>
+</section>
+<section id="if-exists">
+<h3>IF_EXISTS<a class="headerlink" href="#if-exists" title="Link to this heading"></a></h3>
+<p>Use DROP … IF EXISTS commands to drop objects in <code class="docutils literal notranslate"><span class="pre">--clean</span></code> mode of <code class="docutils literal notranslate"><span class="pre">pg_dump</span></code>.</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">False</span></code></p>
+</section>
+</section>
+<section id="postgis">
+<h2>PostGIS<a class="headerlink" href="#postgis" title="Link to this heading"></a></h2>
+<p>Set in <code class="xref py py-class docutils literal notranslate"><span class="pre">dbbackup.db.postgresql.PgDumpGisConnector</span></code>, it does the same as
+PostgreSQL but launches <code class="docutils literal notranslate"><span class="pre">CREATE</span> <span class="pre">EXTENSION</span> <span class="pre">IF</span> <span class="pre">NOT</span> <span class="pre">EXISTS</span> <span class="pre">postgis;</span></code> before
+restore database.</p>
+<section id="psql-cmd">
+<h3>PSQL_CMD<a class="headerlink" href="#psql-cmd" title="Link to this heading"></a></h3>
+<p>Path to <code class="docutils literal notranslate"><span class="pre">psql</span></code> command used for administration tasks like enable PostGIS
+for example, default is <code class="docutils literal notranslate"><span class="pre">psql</span></code>.</p>
+</section>
+<section id="password">
+<h3>PASSWORD<a class="headerlink" href="#password" title="Link to this heading"></a></h3>
+<p>If you fill this settings <code class="docutils literal notranslate"><span class="pre">PGPASSWORD</span></code> environment variable will be used
+with every commands. For security reason, we advise to use <code class="docutils literal notranslate"><span class="pre">.pgpass</span></code> file.</p>
+</section>
+<section id="admin-user">
+<h3>ADMIN_USER<a class="headerlink" href="#admin-user" title="Link to this heading"></a></h3>
+<p>Username used for launch action with privileges, extension creation for
+example.</p>
+</section>
+<section id="admin-password">
+<h3>ADMIN_PASSWORD<a class="headerlink" href="#admin-password" title="Link to this heading"></a></h3>
+<p>Password used for launch action with privileges, extension creation for
+example.</p>
+</section>
+<section id="schemas">
+<h3>SCHEMAS<a class="headerlink" href="#schemas" title="Link to this heading"></a></h3>
+<p>Specify schemas for database dumps by using a pattern-matching option,
+including both the selected schema and its contained objects.
+If not specified, the default behavior is to dump all non-system schemas in the target database.
+This feature is exclusive to PostgreSQL connectors, and users can choose multiple schemas for a customized dump.</p>
+</section>
+</section>
+<section id="mongodb">
+<h2>MongoDB<a class="headerlink" href="#mongodb" title="Link to this heading"></a></h2>
+<p>MongoDB uses by default <code class="xref py py-class docutils literal notranslate"><span class="pre">dbbackup.db.mongodb.MongoDumpConnector</span></code>. it
+uses <code class="docutils literal notranslate"><span class="pre">mongodump</span></code> and <code class="docutils literal notranslate"><span class="pre">mongorestore</span></code> for its job.</p>
+<p>For AuthEnabled MongoDB Connection, you need to add one custom option <code class="docutils literal notranslate"><span class="pre">AUTH_SOURCE</span></code> in your <code class="docutils literal notranslate"><span class="pre">DBBACKUP_CONNECTORS</span></code>.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">DBBACKUP_CONNECTORS</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;default&#39;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="o">...</span>
+        <span class="s1">&#39;AUTH_SOURCE&#39;</span><span class="p">:</span> <span class="s1">&#39;admin&#39;</span><span class="p">,</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Or in <code class="docutils literal notranslate"><span class="pre">DATABASES</span></code> one:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">DATABASES</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;default&#39;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="o">...</span>
+        <span class="s1">&#39;AUTH_SOURCE&#39;</span><span class="p">:</span> <span class="s1">&#39;admin&#39;</span><span class="p">,</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<section id="object-check">
+<h3>OBJECT_CHECK<a class="headerlink" href="#object-check" title="Link to this heading"></a></h3>
+<p>Validate documents before inserting in database (option <code class="docutils literal notranslate"><span class="pre">--objcheck</span></code> in command line), default is <code class="docutils literal notranslate"><span class="pre">True</span></code>.</p>
+</section>
+<section id="id1">
+<h3>DROP<a class="headerlink" href="#id1" title="Link to this heading"></a></h3>
+<p>Replace objects that are already in database, (option <code class="docutils literal notranslate"><span class="pre">--drop</span></code> in command line), default is <code class="docutils literal notranslate"><span class="pre">True</span></code>.</p>
+</section>
+</section>
+<section id="custom-connector">
+<h2>Custom connector<a class="headerlink" href="#custom-connector" title="Link to this heading"></a></h2>
+<p>Creating your connector is easy; create a children class from
+<code class="xref py py-class docutils literal notranslate"><span class="pre">dbbackup.db.base.BaseDBConnector</span></code> and create <code class="docutils literal notranslate"><span class="pre">_create_dump</span></code> and
+<code class="docutils literal notranslate"><span class="pre">_restore_dump</span></code>.  If your connector uses a command line tool, inherit it from
+<code class="xref py py-class docutils literal notranslate"><span class="pre">dbbackup.db.base.BaseCommandDBConnector</span></code></p>
+</section>
+<section id="connecting-a-custom-connector">
+<h2>Connecting a Custom connector<a class="headerlink" href="#connecting-a-custom-connector" title="Link to this heading"></a></h2>
+<p>Here is an example, on how to easily connect a custom connector that you have created or even that you simply want to reuse:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">DBBACKUP_CONNECTOR_MAPPING</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;transaction_hooks.backends.postgis&#39;</span><span class="p">:</span> <span class="s1">&#39;dbbackup.db.postgresql.PgDumpGisConnector&#39;</span><span class="p">,</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Obviously instead of <code class="xref py py-class docutils literal notranslate"><span class="pre">dbbackup.db.postgresql.PgDumpGisConnector</span></code> you can
+use the custom connector you have created yourself and <code class="docutils literal notranslate"><span class="pre">transaction_hooks.backends.postgis</span></code>
+is simply the database engine name you are using.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="configuration.html" class="btn btn-neutral float-left" title="Configuration" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="storage.html" class="btn btn-neutral float-right" title="Storage settings" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright Mark Bakhit.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

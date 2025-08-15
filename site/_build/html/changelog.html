@@ -1,0 +1,225 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Changelog &mdash; django-dbbackup 4.3.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=a17b270f"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="Contributing guide" href="contributing.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            django-dbbackup
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="configuration.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="databases.html">Database settings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="storage.html">Storage settings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="commands.html">Commands</a></li>
+<li class="toctree-l1"><a class="reference internal" href="integration.html">Integration tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing guide</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Changelog</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#unreleased">Unreleased</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id1">4.3.0 (2025-05-09)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id2">4.2.1 (2024-08-23)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id3">4.2.0 (2024-08-22)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id4">4.1.0 (2024-01-14)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id5">4.0.2 (2022-09-27)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id6">4.0.1 (2022-07-09)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#b0-2021-12-19">4.0.0b0 (2021-12-19)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id7">3.3.0 (2020-04-14)</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">django-dbbackup</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Changelog</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/changelog.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="changelog">
+<h1>Changelog<a class="headerlink" href="#changelog" title="Link to this heading"></a></h1>
+<section id="unreleased">
+<h2>Unreleased<a class="headerlink" href="#unreleased" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p>Use environment variable for PostgreSQL password to prevent password leakage in logs/emails</p></li>
+<li><p>This repository has been transferred out of Jazzband due to logistical concerns.</p></li>
+<li><p>Drop support for end-of-life Python 3.7 and 3.8.</p></li>
+<li><p>Drop support for end-of-life Django 3.2.</p></li>
+<li><p>Drop support for <code class="docutils literal notranslate"><span class="pre">DBBACKUP_STORAGE</span></code> AND  <code class="docutils literal notranslate"><span class="pre">DBBACKUP_STORAGE_OPTIONS</span></code> settings, use Django’s <code class="docutils literal notranslate"><span class="pre">STORAGES['dbbackup']</span></code> setting instead.</p></li>
+<li><p>Implement new <code class="docutils literal notranslate"><span class="pre">SqliteBackupConnector</span></code> to backup SQLite3 databases using the <code class="docutils literal notranslate"><span class="pre">.backup</span></code> command (safe to execute on DBs with active connections).</p></li>
+</ul>
+</section>
+<section id="id1">
+<h2>4.3.0 (2025-05-09)<a class="headerlink" href="#id1" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p>Add generic <cite>–pg-options</cite> to pass custom options to postgres.</p></li>
+<li><p>Add option <cite>–if-exists</cite> for pg_dump command</p></li>
+<li><p>Empty string as HOST for postgres unix domain socket connection is now supported.</p></li>
+<li><p>Support Python 3.13 and Django 5.2</p></li>
+</ul>
+</section>
+<section id="id2">
+<h2>4.2.1 (2024-08-23)<a class="headerlink" href="#id2" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p>Add –no-drop option to dbrestore command to prevent dropping tables before restoring data.</p></li>
+<li><p>Fix bug where sqlite dbrestore would fail if field data contains the line break character.</p></li>
+</ul>
+</section>
+<section id="id3">
+<h2>4.2.0 (2024-08-22)<a class="headerlink" href="#id3" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p>Default HOST to localhost for postgres databases.</p></li>
+<li><p>Add PostgreSQL Schema support</p></li>
+<li><p>Fix restore of database from S3 storage by reintroducing inputfile.seek(0) to utils.uncompress_file</p></li>
+<li><p>Add warning for filenames with slashes in them</p></li>
+<li><p>Fix bug where dbbackup management command would not respect settings.py:DBBACKUP_DATABASES</p></li>
+<li><p>Remove usage of deprecated ‘get_storage_class’ function in newer Django versions</p></li>
+<li><p>Add support for new STORAGES (Django 4.2+) setting under the ‘dbbackup’ alias</p></li>
+</ul>
+</section>
+<section id="id4">
+<h2>4.1.0 (2024-01-14)<a class="headerlink" href="#id4" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p>Fix restore fail after editing filename</p></li>
+<li><p>Drop python 3.6</p></li>
+<li><p>update links</p></li>
+<li><p>Update doc for backup directory consistency</p></li>
+<li><p>RESTORE_PREFIX for RESTORE_SUFFIX</p></li>
+<li><p>Support Django 4.1, 4.2 and Python 3.11</p></li>
+<li><p>Support Python 3.12 and Django 5.0</p></li>
+</ul>
+</section>
+<section id="id5">
+<h2>4.0.2 (2022-09-27)<a class="headerlink" href="#id5" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p>support for prometheus wrapped dbs</p></li>
+<li><p>Backup of SQLite fail if there are Virtual Tables (e.g. FTS tables).</p></li>
+<li><p>Closes #460: python-gnupg version increase breaks unencrypt_file func…</p></li>
+</ul>
+</section>
+<section id="id6">
+<h2>4.0.1 (2022-07-09)<a class="headerlink" href="#id6" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p>As of this version, dbbackup is now within Jazzband! This version tests our Jazzband release CI, and adds miscellaneous refactoring/cleanup.</p></li>
+<li><p>Fix GitHub Actions configuration</p></li>
+<li><p>Enable functional tests in CI</p></li>
+<li><p>Update settings.py comment</p></li>
+<li><p>Jazzband transfer tasks</p></li>
+<li><p>Refactoring and tooling</p></li>
+</ul>
+</section>
+<section id="b0-2021-12-19">
+<h2>4.0.0b0 (2021-12-19)<a class="headerlink" href="#b0-2021-12-19" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p>Fix RemovedInDjango41Warning related to default_app_config</p></li>
+<li><p>Add authentication database support for MongoDB</p></li>
+<li><p>Remove six dependency</p></li>
+<li><p>Explicitly support Python 3.6+.</p></li>
+<li><p>Drop support for end of life Django versions. Currently support 2.2, 3.2, 4.0.</p></li>
+<li><p>Replace ugettext_lazy with gettext_lazy</p></li>
+<li><p>Changed logging settings from settings.py to late init</p></li>
+<li><p>Fix authentication error when postgres is password protected</p></li>
+<li><p>Use exclude-table-data instead of exclude-table</p></li>
+<li><p>Add support for exclude tables data in the command interface</p></li>
+<li><p>Move author and version information into setup.py to allow building package in isolated environment (e.g. with the <code class="docutils literal notranslate"><span class="pre">build</span></code> package).</p></li>
+<li><p>Documentation fixes</p></li>
+</ul>
+</section>
+<section id="id7">
+<h2>3.3.0 (2020-04-14)<a class="headerlink" href="#id7" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p>Documentation fixes</p></li>
+<li><p>“output-filename” in mediabackup command</p></li>
+<li><p>Fixes for test infrastructure and mongodb support</p></li>
+<li><p>sqlite3: don’t throw warnings if table already exists</p></li>
+<li><p>Fixes for django3 and updated travis (and File handling)</p></li>
+<li><p>Restoring from FTP</p></li>
+<li><p>Fixes to run dbbackup management command in Postgres for non-latin Windows.</p></li>
+<li><p>Apply changes from pull request 244; Update to include sftp storage</p></li>
+<li><p>Quick fix for proper selection of DB name to restore</p></li>
+</ul>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="contributing.html" class="btn btn-neutral float-left" title="Contributing guide" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright Mark Bakhit.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

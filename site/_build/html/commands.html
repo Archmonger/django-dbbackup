@@ -1,0 +1,385 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Commands &mdash; django-dbbackup 4.3.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=a17b270f"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Integration tutorials" href="integration.html" />
+    <link rel="prev" title="Storage settings" href="storage.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            django-dbbackup
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="configuration.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="databases.html">Database settings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="storage.html">Storage settings</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Commands</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#dbbackup">dbbackup</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#help">Help</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#dbrestore">dbrestore</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id1">Help</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#mediabackup">mediabackup</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id2">Help</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#mediarestore">mediarestore</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id3">Help</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#listbackups">listbackups</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id4">Help</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="integration.html">Integration tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="changelog.html">Changelog</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">django-dbbackup</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Commands</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/commands.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="commands">
+<h1>Commands<a class="headerlink" href="#commands" title="Link to this heading"></a></h1>
+<p>The primary usage of DBBackup is with command line tools. By default,
+commands will create backups and upload to your defined storage or download
+and restore the latest backup.</p>
+<p>Arguments can be passed to commands to compress/uncompress and encrypt/decrypt.</p>
+<section id="dbbackup">
+<h2>dbbackup<a class="headerlink" href="#dbbackup" title="Link to this heading"></a></h2>
+<p>Backup of database.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ ./manage.py dbbackup
+Backing Up Database: /tmp/tmp.x0kN9sYSqk
+Backup size: 3.3 KiB
+Writing file to tmp-zuluvm-2016-07-29-100954.dump
+</pre></div>
+</div>
+<section id="help">
+<h3>Help<a class="headerlink" href="#help" title="Link to this heading"></a></h3>
+<div class="admonition">
+<pre>
+usage: manage.py dbbackup [-h] [--noinput] [-q] [-c] [-d DATABASE] [-s SERVERNAME] [-z] [-e] [-o OUTPUT_FILENAME]
+                          [-O OUTPUT_PATH] [-x EXCLUDE_TABLES] [-n SCHEMA] [--version] [-v {0,1,2,3}]
+                          [--settings SETTINGS] [--pythonpath PYTHONPATH] [--traceback] [--no-color] [--force-color]
+                          [--skip-checks]
+
+Backup a database, encrypt and/or compress.
+
+options:
+  -h, --help            show this help message and exit
+  --noinput             Tells Django to NOT prompt the user for input of any kind.
+  -q, --quiet           Tells Django to NOT output other text than errors.
+  -c, --clean           Clean up old backup files
+  -d DATABASE, --database DATABASE
+                        Database(s) to backup specified by key separated by commas(default: all)
+  -s SERVERNAME, --servername SERVERNAME
+                        Specify server name to include in backup filename
+  -z, --compress        Compress the backup files
+  -e, --encrypt         Encrypt the backup files
+  -o OUTPUT_FILENAME, --output-filename OUTPUT_FILENAME
+                        Specify filename on storage
+  -O OUTPUT_PATH, --output-path OUTPUT_PATH
+                        Specify where to store on local filesystem
+  -x EXCLUDE_TABLES, --exclude-tables EXCLUDE_TABLES
+                        Exclude tables from backup
+  -n SCHEMA, --schema SCHEMA
+                        Specify schema(s) to backup. Can be used multiple times.
+  --version             Show program's version number and exit.
+  -v {0,1,2,3}, --verbosity {0,1,2,3}
+                        Verbosity level; 0=minimal output, 1=normal output, 2=verbose output, 3=very verbose output
+  --settings SETTINGS   The Python path to a settings module, e.g. "myproject.settings.main". If this isn't provided,
+                        the DJANGO_SETTINGS_MODULE environment variable will be used.
+  --pythonpath PYTHONPATH
+                        A directory to add to the Python path, e.g. "/home/djangoprojects/myproject".
+  --traceback           Display a full stack trace on CommandError exceptions.
+  --no-color            Don't colorize the command output.
+  --force-color         Force colorization of the command output.
+  --skip-checks         Skip system checks.
+</pre></div>
+</section>
+</section>
+<section id="dbrestore">
+<h2>dbrestore<a class="headerlink" href="#dbrestore" title="Link to this heading"></a></h2>
+<dl class="simple">
+<dt>Restore a database. ::</dt><dd><p>$ ./manage.py dbrestore
+Restoring backup for database: /tmp/tmp.x0kN9sYSqk
+Finding latest backup
+Restoring: tmp-zuluvm-2016-07-29-100954.dump
+Restore tempfile created: 3.3 KiB</p>
+</dd>
+</dl>
+<section id="id1">
+<h3>Help<a class="headerlink" href="#id1" title="Link to this heading"></a></h3>
+<div class="admonition">
+<pre>
+usage: manage.py dbrestore [-h] [--noinput] [-q] [-d DATABASE] [-i INPUT_FILENAME] [-I INPUT_PATH] [-s SERVERNAME]
+                           [-c] [-p PASSPHRASE] [-z] [-n SCHEMA] [-r] [--pg-options PG_OPTIONS] [--version]
+                           [-v {0,1,2,3}] [--settings SETTINGS] [--pythonpath PYTHONPATH] [--traceback] [--no-color]
+                           [--force-color] [--skip-checks]
+
+Restore a database backup from storage, encrypted and/or compressed.
+
+options:
+  -h, --help            show this help message and exit
+  --noinput             Tells Django to NOT prompt the user for input of any kind.
+  -q, --quiet           Tells Django to NOT output other text than errors.
+  -d DATABASE, --database DATABASE
+                        Database to restore
+  -i INPUT_FILENAME, --input-filename INPUT_FILENAME
+                        Specify filename to backup from
+  -I INPUT_PATH, --input-path INPUT_PATH
+                        Specify path on local filesystem to backup from
+  -s SERVERNAME, --servername SERVERNAME
+                        If backup file is not specified, filter the existing ones with the given servername
+  -c, --decrypt         Decrypt data before restoring
+  -p PASSPHRASE, --passphrase PASSPHRASE
+                        Passphrase for decrypt file
+  -z, --uncompress      Uncompress gzip data before restoring
+  -n SCHEMA, --schema SCHEMA
+                        Specify schema(s) to restore. Can be used multiple times.
+  -r, --no-drop         Don't clean (drop) the database. This only works with mongodb and postgresql.
+  --pg-options PG_OPTIONS
+                        Additional pg_restore options, e.g. '--if-exists --no-owner'. Use quotes.
+  --version             Show program's version number and exit.
+  -v {0,1,2,3}, --verbosity {0,1,2,3}
+                        Verbosity level; 0=minimal output, 1=normal output, 2=verbose output, 3=very verbose output
+  --settings SETTINGS   The Python path to a settings module, e.g. "myproject.settings.main". If this isn't provided,
+                        the DJANGO_SETTINGS_MODULE environment variable will be used.
+  --pythonpath PYTHONPATH
+                        A directory to add to the Python path, e.g. "/home/djangoprojects/myproject".
+  --traceback           Display a full stack trace on CommandError exceptions.
+  --no-color            Don't colorize the command output.
+  --force-color         Force colorization of the command output.
+  --skip-checks         Skip system checks.
+</pre></div>
+</section>
+</section>
+<section id="mediabackup">
+<h2>mediabackup<a class="headerlink" href="#mediabackup" title="Link to this heading"></a></h2>
+<p>Backup media files, gather all in a tarball and encrypt or compress.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ ./manage.py mediabackup
+Backup size: 10.0 KiB
+Writing file to zuluvm-2016-07-04-081612.tar
+</pre></div>
+</div>
+<section id="id2">
+<h3>Help<a class="headerlink" href="#id2" title="Link to this heading"></a></h3>
+<div class="admonition">
+<pre>
+usage: manage.py mediabackup [-h] [--noinput] [-q] [-c] [-s SERVERNAME] [-z] [-e] [-o OUTPUT_FILENAME]
+                             [-O OUTPUT_PATH] [--version] [-v {0,1,2,3}] [--settings SETTINGS]
+                             [--pythonpath PYTHONPATH] [--traceback] [--no-color] [--force-color] [--skip-checks]
+
+Backup media files, gather all in a tarball and encrypt or compress.
+
+options:
+  -h, --help            show this help message and exit
+  --noinput             Tells Django to NOT prompt the user for input of any kind.
+  -q, --quiet           Tells Django to NOT output other text than errors.
+  -c, --clean           Clean up old backup files
+  -s SERVERNAME, --servername SERVERNAME
+                        Specify server name to include in backup filename
+  -z, --compress        Compress the archive
+  -e, --encrypt         Encrypt the backup files
+  -o OUTPUT_FILENAME, --output-filename OUTPUT_FILENAME
+                        Specify filename on storage
+  -O OUTPUT_PATH, --output-path OUTPUT_PATH
+                        Specify where to store on local filesystem
+  --version             Show program's version number and exit.
+  -v {0,1,2,3}, --verbosity {0,1,2,3}
+                        Verbosity level; 0=minimal output, 1=normal output, 2=verbose output, 3=very verbose output
+  --settings SETTINGS   The Python path to a settings module, e.g. "myproject.settings.main". If this isn't provided,
+                        the DJANGO_SETTINGS_MODULE environment variable will be used.
+  --pythonpath PYTHONPATH
+                        A directory to add to the Python path, e.g. "/home/djangoprojects/myproject".
+  --traceback           Display a full stack trace on CommandError exceptions.
+  --no-color            Don't colorize the command output.
+  --force-color         Force colorization of the command output.
+  --skip-checks         Skip system checks.
+</pre></div>
+</section>
+</section>
+<section id="mediarestore">
+<h2>mediarestore<a class="headerlink" href="#mediarestore" title="Link to this heading"></a></h2>
+<p>Restore media files, extract files from archive and put into media storage.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ ./manage.py mediarestore
+Restoring backup for media files
+Finding latest backup
+Reading file zuluvm-2016-07-04-082551.tar
+Restoring: zuluvm-2016-07-04-082551.tar
+Backup size: 10.0 KiB
+Are you sure you want to continue? [Y/n]
+2 file(s) restored
+</pre></div>
+</div>
+<section id="id3">
+<h3>Help<a class="headerlink" href="#id3" title="Link to this heading"></a></h3>
+<div class="admonition">
+<pre>
+usage: manage.py mediarestore [-h] [--noinput] [-q] [-i INPUT_FILENAME] [-I INPUT_PATH] [-s SERVERNAME] [-e]
+                              [-p PASSPHRASE] [-z] [-r] [--version] [-v {0,1,2,3}] [--settings SETTINGS]
+                              [--pythonpath PYTHONPATH] [--traceback] [--no-color] [--force-color] [--skip-checks]
+
+Restore a media backup from storage, encrypted and/or compressed.
+
+options:
+  -h, --help            show this help message and exit
+  --noinput             Tells Django to NOT prompt the user for input of any kind.
+  -q, --quiet           Tells Django to NOT output other text than errors.
+  -i INPUT_FILENAME, --input-filename INPUT_FILENAME
+                        Specify filename to backup from
+  -I INPUT_PATH, --input-path INPUT_PATH
+                        Specify path on local filesystem to backup from
+  -s SERVERNAME, --servername SERVERNAME
+                        If backup file is not specified, filter the existing ones with the given servername
+  -e, --decrypt         Decrypt data before restoring
+  -p PASSPHRASE, --passphrase PASSPHRASE
+                        Passphrase for decrypt file
+  -z, --uncompress      Uncompress gzip data before restoring
+  -r, --replace         Replace existing files
+  --version             Show program's version number and exit.
+  -v {0,1,2,3}, --verbosity {0,1,2,3}
+                        Verbosity level; 0=minimal output, 1=normal output, 2=verbose output, 3=very verbose output
+  --settings SETTINGS   The Python path to a settings module, e.g. "myproject.settings.main". If this isn't provided,
+                        the DJANGO_SETTINGS_MODULE environment variable will be used.
+  --pythonpath PYTHONPATH
+                        A directory to add to the Python path, e.g. "/home/djangoprojects/myproject".
+  --traceback           Display a full stack trace on CommandError exceptions.
+  --no-color            Don't colorize the command output.
+  --force-color         Force colorization of the command output.
+  --skip-checks         Skip system checks.
+</pre></div>
+</section>
+</section>
+<section id="listbackups">
+<h2>listbackups<a class="headerlink" href="#listbackups" title="Link to this heading"></a></h2>
+<p>This command helps to list backups filtered by type (<code class="docutils literal notranslate"><span class="pre">'media'</span></code> or <code class="docutils literal notranslate"><span class="pre">'db'</span></code>),
+by compression or encryption.</p>
+<section id="id4">
+<h3>Help<a class="headerlink" href="#id4" title="Link to this heading"></a></h3>
+<div class="admonition">
+<pre>
+usage: manage.py listbackups [-h] [--noinput] [-q] [-d DATABASE] [-z] [-Z] [-e] [-E] [-c CONTENT_TYPE] [--version]
+                             [-v {0,1,2,3}] [--settings SETTINGS] [--pythonpath PYTHONPATH] [--traceback] [--no-color]
+                             [--force-color] [--skip-checks]
+
+options:
+  -h, --help            show this help message and exit
+  --noinput             Tells Django to NOT prompt the user for input of any kind.
+  -q, --quiet           Tells Django to NOT output other text than errors.
+  -d DATABASE, --database DATABASE
+                        Filter by database name
+  -z, --compressed      Exclude non-compressed
+  -Z, --not-compressed  Exclude compressed
+  -e, --encrypted       Exclude non-encrypted
+  -E, --not-encrypted   Exclude encrypted
+  -c CONTENT_TYPE, --content-type CONTENT_TYPE
+                        Filter by content type 'db' or 'media'
+  --version             Show program's version number and exit.
+  -v {0,1,2,3}, --verbosity {0,1,2,3}
+                        Verbosity level; 0=minimal output, 1=normal output, 2=verbose output, 3=very verbose output
+  --settings SETTINGS   The Python path to a settings module, e.g. "myproject.settings.main". If this isn't provided,
+                        the DJANGO_SETTINGS_MODULE environment variable will be used.
+  --pythonpath PYTHONPATH
+                        A directory to add to the Python path, e.g. "/home/djangoprojects/myproject".
+  --traceback           Display a full stack trace on CommandError exceptions.
+  --no-color            Don't colorize the command output.
+  --force-color         Force colorization of the command output.
+  --skip-checks         Skip system checks.
+</pre></div>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="storage.html" class="btn btn-neutral float-left" title="Storage settings" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="integration.html" class="btn btn-neutral float-right" title="Integration tutorials" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright Mark Bakhit.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,6 +1,3 @@
 .
-docutils
-python-dotenv
-sphinx
-sphinx-django-command
-sphinx-rtd-theme
+mkdocs
+mkdocs-material

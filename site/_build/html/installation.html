@@ -1,0 +1,183 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Installation &mdash; django-dbbackup 4.3.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=a17b270f"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Configuration" href="configuration.html" />
+    <link rel="prev" title="Django Database Backup" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            django-dbbackup
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#installing-on-your-system">Installing on your system</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#getting-the-latest-stable-release">Getting the latest stable release</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#getting-the-latest-release-from-trunk">Getting the latest release from trunk</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#add-it-in-your-project">Add it in your project</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#testing-that-everything-worked">Testing that everything worked</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="configuration.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="databases.html">Database settings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="storage.html">Storage settings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="commands.html">Commands</a></li>
+<li class="toctree-l1"><a class="reference internal" href="integration.html">Integration tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="changelog.html">Changelog</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">django-dbbackup</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Installation</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/installation.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="installation">
+<h1>Installation<a class="headerlink" href="#installation" title="Link to this heading"></a></h1>
+<section id="installing-on-your-system">
+<h2>Installing on your system<a class="headerlink" href="#installing-on-your-system" title="Link to this heading"></a></h2>
+<section id="getting-the-latest-stable-release">
+<h3>Getting the latest stable release<a class="headerlink" href="#getting-the-latest-stable-release" title="Link to this heading"></a></h3>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">django</span><span class="o">-</span><span class="n">dbbackup</span>
+</pre></div>
+</div>
+</section>
+<section id="getting-the-latest-release-from-trunk">
+<h3>Getting the latest release from trunk<a class="headerlink" href="#getting-the-latest-release-from-trunk" title="Link to this heading"></a></h3>
+<p>In general, you should not be downloading and installing stuff
+directly from repositories – especially not if you are backing
+up sensitive data.</p>
+<p>Security is important, bypassing PyPi repositories is a bad habit,
+because it will bypass the fragile key signatures authentication
+that are at least present when using PyPi repositories.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="o">-</span><span class="n">e</span> <span class="n">git</span><span class="o">+</span><span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">github</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">Archmonger</span><span class="o">/</span><span class="n">django</span><span class="o">-</span><span class="n">dbbackup</span><span class="o">.</span><span class="n">git</span><span class="c1">#egg=django-dbbackup</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="add-it-in-your-project">
+<h2>Add it in your project<a class="headerlink" href="#add-it-in-your-project" title="Link to this heading"></a></h2>
+<p>In your <code class="docutils literal notranslate"><span class="pre">settings.py</span></code>, make sure you have the following things:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">INSTALLED_APPS</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="o">...</span>
+    <span class="s1">&#39;dbbackup&#39;</span><span class="p">,</span>  <span class="c1"># django-dbbackup</span>
+<span class="p">)</span>
+
+<span class="n">STORAGES</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;dbbackup&#39;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s1">&#39;BACKEND&#39;</span><span class="p">:</span> <span class="s1">&#39;django.core.files.storage.FileSystemStorage&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;OPTIONS&#39;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s1">&#39;location&#39;</span><span class="p">:</span> <span class="s1">&#39;/my/backup/dir/&#39;</span><span class="p">,</span>
+        <span class="p">},</span>
+    <span class="p">},</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Create the backup directory:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">mkdir</span> <span class="o">/</span><span class="n">my</span><span class="o">/</span><span class="n">backup</span><span class="o">/</span><span class="nb">dir</span><span class="o">/</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This configuration uses filesystem storage, but you can use any storage
+supported by Django API. See <a class="reference external" href="storage.html">Storage settings</a> for more information about it.</p>
+</div>
+</section>
+<section id="testing-that-everything-worked">
+<h2>Testing that everything worked<a class="headerlink" href="#testing-that-everything-worked" title="Link to this heading"></a></h2>
+<p>Now, you should be able to create your first backup by running:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ python manage.py dbbackup
+</pre></div>
+</div>
+<p>If your database was called <code class="docutils literal notranslate"><span class="pre">default</span></code> which is the normal Django behaviour
+of a single-database project, you should now see a new file in your backup
+directory.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="index.html" class="btn btn-neutral float-left" title="Django Database Backup" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="configuration.html" class="btn btn-neutral float-right" title="Configuration" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright Mark Bakhit.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
