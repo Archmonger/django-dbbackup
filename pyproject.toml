@@ -82,10 +82,8 @@ extra-dependencies = [
 ]
 matrix-name-format = "{variable}-{value}"
 
-[tool.hatch.envs.hatch-test.scripts]
-run = ["coverage run runtests.py"]
-cov-report = ["coverage report"]
-cov-combine = ["coverage combine"]
+[tool.hatch.envs.hatch-test.env-vars]
+DJANGO_SETTINGS_MODULE = "dbbackup.tests.settings"
 
 # Django 4.2
 [[tool.hatch.envs.hatch-test.matrix]]
@@ -174,8 +172,31 @@ extra-dependencies = [
     "psycopg2",
 ]
 
+[tool.hatch.envs.functional.env-vars]
+DJANGO_SETTINGS_MODULE = "dbbackup.tests.settings"
+STORAGE = "django.core.files.storage.FileSystemStorage"
+STORAGE_LOCATION = "/tmp/backups/"
+STORAGE_OPTIONS = "location=/tmp/backups/"
+MEDIA_ROOT = "/tmp/media/"
+DB_NAME = "/tmp/test_db.sqlite3"
+
 [tool.hatch.envs.functional.scripts]
-test = ["bash -x functional.sh"]
+test = [
+    "python -c \"import tempfile, os; os.makedirs('/tmp/backups', exist_ok=True); os.makedirs('/tmp/media', exist_ok=True)\"",
+    "python -c \"import os; os.path.exists('/tmp/test_db.sqlite3') and os.remove('/tmp/test_db.sqlite3')\"",
+    "python -m django migrate --noinput",
+    "python -c \"import os, django; os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'dbbackup.tests.settings'); django.setup(); from dbbackup.tests.testapp.models import CharModel; CharModel.objects.create(field='test')\"",
+    "python -m django dbbackup --noinput",
+    "python -c \"import os, django; os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'dbbackup.tests.settings'); django.setup(); from dbbackup.tests.testapp.models import CharModel; CharModel.objects.all().delete()\"",
+    "python -m django dbrestore --noinput",
+    "python -c \"import os, django; os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'dbbackup.tests.settings'); django.setup(); from dbbackup.tests.testapp.models import CharModel; assert CharModel.objects.count() > 0; print('Database test passed!')\"",
+    "python -c \"import os; open('/tmp/media/test.txt', 'w').write('test content')\"",
+    "python -m django mediabackup --noinput",
+    "python -c \"import os; os.remove('/tmp/media/test.txt')\"",
+    "python -m django mediarestore --noinput",
+    "python -c \"import os; assert os.path.exists('/tmp/media/test.txt'); print('Media test passed!')\"",
+    "python -c \"import os; os.path.exists('/tmp/test_db.sqlite3') and os.remove('/tmp/test_db.sqlite3')\"",
+]
 
 # >>> Generic Tools <<<
 
@@ -210,3 +231,8 @@ source = ["dbbackup/"]
 
 [tool.coverage.report]
 show_missing = true
+
+[tool.pytest.ini_options]
+addopts = ["--strict-config", "--strict-markers"]
+python_files = ["tests.py", "test_*.py", "*_tests.py"]
+testpaths = ["dbbackup/tests"]
