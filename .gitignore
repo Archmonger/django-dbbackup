@@ -9,8 +9,8 @@ __pycache__/
 .Python
 .env
 env/
-.venv
-venv/
+.venv*
+venv*
 build/
 develop-eggs/
 dist/
@@ -69,3 +69,6 @@ target/
 *.sw[po]
 test-sqlite
 venv
+
+# Other
+*memorydb_default*

@@ -112,7 +112,7 @@ class Encrypt_FileTest(TestCase):
         clean_gpg_keys()
 
     def test_func(self, *args):
-        with open(self.path) as fd:
+        with open(self.path, mode="rb") as fd:
             encrypted_file, filename = utils.encrypt_file(
                 inputfile=fd, filename="foo.txt"
             )
@@ -146,7 +146,7 @@ class Compress_FileTest(TestCase):
         os.remove(self.path)
 
     def test_func(self, *args):
-        with open(self.path) as fd:
+        with open(self.path, mode="rb") as fd:
             compressed_file, filename = utils.encrypt_file(
                 inputfile=fd, filename="foo.txt"
             )

@@ -2,7 +2,7 @@ coverage
 django-storages
 flake8
 pep8
-psycopg2
+psycopg2-binary
 pylint
 python-dotenv
 python-gnupg>=0.5.0
