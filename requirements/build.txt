@@ -1,5 +1,0 @@
-build
-setuptools
-tox>=4.0.0
-twine
-wheel

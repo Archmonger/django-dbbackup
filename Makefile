@@ -1,4 +1,4 @@
-.PHONY: all test clean docs
+.PHONY: all test clean docs build upload install lint format
 
 clean:
 	find . -name "*.pyc" -type f -delete
@@ -9,19 +9,30 @@ clean:
 	       *.egg
 
 test:
-	python runtests.py
+	hatch test
+
+functional:
+	hatch run functional:test
+
+lint:
+	hatch run lint:check
+
+format:
+	hatch run lint:format
+
+format-check:
+	hatch run lint:format-check
 
 install:
-	python setup.py install
+	hatch build
 
 build:
-	python setup.py build
+	hatch build
 
 docs:
-	cd docs/ && make clean
-	cd docs/ && make html
+	hatch run docs:build
 
 upload:
 	make clean
-	python setup.py sdist bdist_wheel
-	twine upload dist/*
+	hatch build
+	hatch publish
