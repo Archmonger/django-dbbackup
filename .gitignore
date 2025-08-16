@@ -72,3 +72,4 @@ venv
 
 # Other
 *memorydb_default*
+:memory:
