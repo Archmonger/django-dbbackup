@@ -8,7 +8,7 @@
 pip install django-dbbackup
 ```
 
-### Getting the latest release from trunk
+### Getting the latest from GitHub
 
 In general, you should not be downloading and installing stuff
 directly from repositories -- especially not if you are backing
@@ -28,7 +28,7 @@ In your `settings.py`, make sure you have the following things:
 
 ```python
 INSTALLED_APPS = (
-    ...
+    ... ,
     'dbbackup',  # django-dbbackup
 )
 

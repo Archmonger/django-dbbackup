@@ -227,16 +227,14 @@ Validate documents before inserting in database (option `--objcheck` in command 
 
 Replace objects that are already in database, (option `--drop` in command line), default is `True`.
 
-## Custom connector
+## Custom connectors
 
 Creating your connector is easy; create a children class from
 `dbbackup.db.base.BaseDBConnector` and create `_create_dump` and
 `_restore_dump`. If your connector uses a command line tool, inherit it from
 `dbbackup.db.base.BaseCommandDBConnector`
 
-## Connecting a Custom connector
-
-Here is an example, on how to easily connect a custom connector that you have created or even that you simply want to reuse:
+Here is an example, on how to easily use a custom connector that you have created or even that you simply want to reuse:
 
 ```python
 DBBACKUP_CONNECTOR_MAPPING = {

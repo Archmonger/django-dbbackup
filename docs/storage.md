@@ -56,7 +56,7 @@ STORAGES = {
 }
 ```
 
-### Available settings
+### Settings
 
 **location**
 
@@ -129,7 +129,7 @@ STORAGES = {
 }
 ```
 
-### Available settings
+### Settings
 
 !!! note
     See the [Django Storage S3 storage official documentation](https://django-storages.readthedocs.io/en/latest/backends/amazon-S3.html) for all options.
@@ -184,7 +184,9 @@ In order to backup to Dropbox, you'll first need to create a Dropbox account
 and set it up to communicate with the Django-DBBackup application. Don't
 worry, all instructions are below.
 
-### Setup your Dropbox account
+### Setup
+
+First, configure your Dropbox account by following these steps:
 
 1. Login to Dropbox and navigate to Developers » MyApps.
    https://www.dropbox.com/developers/apps
@@ -196,13 +198,14 @@ worry, all instructions are below.
    importantly the 'App Key' and 'App Secret' values inside. You'll need
    those later.
 
-### Setup your Django project
+Then, configure your Django project by installing the required
+dependencies:
 
 ```bash
 pip install dropbox django-storages
 ```
 
-...And make sure you have the following required settings:
+And make sure you have the following required settings:
 
 ```python
 STORAGES = {
@@ -215,7 +218,7 @@ STORAGES = {
 }
 ```
 
-### Available settings
+### Settings
 
 !!! note
     See [django-storages dropbox official documentation](https://django-storages.readthedocs.io/en/latest/backends/dropbox.html) for more details.
@@ -230,7 +233,7 @@ Jail storage to this directory
 
 ## FTP
 
-To store your database backups on a remote filesystem via [a]FTP, simply
+To store your database backups on a remote filesystem via FTP, simply
 setup the required settings below.
 
 ### Setup
@@ -286,7 +289,7 @@ STORAGES = {
 }
 ```
 
-### Available settings
+### Settings
 
 **host** - Required
 
