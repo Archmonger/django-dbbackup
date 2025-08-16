@@ -105,10 +105,7 @@ django = ["5.1"]
 python = ["3.10", "3.11", "3.12", "3.13"]
 django = ["5.2"]
 
-# Django master (dev)
-[[tool.hatch.envs.hatch-test.matrix]]
-python = ["3.11", "3.12", "3.13"]
-django = ["master"]
+
 
 [tool.hatch.envs.hatch-test.overrides]
 matrix.django.dependencies = [
@@ -116,7 +113,6 @@ matrix.django.dependencies = [
   { if = ["5.0"], value = "django>=5.0,<5.1" },
   { if = ["5.1"], value = "django>=5.1,<5.2" },
   { if = ["5.2"], value = "django>=5.2,<5.3" },
-  { if = ["master"], value = "django @ https://github.com/django/django/archive/main.tar.gz" },
 ]
 
 # >>> Hatch Documentation Scripts <<<
