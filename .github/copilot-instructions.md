@@ -174,7 +174,7 @@ Core runtime dependencies (requirements.txt):
 Test dependencies (requirements/tests.txt):
 - coverage, flake8, pylint (code quality)
 - python-gnupg>=0.5.0 (encryption support)
-- psycopg2 (PostgreSQL testing)
+- psycopg2-binary (PostgreSQL testing)
 - django-storages (cloud storage testing)
 - tox, tox-gh-actions (multi-environment testing)
 
