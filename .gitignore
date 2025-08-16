@@ -48,6 +48,7 @@ coverage.xml
 tests/media/
 coverage_html_report/
 *.db
+*.sqlite3
 
 # Translations
 *.mo

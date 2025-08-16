@@ -31,7 +31,7 @@ Run tests in multiple configurations:
 Expected test results:
 - Unit tests: >200 tests, completes in ~30 seconds across all environments **All tests must always pass - failures are never expected or allowed.**
 - Functional tests: database and media backup/restore cycles, completes in ~10 seconds
-- All tests use SQLite in-memory database by default, functional tests use /tmp filesystem
+- All tests use a SQLite filesystem database by default
 
 ## Manual Validation Scenarios
 
@@ -143,8 +143,7 @@ Modern isolated environments configured in pyproject.toml:
 - **precommit**: Git hooks management
 
 ### Test Configuration
-- Default database: SQLite in-memory (`:memory:`)
-- Functional tests: SQLite file-based (`/tmp/test_db.sqlite3`)
+- Default database: SQLite file-based (`/tmp/test_db.sqlite3`)
 - Email testing: Django locmem backend (`django.core.mail.backends.locmem.EmailBackend`)
 - Settings: `dbbackup.tests.settings`
 - Test data models: `dbbackup.tests.testapp.models`
