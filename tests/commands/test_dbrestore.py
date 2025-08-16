@@ -83,6 +83,7 @@ class DbrestoreCommandRestoreBackupTest(TestCase):
 
     @patch("dbbackup.utils.getpass", return_value=None)
     def test_decrypt(self, *args):
+        add_private_gpg()
         self.command.path = None
         self.command.decrypt = True
         encrypted_file, self.command.filename = utils.encrypt_file(

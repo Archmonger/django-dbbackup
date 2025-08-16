@@ -10,7 +10,7 @@ Always reference these instructions first and fallback to search or bash command
 
 Bootstrap, build, and test the repository:
 - `python -m pip install --upgrade pip hatch uv` - installs modern Python tooling (takes ~30 seconds)
-- `hatch test` - runs comprehensive unit test suite across all Python/Django versions. Takes ~30 seconds. NEVER CANCEL.
+- `hatch test` - runs comprehensive unit test suite across all Python/Django versions. Takes ~30 seconds. NEVER CANCEL. **All tests must always pass - failures are never expected or allowed.**
 - `hatch run functional:test` - runs end-to-end functional tests for backup/restore workflows. Takes ~10 seconds. NEVER CANCEL.
 - `hatch run lint:check` - runs linting on the main package. Takes ~5 seconds. NEVER CANCEL.
 - `hatch run lint:format-check` - runs code formatting checks. Takes ~2 seconds. NEVER CANCEL.
@@ -22,14 +22,14 @@ Build documentation:
 ## Testing and Validation
 
 Run tests in multiple configurations:
-- `hatch test` - unit test runner for all environments (30 seconds)
+- `hatch test` - unit test runner for all environments (30 seconds) **All tests must always pass - failures are never expected or allowed.**
 - `hatch test --python 3.12` - test on specific Python version (10 seconds)
 - `hatch run functional:test` - complete backup/restore test cycle in real filesystem environment (10 seconds)
 - `hatch run lint:check` - linting on main package (5 seconds)
 - `hatch run lint:format` - auto-format code using Ruff (2 seconds)
 
 Expected test results:
-- Unit tests: >200 tests, completes in ~30 seconds across all environments
+- Unit tests: >200 tests, completes in ~30 seconds across all environments **All tests must always pass - failures are never expected or allowed.**
 - Functional tests: database and media backup/restore cycles, completes in ~10 seconds
 - All tests use SQLite in-memory database by default, functional tests use /tmp filesystem
 
@@ -75,7 +75,7 @@ Always test backup and restore functionality after making changes using function
 Modern development process using Hatch:
 1. **Bootstrap environment**: `pip install --upgrade pip hatch uv`
 2. **Make your changes** to the codebase
-3. **Run unit tests**: `hatch test` (30 seconds)
+3. **Run unit tests**: `hatch test` (30 seconds) **All tests must always pass - failures are never expected or allowed.**
 4. **Run functional tests**: `hatch run functional:test` (10 seconds)  
 5. **Run linting**: `hatch run lint:check` (5 seconds)
 6. **Auto-format code**: `hatch run lint:format` (2 seconds)
