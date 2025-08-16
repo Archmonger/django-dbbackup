@@ -10,7 +10,7 @@ Bootstrap, build, and test the repository:
 - `python -m pip install --upgrade pip`
 - `pip install -r requirements.txt` - installs core Django dependencies (takes ~30 seconds)
 - `pip install -r requirements/tests.txt` - installs testing dependencies including coverage, flake8, pylint, tox (takes ~60 seconds)
-- `python runtests.py` - runs unit test suite. Takes ~3 seconds. NEVER CANCEL. Expect 2 GPG-related test failures which are normal.
+- `python runtests.py` - runs unit test suite. Takes ~3 seconds. NEVER CANCEL.
 - `bash functional.sh` - runs end-to-end functional tests for backup/restore workflows. Takes ~2 seconds. NEVER CANCEL.
 - `flake8 dbbackup` - runs linting on the main package. Takes ~1 second. NEVER CANCEL.
 
@@ -21,13 +21,13 @@ Build documentation:
 ## Testing and Validation
 
 Run tests in multiple configurations:
-- `python runtests.py` - unit test launcher (3 seconds, expect 2 GPG errors)
+- `python runtests.py` - unit test launcher (3 seconds)
 - `bash functional.sh` - uses `runtests.py` to run backup/restore test in the current environment (2 seconds)
 - `tox -e py312-django42` - run tests in a specific isolated environment (may timeout due to network issues, set timeout to 20+ seconds)
 - `flake8 dbbackup` - linting on main package (1 second)
 
 Expected test results:
-- Unit tests: >200 tests, 2 expected GPG-related failures, completes in ~3 seconds
+- Unit tests: >200 tests, completes in ~3 seconds
 - Functional tests: database and media backup/restore cycles, completes in ~2 seconds
 - All tests use SQLite in-memory database by default
 
@@ -64,7 +64,6 @@ Always test backup and restore functionality after making changes:
 
 ## Troubleshooting Known Issues
 
-- **GPG Test Failures**: Two tests fail with "TypeError: a bytes-like object is required, not 'str'" - this is expected and does not affect functionality
 - **Tox Network Timeouts**: `tox` commands may fail with "Read timed out" errors due to network connectivity. This is environmental, not code-related.
 - **Pip Installation Timeouts**: `pip install` commands may timeout when installing documentation dependencies. Dependencies are likely already installed from previous steps.
 - **SQLite Restore Warnings**: Warnings about "UNIQUE constraint failed" during restore operations are normal for test scenarios
@@ -187,6 +186,5 @@ Documentation dependencies (requirements/docs.txt):
 
 - **This is a Django package**, not a standalone application - it provides management commands for Django projects
 - **Backup/restore functionality** works with SQLite, MySQL, PostgreSQL databases and various storage backends
-- **GPG encryption** and **compression** are optional features that may not work in all test environments
 - **All builds and tests run very quickly** - if something takes more than 5 minutes, investigate network connectivity
 - **The functional.sh script is the gold standard** for testing - it performs real backup and restore operations
