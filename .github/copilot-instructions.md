@@ -197,4 +197,4 @@ Modern GitHub Actions workflow (.github/workflows/build.yml):
 - **Hatch environments provide full isolation** - no need to manage virtual environments manually
 - **The functional test environment is the gold standard** - it performs real backup and restore operations with filesystem storage
 - **Documentation updates are required** when making changes to Python source code
-- **Always update this file** when making changes to the development workflow or build process
+- **Always update this file** when making changes to the development workflow, build process, or repository structure
