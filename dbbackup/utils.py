@@ -174,6 +174,10 @@ def encrypt_file(inputfile, filename):
     try:
         filename = f"{filename}.gpg"
         filepath = os.path.join(tempdir, filename)
+        if "b" not in inputfile.mode:
+            raise ValueError(
+                "Input file must be opened in binary mode."
+            )
         try:
             inputfile.seek(0)
             always_trust = settings.GPG_ALWAYS_TRUST
