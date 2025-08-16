@@ -19,12 +19,6 @@ For more details, see the [official documentation](https://archmonger.github.io/
 
 ## Why use DBBackup?
 
-This software doesn't reinvent the wheel. In a few words, it is a pipe between your Django project and your backup storage. It uses native database dump and restore mechanisms (non-Django), applies compression and/or encryption, and works with your desired storage system.
+DBBackup gives you a simple yet robust interface to backup, encrypt, transmit, and restore your database and media.
 
-It provides a simple interface to backup and restore your database or media files.
-
-## Contributing
-
-All contributions are very welcome. Propositions, problems, bugs, and enhancements are tracked with [GitHub issues](https://github.com/Archmonger/django-dbbackup/issues), and patches are submitted via [pull requests](https://github.com/Archmonger/django-dbbackup/pulls).
-
-We use GitHub Actions for continuous integration.
+In a few words, it is a pipe between your Django project and your backups. Behind the hood, your database's standard/best procedure is used to backup and restore data. Optionally, DBBackup can apply compression and/or encryption before transferring the data to nearly any storage system.
