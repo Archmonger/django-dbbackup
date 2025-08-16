@@ -17,7 +17,7 @@ keywords = [
     "sqlite",
 ]
 license = "BSD-3-Clause"
-authors = [{ name = "Archmonger", email = "archiethemonger@gmail.com" }]
+authors = [{ name = "Mark Bakhit", email = "archiethemonger@gmail.com" }]
 requires-python = ">=3.9"
 classifiers = [
     "Development Status :: 5 - Production/Stable",
@@ -48,22 +48,21 @@ dependencies = [
     "pytz",
 ]
 dynamic = ["version"]
-urls.Changelog = "https://github.com/Archmonger/django-dbbackup/blob/master/docs/changelog.md"
-urls.Documentation = "https://django-dbbackup.readthedocs.io/"
+urls.Changelog = "https://archmonger.github.io/django-dbbackup /latest/changelog/"
+urls.Documentation = "https://archmonger.github.io/django-dbbackup"
 urls.Source = "https://github.com/Archmonger/django-dbbackup"
 
 [tool.hatch.version]
-path = "dbbackup/VERSION"
-pattern = "(?P<version>.+)"
+path = "dbbackup/__init__.py"
 
 [tool.hatch.build.targets.sdist]
-include = ["/dbbackup", "/requirements.txt", "/README.md", "/LICENSE.txt"]
+include = ["/dbbackup"]
 
 [tool.hatch.build.targets.wheel]
 packages = ["dbbackup"]
 
 [tool.hatch.metadata]
-license-files = { paths = ["LICENSE.txt"] }
+license-files = { paths = ["LICENSE.md"] }
 
 [tool.hatch.envs.default]
 installer = "uv"
@@ -71,7 +70,6 @@ installer = "uv"
 # >>> Hatch Test Suite <<<
 
 [tool.hatch.envs.hatch-test]
-template = "hatch-test"
 extra-dependencies = [
     "coverage",
     "django-storages", 
@@ -159,13 +157,12 @@ format-check = ["ruff format --check dbbackup"]
 extra-dependencies = [
     "coverage",
     "django-storages",
-    "psycopg2-binary", 
     "python-dotenv",
     "python-gnupg>=0.5.0",
     "testfixtures",
     "django",
-    "mysqlclient",
-    "psycopg2",
+    # "psycopg2-binary", 
+    # "mysqlclient",
 ]
 
 [tool.hatch.envs.functional.env-vars]
@@ -200,35 +197,18 @@ test = [
 line-length = 120
 target-version = "py39"
 extend-exclude = [".eggs/*", ".tox/*", ".venv/*", "build/*", "*/migrations/*"]
+format.preview = true
+lint.extend-ignore = []
 
-[tool.ruff.lint]
-extend-ignore = [
-    "E501",   # line too long (covered by formatter)
-    "E203",   # whitespace before ':'
-]
-
-[tool.black]
-target-version = ['py39']
-extend-exclude = 'migrations'
-line-length = 120
-
-[tool.isort]
-profile = 'black'
-skip = 'migrations'
-line_length = 120
-
+[tool.pytest.ini_options]
+addopts = ["--strict-config", "--strict-markers"]
 [tool.coverage.run]
 branch = true
 parallel = true
-source = ["dbbackup/"]
+source = ["dbbackup/", "tests/"]
 
 [tool.coverage.paths]
 source = ["dbbackup/"]
 
 [tool.coverage.report]
 show_missing = true
-
-[tool.pytest.ini_options]
-addopts = ["--strict-config", "--strict-markers"]
-python_files = ["tests.py", "test_*.py", "*_tests.py"]
-testpaths = ["tests"]

@@ -1,6 +1,0 @@
-recursive-include requirements *
-include requirements.txt
-include README.md
-include LICENSE.txt
-include dbbackup/VERSION
-recursive-include dbbackup/tests/testapp/blobs *

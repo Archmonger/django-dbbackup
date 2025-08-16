@@ -71,3 +71,10 @@ target/
 *.sw[po]
 test-sqlite
 venv
+
+# Visual Studio Code #
+.vscode/settings.json
+.vscode/tasks.json
+.vscode/launch.json
+.history
+%SystemDrive%
