@@ -260,27 +260,6 @@ STORAGES = {
 
 A FTP URI with optional user, password and port. example: `'ftp://anonymous@myftp.net'`
 
-### Setup
-
-We use FTP backend from Django-Storages (again).
-
-```bash
-pip install django-storages
-```
-
-Here a simple configuration:
-
-```python
-STORAGES = {
-    "dbbackup": {
-        "BACKEND": "storages.backends.ftp.FTPStorage",
-        "OPTIONS": {
-            "location": "ftp://myftpserver/",
-        },
-    },
-}
-```
-
 ## SFTP
 
 To store your database backups on a remote filesystem via SFTP, simply
