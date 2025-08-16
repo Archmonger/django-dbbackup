@@ -30,7 +30,7 @@ Why use DBBackup
 ================
 
 This software doesn't reinvent the wheel, in a few words it is a pipe between
-your Django project and your backup storage. It tries to use the traditional dump &
+your Django project and your backup storage. It tries to use database native (non-Django) dump &
 restore mechanisms, apply compression and/or encryption and use the storage system you desire.
 
 It gives a simple interface to backup and restore your database or media

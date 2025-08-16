@@ -106,17 +106,3 @@ Storage used for backups
 
 Options for instantiating the chosen storage. It must be formatted as
 `"key1=foo,key2=bar"` and will be converted into a `dict`.
-
-## Online CI
-
-We use [Travis](https://travis-ci.org/Archmonger/django-dbbackup) which tests Dbbackup with a matrix of components' versions: Several versions of Django and several versions of Python including 2, 3 and PyPy.
-
-[![Build Status](https://api.travis-ci.org/Archmonger/django-dbbackup.svg)](https://travis-ci.org/Archmonger/django-dbbackup)
-
-Code coverage is ensured with [Coveralls](https://coveralls.io/github/Archmonger/django-dbbackup) and the project has not yet reached a minimum coverage limit.
-
-[![Coverage Status](https://coveralls.io/repos/Archmonger/django-dbbackup/badge.svg?branch=master&service=github)](https://coveralls.io/github/Archmonger/django-dbbackup?branch=master)
-
-Code health is checked with [Landscape](https://landscape.io/github/Archmonger/django-dbbackup/)
-
-[![Code Health](https://landscape.io/github/Archmonger/django-dbbackup/master/landscape.svg?style=flat)](https://landscape.io/github/Archmonger/django-dbbackup/master)

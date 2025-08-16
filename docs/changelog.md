@@ -8,6 +8,7 @@
 * Drop support for end-of-life Django 3.2.
 * Drop support for `DBBACKUP_STORAGE` AND  `DBBACKUP_STORAGE_OPTIONS` settings, use Django's `STORAGES['dbbackup']` setting instead.
 * Implement new `SqliteBackupConnector` to backup SQLite3 databases using the `.backup` command (safe to execute on DBs with active connections).
+* Fix encryption support when using `gnupg==5.x`.
 
 ## 4.3.0 (2025-05-09)
 

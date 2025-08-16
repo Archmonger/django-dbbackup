@@ -15,8 +15,8 @@ It is made to:
 ## Other Resources
 
 * [GitHub repository](https://github.com/Archmonger/django-dbbackup)
-* [PyPI project](https://pypi.python.org/pypi/django-dbbackup/)
-* [Read The Docs](https://django-dbbackup.readthedocs.org/)
+* [PyPI project](https://pypi.org/pypi/django-dbbackup/)
+* [Documentation](https://django-dbbackup.readthedocs.org/)
 * [GitHub issues](https://github.com/Archmonger/django-dbbackup/issues)
+* [GitHub discussions](https://github.com/Archmonger/django-dbbackup/discussions)
 * [GitHub pull requests](https://github.com/Archmonger/django-dbbackup/pulls)
-* [Coveralls](https://coveralls.io/github/Archmonger/django-dbbackup)

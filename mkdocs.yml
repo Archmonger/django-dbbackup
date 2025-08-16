@@ -48,17 +48,19 @@ markdown_extensions:
 nav:
   - Home: index.md
   - Installation: installation.md
-  - Configuration: configuration.md
-  - Databases: databases.md
-  - Storage: storage.md
-  - Commands: commands.md
-  - Integration: integration.md
-  - Contributing: contributing.md
-  - Changelog: changelog.md
+  - Reference:
+    - Configuration: configuration.md
+    - Databases: databases.md
+    - Storage: storage.md
+    - Commands: commands.md
+    - Integration: integration.md
+  - About:
+    - Changelog: changelog.md
+    - Contributing: contributing.md
 
 extra:
   social:
     - icon: fontawesome/brands/github
       link: https://github.com/Archmonger/django-dbbackup
     - icon: fontawesome/brands/python
-      link: https://pypi.python.org/pypi/django-dbbackup/
+      link: https://pypi.org/pypi/django-dbbackup/
