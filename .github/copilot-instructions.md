@@ -21,14 +21,13 @@ Build documentation:
 ## Testing and Validation
 
 Run tests in multiple configurations:
-- `python runtests.py` - unit tests (3 seconds, expect 2 GPG errors)
-- `make test` - same as above via Makefile
-- `bash functional.sh` - functional backup/restore test (2 seconds)
-- `tox -e py312-django42` - run tests in isolated environment (may timeout due to network issues, set timeout to 600+ seconds)
+- `python runtests.py` - unit test launcher (3 seconds, expect 2 GPG errors)
+- `bash functional.sh` - uses `runtests.py` to run backup/restore test in the current environment (2 seconds)
+- `tox -e py312-django42` - run tests in a specific isolated environment (may timeout due to network issues, set timeout to 20+ seconds)
 - `flake8 dbbackup` - linting on main package (1 second)
 
 Expected test results:
-- Unit tests: 211 tests, 2 expected GPG-related failures, completes in ~3 seconds
+- Unit tests: >200 tests, 2 expected GPG-related failures, completes in ~3 seconds
 - Functional tests: database and media backup/restore cycles, completes in ~2 seconds
 - All tests use SQLite in-memory database by default
 
