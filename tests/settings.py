@@ -21,13 +21,13 @@ BLOB_DIR = os.path.join(TESTAPP_DIR, "blobs/")
 ADMINS = (("ham", "foo@bar"),)
 ALLOWED_HOSTS = ["*"]
 MIDDLEWARE_CLASSES = ()
-ROOT_URLCONF = "dbbackup.tests.testapp.urls"
+ROOT_URLCONF = "tests.testapp.urls"
 SECRET_KEY = "it's a secret to everyone"
 SITE_ID = 1
 MEDIA_ROOT = os.environ.get("MEDIA_ROOT") or tempfile.mkdtemp()
 INSTALLED_APPS = (
     "dbbackup",
-    "dbbackup.tests.testapp",
+    "tests.testapp",
 )
 DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 
@@ -62,7 +62,7 @@ STORAGES = {
         "OPTIONS": {},
     },
     "dbbackup": {
-        "BACKEND": os.environ.get("STORAGE", "dbbackup.tests.utils.FakeStorage"),
+        "BACKEND": os.environ.get("STORAGE", "tests.utils.FakeStorage"),
         "OPTIONS": dict(
             [
                 keyvalue.split("=")

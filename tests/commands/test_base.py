@@ -12,7 +12,7 @@ from django.test import TestCase
 
 from dbbackup.management.commands._base import BaseDbBackupCommand
 from dbbackup.storage import get_storage
-from dbbackup.tests.utils import DEV_NULL, HANDLED_FILES
+from tests.utils import DEV_NULL, HANDLED_FILES
 
 
 class BaseDbBackupCommandSetLoggerLevelTest(TestCase):

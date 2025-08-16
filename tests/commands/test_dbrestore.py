@@ -18,7 +18,7 @@ from dbbackup.db.postgresql import PgDumpConnector
 from dbbackup.management.commands.dbrestore import Command as DbrestoreCommand
 from dbbackup.settings import HOSTNAME
 from dbbackup.storage import get_storage
-from dbbackup.tests.utils import (
+from tests.utils import (
     DEV_NULL,
     HANDLED_FILES,
     TARED_FILE,

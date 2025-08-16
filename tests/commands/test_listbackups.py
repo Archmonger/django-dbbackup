@@ -6,7 +6,7 @@ from django.test import TestCase
 
 from dbbackup.management.commands.listbackups import Command as ListbackupsCommand
 from dbbackup.storage import get_storage
-from dbbackup.tests.utils import HANDLED_FILES
+from tests.utils import HANDLED_FILES
 
 
 class ListbackupsCommandTest(TestCase):

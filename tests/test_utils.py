@@ -10,7 +10,7 @@ from django.core import mail
 from django.test import TestCase
 
 from dbbackup import settings, utils
-from dbbackup.tests.utils import (
+from tests.utils import (
     COMPRESSED_FILE,
     ENCRYPTED_FILE,
     add_private_gpg,

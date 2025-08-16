@@ -6,8 +6,8 @@ from django.conf import settings
 from django.core.management import execute_from_command_line
 from django.test import TransactionTestCase as TestCase
 
-from dbbackup.tests.testapp import models
-from dbbackup.tests.utils import (
+from tests.testapp import models
+from tests.utils import (
     HANDLED_FILES,
     TEST_DATABASE,
     add_private_gpg,

@@ -10,7 +10,7 @@ from django.test import TestCase
 from dbbackup.db.base import get_connector
 from dbbackup.management.commands.dbbackup import Command as DbbackupCommand
 from dbbackup.storage import get_storage
-from dbbackup.tests.utils import DEV_NULL, TEST_DATABASE, add_public_gpg, clean_gpg_keys
+from tests.utils import DEV_NULL, TEST_DATABASE, add_public_gpg, clean_gpg_keys
 
 
 @patch("dbbackup.settings.GPG_RECIPIENT", "test@test")

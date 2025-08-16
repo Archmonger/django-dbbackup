@@ -4,7 +4,7 @@ from django.test import TestCase
 
 from dbbackup import utils
 from dbbackup.storage import Storage, get_storage, get_storage_class
-from dbbackup.tests.utils import HANDLED_FILES, FakeStorage
+from tests.utils import HANDLED_FILES, FakeStorage
 
 DEFAULT_STORAGE_PATH = "django.core.files.storage.FileSystemStorage"
 STORAGE_OPTIONS = {"location": "/tmp"}
@@ -17,7 +17,7 @@ class Get_StorageTest(TestCase):
         self.assertIsInstance(get_storage(), Storage)
 
     def test_set_path(self):
-        fake_storage_path = "dbbackup.tests.utils.FakeStorage"
+        fake_storage_path = "tests.utils.FakeStorage"
         storage = get_storage(fake_storage_path)
         self.assertIsInstance(storage.storage, FakeStorage)
 
@@ -37,8 +37,8 @@ class Get_StorageTest(TestCase):
         )
         self.assertIn(storage_class.__name__, ("FileSystemStorage", "DefaultStorage"))
 
-        storage_class = get_storage_class("dbbackup.tests.utils.FakeStorage")
-        self.assertEqual(storage_class.__module__, "dbbackup.tests.utils")
+        storage_class = get_storage_class("tests.utils.FakeStorage")
+        self.assertEqual(storage_class.__module__, "tests.utils")
         self.assertEqual(storage_class.__name__, "FakeStorage")
 
     def test_default_storage_class(self):
@@ -58,7 +58,7 @@ class Get_StorageTest(TestCase):
 
         self.assertIsInstance(STORAGES, dict)
         self.assertEqual(
-            STORAGES["dbbackup"]["BACKEND"], "dbbackup.tests.utils.FakeStorage"
+            STORAGES["dbbackup"]["BACKEND"], "tests.utils.FakeStorage"
         )
 
         from dbbackup.settings import DJANGO_STORAGES, STORAGE
@@ -68,7 +68,7 @@ class Get_StorageTest(TestCase):
         self.assertEqual(STORAGES["dbbackup"]["BACKEND"], STORAGE)
 
         storage = get_storage()
-        self.assertEqual(storage.storage.__class__.__module__, "dbbackup.tests.utils")
+        self.assertEqual(storage.storage.__class__.__module__, "tests.utils")
         self.assertEqual(storage.storage.__class__.__name__, "FakeStorage")
 
     def test_storages_settings_options(self):
