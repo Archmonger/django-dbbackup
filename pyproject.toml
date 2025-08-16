@@ -1,7 +1,212 @@
+[build-system]
+build-backend = "hatchling.build"
+requires = ["hatchling"]
+
+[project]
+name = "django-dbbackup"
+description = "Management commands to help backup and restore a project database and media."
+readme = "README.md"
+keywords = [
+    "django",
+    "database", 
+    "media",
+    "backup",
+    "amazon",
+    "s3",
+    "dropbox",
+    "sqlite",
+]
+license = "BSD-3-Clause"
+authors = [{ name = "Archmonger", email = "archiethemonger@gmail.com" }]
+requires-python = ">=3.9"
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Environment :: Web Environment",
+    "Environment :: Console",
+    "Framework :: Django :: 4.2",
+    "Framework :: Django :: 5.0",
+    "Framework :: Django :: 5.1", 
+    "Framework :: Django :: 5.2",
+    "Intended Audience :: Developers",
+    "Intended Audience :: System Administrators",
+    "License :: OSI Approved :: BSD License",
+    "Natural Language :: English",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Database",
+    "Topic :: System :: Archiving",
+    "Topic :: System :: Archiving :: Backup",
+    "Topic :: System :: Archiving :: Compression",
+]
+dependencies = [
+    "django>=4.2",
+    "pytz",
+]
+dynamic = ["version"]
+urls.Changelog = "https://github.com/Archmonger/django-dbbackup/blob/master/docs/changelog.md"
+urls.Documentation = "https://django-dbbackup.readthedocs.io/"
+urls.Source = "https://github.com/Archmonger/django-dbbackup"
+
+[tool.hatch.version]
+path = "dbbackup/VERSION"
+pattern = "(?P<version>.+)"
+
+[tool.hatch.build.targets.sdist]
+include = ["/dbbackup", "/requirements.txt", "/README.md", "/LICENSE.txt"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["dbbackup"]
+
+[tool.hatch.metadata]
+license-files = { paths = ["LICENSE.txt"] }
+
+[tool.hatch.envs.default]
+installer = "uv"
+
+# >>> Hatch Test Suite <<<
+
+[tool.hatch.envs.hatch-test]
+template = "hatch-test"
+extra-dependencies = [
+    "coverage",
+    "django-storages", 
+    "psycopg2-binary",
+    "python-dotenv",
+    "python-gnupg>=0.5.0",
+    "testfixtures",
+]
+matrix-name-format = "{variable}-{value}"
+
+[tool.hatch.envs.hatch-test.scripts]
+run = ["coverage run runtests.py"]
+cov-report = ["coverage report"]
+cov-combine = ["coverage combine"]
+
+# Django 4.2
+[[tool.hatch.envs.hatch-test.matrix]]
+python = ["3.9", "3.10", "3.11", "3.12"]
+django = ["4.2"]
+
+# Django 5.0
+[[tool.hatch.envs.hatch-test.matrix]]
+python = ["3.10", "3.11", "3.12"]
+django = ["5.0"]
+
+# Django 5.1
+[[tool.hatch.envs.hatch-test.matrix]]
+python = ["3.10", "3.11", "3.12", "3.13"]
+django = ["5.1"]
+
+# Django 5.2
+[[tool.hatch.envs.hatch-test.matrix]]
+python = ["3.10", "3.11", "3.12", "3.13"]
+django = ["5.2"]
+
+# Django master (dev)
+[[tool.hatch.envs.hatch-test.matrix]]
+python = ["3.11", "3.12", "3.13"]
+django = ["master"]
+
+[tool.hatch.envs.hatch-test.overrides]
+matrix.django.dependencies = [
+  { if = ["4.2"], value = "django>=4.2,<4.3" },
+  { if = ["5.0"], value = "django>=5.0,<5.1" },
+  { if = ["5.1"], value = "django>=5.1,<5.2" },
+  { if = ["5.2"], value = "django>=5.2,<5.3" },
+  { if = ["master"], value = "django @ https://github.com/django/django/archive/main.tar.gz" },
+]
+
+# >>> Hatch Documentation Scripts <<<
+
+[tool.hatch.envs.docs]
+template = "docs"
+detached = true
+dependencies = [
+    "mkdocs",
+    "mkdocs-material",
+]
+
+[tool.hatch.envs.docs.scripts]
+serve = ["cd docs && mkdocs serve"]
+build = ["cd docs && mkdocs build --strict"]
+
+# >>> Hatch pre-commit <<<
+
+[tool.hatch.envs.precommit]
+template = "pre-commit"
+detached = true
+dependencies = ["pre-commit>=3,<4"]
+
+[tool.hatch.envs.precommit.scripts]
+check = ["pre-commit run --all-files"]
+update = ["pre-commit autoupdate"]
+
+# >>> Hatch Lint Environment <<<
+
+[tool.hatch.envs.lint]
+extra-dependencies = [
+    "ruff",
+    "pylint",
+]
+
+[tool.hatch.envs.lint.scripts]
+check = ["ruff check dbbackup", "pylint dbbackup --rcfile=.pylintrc"]
+format = ["ruff format dbbackup"]
+format-check = ["ruff format --check dbbackup"]
+
+# >>> Hatch Functional Testing <<<
+
+[tool.hatch.envs.functional]
+extra-dependencies = [
+    "coverage",
+    "django-storages",
+    "psycopg2-binary", 
+    "python-dotenv",
+    "python-gnupg>=0.5.0",
+    "testfixtures",
+    "django",
+    "mysqlclient",
+    "psycopg2",
+]
+
+[tool.hatch.envs.functional.scripts]
+test = ["bash -x functional.sh"]
+
+# >>> Generic Tools <<<
+
+[tool.ruff]
+line-length = 120
+target-version = "py39"
+extend-exclude = [".eggs/*", ".tox/*", ".venv/*", "build/*", "*/migrations/*"]
+
+[tool.ruff.lint]
+extend-ignore = [
+    "E501",   # line too long (covered by formatter)
+    "E203",   # whitespace before ':'
+]
+
 [tool.black]
 target-version = ['py39']
 extend-exclude = 'migrations'
+line-length = 120
 
 [tool.isort]
 profile = 'black'
 skip = 'migrations'
+line_length = 120
+
+[tool.coverage.run]
+branch = true
+parallel = true
+source = ["dbbackup/"]
+
+[tool.coverage.paths]
+source = ["dbbackup/"]
+
+[tool.coverage.report]
+show_missing = true
