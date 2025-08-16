@@ -47,6 +47,7 @@ coverage.xml
 *,cover
 tests/media/
 coverage_html_report/
+*.db
 
 # Translations
 *.mo
@@ -69,7 +70,3 @@ target/
 *.sw[po]
 test-sqlite
 venv
-
-# Other
-*memorydb_default*
-:memory:
