@@ -4,7 +4,7 @@
     If you have a custom and/or interesting way of use DBBackup, do not
     hesitate to make a pull request.
 
-## Django-cron
+## Django-Cron
 
 Example of cron job with [django-cron](https://github.com/Tivix/django-cron) with file system storage:
 
@@ -24,7 +24,7 @@ class Backup(CronJobBase):
         management.call_command('dbbackup')
 ```
 
-## Django-crontab
+## Django-Crontab
 
 Example of cron job with [django-crontab](https://github.com/kraiz/django-crontab) with file system storage:
 

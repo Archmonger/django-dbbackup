@@ -118,35 +118,35 @@ DBBackup contains a test Django project at `dbbackup.tests` and its
 `settings` module. This configuration takes care of the following
 environment variables:
 
-**DB_ENGINE** - Default: `django.db.backends.sqlite3`
+**`DB_ENGINE`** - Default: `django.db.backends.sqlite3`
 
-Database engine to use. See django.db.backends for default backends.
+Database engine to use. See `django.db.backend`s for default backends.
 
-**DB_NAME** - Default: `:memory:`
+**`DB_NAME`** - Default: `:memory:`
 
-Database name. Should be set correctly if a db other than sqlite3 is used.
+Database name. Should be set correctly if a database other than sqlite3 is used.
 
-**DB_USER** - Default: `None`
+**`DB_USER`** - Default: `None`
 
-DB Username
+Database username
 
-**DB_PASSWORD** - Default: `None`
+**`DB_PASSWORD`** - Default: `None`
 
-DB Password
+Database password
 
-**DB_HOST** - Default: `None`
+**`DB_HOST`** - Default: `None`
 
-DB Host
+Database host
 
-**MEDIA_ROOT** - Default= `tempfile.mkdtemp()`
+**`MEDIA_ROOT`** - Default= `tempfile.mkdtemp()`
 
 Django's `MEDIA_ROOT`, useful if you want test media backup from filesystem
 
-**STORAGE** - Default: `dbbackup.tests.utils.FakeStorage`
+**`STORAGE`** - Default: `dbbackup.tests.utils.FakeStorage`
 
 Storage used for backups
 
-**STORAGE_OPTIONS**
+**`STORAGE_OPTIONS`**
 
 Options for instantiating the chosen storage. It must be formatted as
 `"key1=foo,key2=bar"` and will be converted into a `dict`.

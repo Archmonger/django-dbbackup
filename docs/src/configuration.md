@@ -83,8 +83,6 @@ good idea to encrypt backups.
 
 Just remember to keep the encryption keys safe, too!
 
-### PGP
-
 You can encrypt a backup with the `--encrypt` option. The backup is done
 using GPG.
 

@@ -117,13 +117,27 @@ matrix.django.dependencies = [
 template = "docs"
 detached = true
 dependencies = [
-    "mkdocs",
-    "mkdocs-material",
+  "mkdocs",
+  "mkdocs-git-revision-date-localized-plugin",
+  "mkdocs-material",
+  "mkdocs-include-markdown-plugin",
+  "linkcheckmd",
+  "mkdocs-spellcheck[all]",
+  "mkdocs-git-authors-plugin",
+  "mkdocs-minify-plugin",
+  "mike",
 ]
 
 [tool.hatch.envs.docs.scripts]
 serve = ["cd docs && mkdocs serve"]
 build = ["cd docs && mkdocs build --strict"]
+linkcheck = [
+  "linkcheckMarkdown docs/ -v -r",
+  "linkcheckMarkdown README.md -v -r",
+  "linkcheckMarkdown CHANGELOG.md -v -r",
+]
+deploy_latest = ["cd docs && mike deploy --push --update-aliases {args} latest"]
+deploy_develop = ["cd docs && mike deploy --push develop"]
 
 # >>> Pre-commit Environment <<<
 

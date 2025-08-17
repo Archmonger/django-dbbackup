@@ -1,4 +1,7 @@
-# Installation
+---
+hide:
+    - navigation
+---
 
 ## Installing on your system
 

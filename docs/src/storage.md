@@ -58,15 +58,15 @@ STORAGES = {
 
 ### Settings
 
-**location**
+**`location`**
 
 Absolute path to the directory that will hold the files.
 
-**file_permissions_mode**
+**`file_permissions_mode`**
 
 The file system permissions that the file will receive when it is saved.
 
-**directory_permissions_mode**
+**`directory_permissions_mode`**
 
 The file system permissions that the directory will receive when it is saved.
 
@@ -84,7 +84,7 @@ In order to backup to Google cloud storage, you'll first need to create an accou
 pip install django-storages[google]
 ```
 
-Add the following to your project's settings. Strictly speaking only `bucket_name` is required, but we'd recommend to add the other two as well. You can also find more settings in the readme for [django-storages](https://django-storages.readthedocs.io/en/latest/backends/gcloud.html)
+Add the following to your project's settings. Strictly speaking only `bucket_name` is required, but we'd recommend to add the other two as well. You can also find more settings in the documentation for [django-storages](https://django-storages.readthedocs.io/en/latest/backends/gcloud.html)
 
 ```python
 STORAGES = {
@@ -106,7 +106,7 @@ Our S3 backend uses Django Storages which uses [boto3](https://boto3.amazonaws.c
 ### Setup
 
 In order to backup to Amazon S3, you'll first need to create an Amazon
-Webservices Account and setup your Amazon S3 bucket. Once that is
+Web Services Account and setup your Amazon S3 bucket. Once that is
 complete, you can follow the required setup below.
 
 ```bash
@@ -135,36 +135,36 @@ STORAGES = {
     See the [Django Storage S3 storage official documentation](https://django-storages.readthedocs.io/en/latest/backends/amazon-S3.html) for all options.
 
     The options listed here are a selection of dictionary keys returned by
-    `get_default_settings` in django-storages' [storages/backends/s3boto3.py](https://github.com/jschneier/django-storages/blob/master/storages/backends/s3boto3.py#L293-L324),
+    `get_default_settings` in django-storages' [`storages/backends/s3boto3.py`](https://github.com/jschneier/django-storages/blob/master/storages/backends/s3boto3.py#L293-L324),
     which allows us to write nicer code compared to using the `AWS_` prefixed
     settings.
 
-**access_key** - Required
+**`access_key`** - Required
 
 Your AWS access key as string. This can be found on your [Amazon Account Security Credentials page](https://console.aws.amazon.com/iam/home#security_credential).
 
-**secret_key** - Required
+**`secret_key`** - Required
 
 Your Amazon Web Services secret access key, as a string.
 
-**bucket_name** - Required
+**`bucket_name`** - Required
 
 Your Amazon Web Services storage bucket name, as a string. This directory must
 exist before attempting to create your first backup.
 
-**region_name** - Optional
+**`region_name`** - Optional
 
 Specify the Amazon region, e.g. `'us-east-1'`.
 
-**endpoint_url** - Optional
+**`endpoint_url`** - Optional
 
 Set this to fully override the endpoint, e.g. to use an alternative S3 service,
 which is compatible with AWS S3. The value must contain the protocol, e.g.
 `'https://compatible-s3-service.example.com'`.
 
-If setting this, it is mandatory to also configure **region_name**.
+If setting this, it is mandatory to also configure **`region_name`**.
 
-**default_acl** - Required
+**`default_acl`** - Required
 
 This setting can either be `'private'` or `'public'`. Since you want your
 backups to be secure you'll want to set `'default_acl'` to `'private'`.
@@ -172,7 +172,7 @@ backups to be secure you'll want to set `'default_acl'` to `'private'`.
 *NOTE: This value will be removed in a future version of django-storages.*
 See their [CHANGELOG](https://github.com/jschneier/django-storages/blob/master/CHANGELOG.rst) for details.
 
-**location** - Optional
+**`location`** - Optional
 
 If you want to store your backups inside a particular folder in your bucket you need to specify the `'location'`.
 The folder can be specified as `'folder_name/'`.
@@ -188,8 +188,7 @@ worry, all instructions are below.
 
 First, configure your Dropbox account by following these steps:
 
-1. Login to Dropbox and navigate to Developers » MyApps.
-   https://www.dropbox.com/developers/apps
+1. Login to Dropbox and navigate to [Developers » MyApps](https://www.dropbox.com/developers/apps).
 
 2. Click the button to create a new app and name it whatever you like.
    As an example, I named mine 'Website Backups'.
@@ -223,11 +222,11 @@ STORAGES = {
 !!! note
     See [django-storages dropbox official documentation](https://django-storages.readthedocs.io/en/latest/backends/dropbox.html) for more details.
 
-**oauth2_access_token** - Required
+**`oauth2_access_token`** - Required
 
 Your OAuth access token
 
-**root_path**
+**`root_path`**
 
 Jail storage to this directory
 
@@ -259,7 +258,7 @@ STORAGES = {
 
 ### Settings
 
-**location** - Required
+**`location`** - Required
 
 A FTP URI with optional user, password and port. example: `'ftp://anonymous@myftp.net'`
 
@@ -291,32 +290,32 @@ STORAGES = {
 
 ### Settings
 
-**host** - Required
+**`host`** - Required
 
-Hostname or address of the SSH server
+Host name or address of the SSH server
 
-**root_path** - Default `~/`
+**`root_path`** - Default `~/`
 
 Jail storage to this directory
 
-**params** - Default `{}`
+**`params`** - Default `{}`
 
 Argument used by method:`paramiko.SSHClient.connect()`.
 See [paramiko SSHClient.connect() documentation](https://docs.paramiko.org/en/latest/api/client.html#paramiko.client.SSHClient.connect) for details.
 
-**interactive** - Default `False`
+**`interactive`** - Default `False`
 
 A boolean indicating whether to prompt for a password if the connection cannot
 be made using keys, and there is not already a password in `params`.
 
-**file_mode**
+**`file_mode`**
 
 UID of the account that should be set as owner of the files on the remote.
 
-**dir_mode**
+**`dir_mode`**
 
 GID of the group that should be set on the files on the remote host.
 
-**known_host_file**
+**`known_host_file`**
 
 Absolute path of known_hosts file, if it isn't set `"~/.ssh/known_hosts"` will be used.

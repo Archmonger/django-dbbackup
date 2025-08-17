@@ -1,0 +1,94 @@
+nav:
+  - Home: index.md
+  - Installation: installation.md
+  - Reference:
+    - Configuration: configuration.md
+    - Databases: databases.md
+    - Storage: storage.md
+    - Commands: commands.md
+    - Integration: integration.md
+  - About:
+    - Changelog: changelog.md
+    - Contributor Guide: contributing.md
+    - Community:
+      - GitHub Discussions: https://github.com/Archmonger/django-dbbackup/discussions
+    - License: license.md
+
+theme:
+  name: material
+  palette:
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      toggle:
+        icon: material/white-balance-sunny
+        name: Switch to light mode
+      primary: black
+      accent: blue
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      toggle:
+        icon: material/weather-night
+        name: Switch to dark mode
+      primary: black
+      accent: blue
+  features:
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.top
+    - content.code.copy
+    - search.highlight
+  icon:
+    repo: fontawesome/brands/github
+    admonition:
+      note: fontawesome/solid/note-sticky
+
+markdown_extensions:
+  - toc:
+      permalink: true
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - pymdownx.superfences
+  - pymdownx.details
+  - admonition
+  - attr_list
+  - pymdownx.keys
+
+plugins:
+  - search
+  - include-markdown
+  - git-authors
+  - minify:
+      minify_html: true
+      minify_js: true
+      minify_css: true
+      cache_safe: true
+  - git-revision-date-localized:
+      fallback_to_build_date: true
+  - spellcheck:
+      known_words: dictionary.txt
+      allow_unicode: no
+      ignore_code: yes
+
+extra:
+  generator: false
+  version:
+    provider: mike
+
+extra_css:
+  - assets/css/main.css
+
+watch:
+  - ../docs
+  - ../README.md
+  - ../CHANGELOG.md
+  - ../LICENSE.md
+
+site_name: Django DBBackup
+site_description: This Django application provides management commands to help backup and restore your project database and media files with various storages such as Amazon S3, DropBox or local file system.
+copyright: '&copy;<div id="year"></div> <script>document.getElementById("year").innerHTML = new Date().getFullYear();</script> Mark Bakhit (Archmonger)'
+repo_url: https://github.com/Archmonger/django-dbbackup
+site_url: https://archmonger.github.io/django-dbbackup/
+repo_name: django-dbbackup (GitHub)
+edit_uri: edit/main/docs/src
+docs_dir: src

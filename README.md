@@ -1,6 +1,6 @@
-# Django Database Backup
+# Django DBBackup
 
-[![Build Status](https://github.com/Archmonger/django-dbbackup/actions/workflows/build.yml/badge.svg)](https://github.com/Archmonger/django-dbbackup/actions)
+[![Build Status](https://github.com/Archmonger/django-dbbackup/actions/workflows/ci.yml/badge.svg)](https://github.com/Archmonger/django-dbbackup/actions)
 
 This Django application provides management commands to help backup and restore your project database and media files with various storages such as Amazon S3, Dropbox, local file storage, or any Django-supported storage.
 
