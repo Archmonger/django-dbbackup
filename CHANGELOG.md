@@ -242,8 +242,11 @@ Don't forget to remove deprecated code on each major release!
 
 ## [2.3.3] - 2015-10-05
 
+### Changed
+- Initial copy from BitBucket to GitHub.
+
 ### Fixed
-- Miscellaneous maintenance and minor bug fixes (pre-2.5 feature work).
+- Miscellaneous maintenance and minor bug fixes.
 
 [Unreleased]: https://github.com/Archmonger/django-dbbackup/compare/4.3.0...HEAD
 [4.3.0]: https://github.com/Archmonger/django-dbbackup/compare/4.2.1...4.3.0
