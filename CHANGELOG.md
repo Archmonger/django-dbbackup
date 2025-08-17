@@ -233,12 +233,12 @@ Don't forget to remove deprecated code on each major release!
 ### Changed
 - Dropbox storage updated to OAuth2 & Python 3 compatibility.
 
+### Removed
+- `DBBACKUP_DROPBOX_ACCESS_TYPE` setting (deprecated by OAuth2 changes).
+
 ### Fixed
 - NameError for missing `warnings` import.
 - Wildcard handling in generated filenames; proper server name derivation for SQLite paths.
-
-### Removed
-- `DBBACKUP_DROPBOX_ACCESS_TYPE` setting (deprecated by OAuth2 changes).
 
 ## [2.3.3] - 2015-10-05
 
