@@ -39,3 +39,4 @@ config
 dumpable
 schemas
 redistributions
+whitespace

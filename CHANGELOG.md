@@ -31,7 +31,7 @@ Don't forget to remove deprecated code on each major release!
 
 ### Fixed
 
-- Improve robustness of database name parsing in `dbbackup` command to handle edge cases with whitespace and empty strings in comma-separated database lists.
+- Fix issues with parsing excess whitespace within `dbbackup -d "<COMMA_SEPARATED_ARGS>"`
 - Fix encryption support when using `gnupg==5.x`.
 - Resolve SQLite backup temporary file locking issues on Windows.
 
