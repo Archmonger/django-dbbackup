@@ -48,8 +48,9 @@ jobs:
                   cache: pip
             - name: Install dependencies
               run: pip install --upgrade hatch uv
-            - name: Check documentation links
-              run: hatch run docs:linkcheck
+            # FIXME: Link checking disabled due to github.com link HTTP rate limit issues.
+            # - name: Check documentation links
+            #   run: hatch run docs:linkcheck
             - name: Check docs build
               run: hatch run docs:build
             - name: Validate changelog format
