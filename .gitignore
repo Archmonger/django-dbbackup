@@ -71,6 +71,7 @@ target/
 *.sw[po]
 test-sqlite
 venv
+tmp/
 
 # Visual Studio Code #
 .vscode/settings.json

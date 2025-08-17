@@ -1,8 +1,6 @@
 # Commands
 
-The primary usage of DBBackup is with command line tools. By default,
-commands will create backups and upload to your defined storage or download
-and restore the latest backup.
+The primary usage of DBBackup is with command line tools. By default, commands will create backups and upload to your defined storage or download and restore the latest backup.
 
 Arguments can be passed to commands to compress/uncompress and encrypt/decrypt.
 
@@ -12,7 +10,7 @@ Backup of database.
 
 ```bash
 $ ./manage.py dbbackup
-Backing Up Database: /tmp/tmp.x0kN9sYSqk
+Backing Up Database: tmp.x0kN9sYSqk
 Backup size: 3.3 KiB
 Writing file to tmp-zuluvm-2016-07-29-100954.dump
 ```
@@ -29,7 +27,7 @@ Restore a database.
 
 ```bash
 $ ./manage.py dbrestore
-Restoring backup for database: /tmp/tmp.x0kN9sYSqk
+Restoring backup for database: tmp.x0kN9sYSqk
 Finding latest backup
 Restoring: tmp-zuluvm-2016-07-29-100954.dump
 Restore tempfile created: 3.3 KiB
@@ -80,8 +78,7 @@ python manage.py mediarestore --help
 
 ## listbackups
 
-This command helps to list backups filtered by type (`'media'` or `'db'`),
-by compression or encryption.
+This command helps to list backups filtered by type (`'media'` or `'db'`), by compression or encryption.
 
 For detailed help information, run:
 

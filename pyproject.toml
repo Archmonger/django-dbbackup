@@ -7,46 +7,43 @@ name = "django-dbbackup"
 description = "Management commands to help backup and restore a project database and media."
 readme = "README.md"
 keywords = [
-    "django",
-    "database", 
-    "media",
-    "backup",
-    "amazon",
-    "s3",
-    "dropbox",
-    "sqlite",
+  "django",
+  "database",
+  "media",
+  "backup",
+  "amazon",
+  "s3",
+  "dropbox",
+  "sqlite",
 ]
 license = "BSD-3-Clause"
 authors = [{ name = "Mark Bakhit", email = "archiethemonger@gmail.com" }]
 requires-python = ">=3.9"
 classifiers = [
-    "Development Status :: 5 - Production/Stable",
-    "Environment :: Web Environment",
-    "Environment :: Console",
-    "Framework :: Django :: 4.2",
-    "Framework :: Django :: 5.0",
-    "Framework :: Django :: 5.1", 
-    "Framework :: Django :: 5.2",
-    "Intended Audience :: Developers",
-    "Intended Audience :: System Administrators",
-    "License :: OSI Approved :: BSD License",
-    "Natural Language :: English",
-    "Operating System :: OS Independent",
-    "Programming Language :: Python",
-    "Programming Language :: Python :: 3.9",
-    "Programming Language :: Python :: 3.10",
-    "Programming Language :: Python :: 3.11",
-    "Programming Language :: Python :: 3.12",
-    "Programming Language :: Python :: 3.13",
-    "Topic :: Database",
-    "Topic :: System :: Archiving",
-    "Topic :: System :: Archiving :: Backup",
-    "Topic :: System :: Archiving :: Compression",
+  "Development Status :: 5 - Production/Stable",
+  "Environment :: Web Environment",
+  "Environment :: Console",
+  "Framework :: Django :: 4.2",
+  "Framework :: Django :: 5.0",
+  "Framework :: Django :: 5.1",
+  "Framework :: Django :: 5.2",
+  "Intended Audience :: Developers",
+  "Intended Audience :: System Administrators",
+  "License :: OSI Approved :: BSD License",
+  "Natural Language :: English",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Topic :: Database",
+  "Topic :: System :: Archiving",
+  "Topic :: System :: Archiving :: Backup",
+  "Topic :: System :: Archiving :: Compression",
 ]
-dependencies = [
-    "django>=4.2",
-    "pytz",
-]
+dependencies = ["django>=4.2", "pytz"]
 dynamic = ["version"]
 urls.Changelog = "https://archmonger.github.io/django-dbbackup /latest/changelog/"
 urls.Documentation = "https://archmonger.github.io/django-dbbackup"
@@ -71,12 +68,12 @@ installer = "uv"
 
 [tool.hatch.envs.hatch-test]
 extra-dependencies = [
-    "coverage",
-    "django-storages", 
-    "psycopg2-binary",
-    "python-dotenv",
-    "python-gnupg>=0.5.0",
-    "testfixtures",
+  "coverage",
+  "django-storages",
+  "psycopg2-binary",
+  "python-dotenv",
+  "python-gnupg>=0.5.0",
+  "testfixtures",
 ]
 matrix-name-format = "{variable}-{value}"
 
@@ -105,10 +102,18 @@ django = ["5.2"]
 
 [tool.hatch.envs.hatch-test.overrides]
 matrix.django.dependencies = [
-  { if = ["4.2"], value = "django>=4.2,<4.3" },
-  { if = ["5.0"], value = "django>=5.0,<5.1" },
-  { if = ["5.1"], value = "django>=5.1,<5.2" },
-  { if = ["5.2"], value = "django>=5.2,<5.3" },
+  { if = [
+    "4.2",
+  ], value = "django>=4.2,<4.3" },
+  { if = [
+    "5.0",
+  ], value = "django>=5.0,<5.1" },
+  { if = [
+    "5.1",
+  ], value = "django>=5.1,<5.2" },
+  { if = [
+    "5.2",
+  ], value = "django>=5.2,<5.3" },
 ]
 
 # >>> Documentation Scripts <<<
@@ -153,10 +158,7 @@ update = ["pre-commit autoupdate"]
 # >>> Lint Environment <<<
 
 [tool.hatch.envs.lint]
-extra-dependencies = [
-    "ruff",
-    "pylint",
-]
+extra-dependencies = ["ruff", "pylint"]
 
 [tool.hatch.envs.lint.scripts]
 check = ["ruff check dbbackup", "pylint dbbackup --rcfile=.pylintrc"]
@@ -170,40 +172,40 @@ format-check = ["ruff format --check dbbackup"]
 
 [tool.hatch.envs.functional]
 extra-dependencies = [
-    "coverage",
-    "django-storages",
-    "python-dotenv",
-    "python-gnupg>=0.5.0",
-    "testfixtures",
-    "django",
-    # "psycopg2-binary", 
-    # "mysqlclient",
+  "coverage",
+  "django-storages",
+  "python-dotenv",
+  "python-gnupg>=0.5.0",
+  "testfixtures",
+  "django",
+  # "psycopg2-binary",
+  # "mysqlclient",
 ]
 
 [tool.hatch.envs.functional.env-vars]
 DJANGO_SETTINGS_MODULE = "tests.settings"
 STORAGE = "django.core.files.storage.FileSystemStorage"
-STORAGE_LOCATION = "/tmp/backups/"
-STORAGE_OPTIONS = "location=/tmp/backups/"
-MEDIA_ROOT = "/tmp/media/"
-DB_NAME = "/tmp/test_db.sqlite3"
+STORAGE_LOCATION = "tmp/backups/"
+STORAGE_OPTIONS = "location=tmp/backups/"
+MEDIA_ROOT = "tmp/media/"
+DB_NAME = "tmp/test_db.sqlite3"
 
 [tool.hatch.envs.functional.scripts]
 test = [
-    "python -c \"import tempfile, os; os.makedirs('/tmp/backups', exist_ok=True); os.makedirs('/tmp/media', exist_ok=True)\"",
-    "python -c \"import os; os.path.exists('/tmp/test_db.sqlite3') and os.remove('/tmp/test_db.sqlite3')\"",
-    "python -m django migrate --noinput",
-    "python -c \"import os, django; os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'tests.settings'); django.setup(); from tests.testapp.models import CharModel; CharModel.objects.create(field='test')\"",
-    "python -m django dbbackup --noinput",
-    "python -c \"import os, django; os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'tests.settings'); django.setup(); from tests.testapp.models import CharModel; CharModel.objects.all().delete()\"",
-    "python -m django dbrestore --noinput",
-    "python -c \"import os, django; os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'tests.settings'); django.setup(); from tests.testapp.models import CharModel; assert CharModel.objects.count() > 0; print('Database test passed!')\"",
-    "python -c \"import os; open('/tmp/media/test.txt', 'w').write('test content')\"",
-    "python -m django mediabackup --noinput",
-    "python -c \"import os; os.remove('/tmp/media/test.txt')\"",
-    "python -m django mediarestore --noinput",
-    "python -c \"import os; assert os.path.exists('/tmp/media/test.txt'); print('Media test passed!')\"",
-    "python -c \"import os; os.path.exists('/tmp/test_db.sqlite3') and os.remove('/tmp/test_db.sqlite3')\"",
+  "python -c \"import os; os.makedirs('tmp/backups', exist_ok=True); os.makedirs('tmp/media', exist_ok=True)\"",
+  "python -c \"import os; os.path.exists('tmp/test_db.sqlite3') and os.remove('tmp/test_db.sqlite3')\"",
+  "python -m django migrate --noinput",
+  "python -c \"import os, django; os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'tests.settings'); django.setup(); from tests.testapp.models import CharModel; CharModel.objects.create(field='test')\"",
+  "python -m django dbbackup --noinput",
+  "python -c \"import os, django; os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'tests.settings'); django.setup(); from tests.testapp.models import CharModel; CharModel.objects.all().delete()\"",
+  "python -m django dbrestore --noinput",
+  "python -c \"import os, django; os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'tests.settings'); django.setup(); from tests.testapp.models import CharModel; assert CharModel.objects.count() > 0; print('Database test passed!')\"",
+  "python -c \"import os; open('tmp/media/test.txt', 'w').write('test content')\"",
+  "python -m django mediabackup --noinput",
+  "python -c \"import os; os.remove('tmp/media/test.txt')\"",
+  "python -m django mediarestore --noinput",
+  "python -c \"import os; assert os.path.exists('tmp/media/test.txt'); print('Media test passed!')\"",
+  "python -c \"import os; os.path.exists('tmp/test_db.sqlite3') and os.remove('tmp/test_db.sqlite3')\"",
 ]
 
 # >>> Generic Tools <<<

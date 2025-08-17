@@ -14,9 +14,12 @@ ENCRYPTED_FILE = os.path.join(settings.BLOB_DIR, "test.txt.gpg")
 COMPRESSED_FILE = os.path.join(settings.BLOB_DIR, "test.txt.gz")
 TARED_FILE = os.path.join(settings.BLOB_DIR, "test.txt.tar")
 ENCRYPTED_COMPRESSED_FILE = os.path.join(settings.BLOB_DIR, "test.txt.gz.gpg")
+_REPO_TMP_DIR = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "tmp"))
+os.makedirs(_REPO_TMP_DIR, exist_ok=True)
 TEST_DATABASE = {
     "ENGINE": "django.db.backends.sqlite3",
-    "NAME": "/tmp/foo.db",
+    # Store test DB in repo-local tmp directory (ensured above)
+    "NAME": os.path.join(_REPO_TMP_DIR, "foo.db"),
     "USER": "foo",
     "PASSWORD": "bar",
     "HOST": "foo",

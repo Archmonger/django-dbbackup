@@ -7,7 +7,7 @@ from dbbackup.storage import Storage, get_storage, get_storage_class
 from tests.utils import HANDLED_FILES, FakeStorage
 
 DEFAULT_STORAGE_PATH = "django.core.files.storage.FileSystemStorage"
-STORAGE_OPTIONS = {"location": "/tmp"}
+STORAGE_OPTIONS = {"location": "tmp"}
 
 
 class Get_StorageTest(TestCase):
@@ -57,9 +57,7 @@ class Get_StorageTest(TestCase):
         from .settings import STORAGES
 
         self.assertIsInstance(STORAGES, dict)
-        self.assertEqual(
-            STORAGES["dbbackup"]["BACKEND"], "tests.utils.FakeStorage"
-        )
+        self.assertEqual(STORAGES["dbbackup"]["BACKEND"], "tests.utils.FakeStorage")
 
         from dbbackup.settings import DJANGO_STORAGES, STORAGE
 
@@ -92,12 +90,10 @@ class StorageListBackupsTest(TestCase):
         self.storage = get_storage()
         # foodb files
         HANDLED_FILES["written_files"] += [
-            (utils.filename_generate(ext, "foodb"), None)
-            for ext in ("db", "db.gz", "db.gpg", "db.gz.gpg")
+            (utils.filename_generate(ext, "foodb"), None) for ext in ("db", "db.gz", "db.gpg", "db.gz.gpg")
         ]
         HANDLED_FILES["written_files"] += [
-            (utils.filename_generate(ext, "hamdb", "fooserver"), None)
-            for ext in ("db", "db.gz", "db.gpg", "db.gz.gpg")
+            (utils.filename_generate(ext, "hamdb", "fooserver"), None) for ext in ("db", "db.gz", "db.gpg", "db.gz.gpg")
         ]
         # Media file
         HANDLED_FILES["written_files"] += [
@@ -105,8 +101,7 @@ class StorageListBackupsTest(TestCase):
             for ext in ("tar", "tar.gz", "tar.gpg", "tar.gz.gpg")
         ]
         HANDLED_FILES["written_files"] += [
-            (utils.filename_generate(ext, "bardb", "barserver"), None)
-            for ext in ("db", "db.gz", "db.gpg", "db.gz.gpg")
+            (utils.filename_generate(ext, "bardb", "barserver"), None) for ext in ("db", "db.gz", "db.gpg", "db.gz.gpg")
         ]
         # barserver files
         HANDLED_FILES["written_files"] += [("file_without_date", None)]

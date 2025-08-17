@@ -4,7 +4,6 @@ Configuration and launcher for dbbackup tests.
 
 import os
 import sys
-import tempfile
 
 from dotenv import load_dotenv
 
@@ -15,6 +14,11 @@ if not test:
 DEBUG = False
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+# Use a repository local tmp directory instead of system /tmp to improve
+# cross-platform compatibility (especially on Windows) and to avoid
+# permission or cleanup issues on shared CI runners.
+REPO_TMP_DIR = os.path.join(BASE_DIR, "..", "tmp")
+os.makedirs(REPO_TMP_DIR, exist_ok=True)
 TESTAPP_DIR = os.path.join(BASE_DIR, "testapp/")
 BLOB_DIR = os.path.join(TESTAPP_DIR, "blobs/")
 
@@ -24,7 +28,8 @@ MIDDLEWARE_CLASSES = ()
 ROOT_URLCONF = "tests.testapp.urls"
 SECRET_KEY = "it's a secret to everyone"
 SITE_ID = 1
-MEDIA_ROOT = os.environ.get("MEDIA_ROOT") or tempfile.mkdtemp()
+MEDIA_ROOT = os.environ.get("MEDIA_ROOT") or os.path.join(REPO_TMP_DIR, "media")
+os.makedirs(MEDIA_ROOT, exist_ok=True)
 INSTALLED_APPS = (
     "dbbackup",
     "tests.testapp",
@@ -34,7 +39,8 @@ DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 DATABASES = {
     "default": {
         "ENGINE": os.environ.get("DB_ENGINE", "django.db.backends.sqlite3"),
-        "NAME": os.environ.get("DB_NAME", "/tmp/test_db.sqlite3"),
+        # Default DB file stored inside repository tmp directory
+        "NAME": os.environ.get("DB_NAME", os.path.join(REPO_TMP_DIR, "test_db.sqlite3")),
         "USER": os.environ.get("DB_USER"),
         "PASSWORD": os.environ.get("DB_PASSWORD"),
         "HOST": os.environ.get("DB_HOST"),
@@ -63,13 +69,9 @@ STORAGES = {
     },
     "dbbackup": {
         "BACKEND": os.environ.get("STORAGE", "tests.utils.FakeStorage"),
-        "OPTIONS": dict(
-            [
-                keyvalue.split("=")
-                for keyvalue in os.environ.get("STORAGE_OPTIONS", "").split(",")
-                if keyvalue
-            ]
-        ),
+        "OPTIONS": dict([
+            keyvalue.split("=") for keyvalue in os.environ.get("STORAGE_OPTIONS", "").split(",") if keyvalue
+        ]),
     },
 }
 

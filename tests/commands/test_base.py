@@ -61,8 +61,10 @@ class BaseDbBackupCommandMethodsTest(TestCase):
         self.assertEqual(HANDLED_FILES["written_files"][0][0], "bar")
 
     def test_read_local_file(self):
-        # setUp
-        self.command.path = "/tmp/foo.bak"
+        # setUp: use repository-local tmp directory
+        local_tmp = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "tmp")
+        os.makedirs(local_tmp, exist_ok=True)
+        self.command.path = os.path.join(local_tmp, "foo.bak")
         open(self.command.path, "w").close()
         # Test
         self.command.read_local_file(self.command.path)
@@ -70,7 +72,9 @@ class BaseDbBackupCommandMethodsTest(TestCase):
         os.remove(self.command.path)
 
     def test_write_local_file(self):
-        fd, path = File(BytesIO(b"foo")), "/tmp/foo.bak"
+        local_tmp = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "tmp")
+        os.makedirs(local_tmp, exist_ok=True)
+        fd, path = File(BytesIO(b"foo")), os.path.join(local_tmp, "foo.bak")
         self.command.write_local_file(fd, path)
         self.assertTrue(os.path.exists(path))
         # tearDown
@@ -131,33 +135,25 @@ class BaseDbBackupCommandCleanupOldBackupsTest(TestCase):
         self.command.database = "foodb"
         self.command._cleanup_old_backups(database="foodb")
         self.assertEqual(2, len(HANDLED_FILES["deleted_files"]))
-        self.assertNotIn(
-            "foodb-fooserver-2015-02-08-042810.dump", HANDLED_FILES["deleted_files"]
-        )
+        self.assertNotIn("foodb-fooserver-2015-02-08-042810.dump", HANDLED_FILES["deleted_files"])
 
     @patch("dbbackup.settings.CLEANUP_KEEP", 1)
     def test_clean_other_db(self):
         self.command.content_type = "db"
         self.command._cleanup_old_backups(database="bardb")
         self.assertEqual(2, len(HANDLED_FILES["deleted_files"]))
-        self.assertNotIn(
-            "bardb-fooserver-2015-02-08-042810.dump", HANDLED_FILES["deleted_files"]
-        )
+        self.assertNotIn("bardb-fooserver-2015-02-08-042810.dump", HANDLED_FILES["deleted_files"])
 
     @patch("dbbackup.settings.CLEANUP_KEEP", 1)
     def test_clean_other_server_db(self):
         self.command.content_type = "db"
         self.command._cleanup_old_backups(database="bardb")
         self.assertEqual(2, len(HANDLED_FILES["deleted_files"]))
-        self.assertNotIn(
-            "bardb-fooserver-2015-02-08-042810.dump", HANDLED_FILES["deleted_files"]
-        )
+        self.assertNotIn("bardb-fooserver-2015-02-08-042810.dump", HANDLED_FILES["deleted_files"])
 
     @patch("dbbackup.settings.CLEANUP_KEEP_MEDIA", 1)
     def test_clean_media(self):
         self.command.content_type = "media"
         self.command._cleanup_old_backups()
         self.assertEqual(2, len(HANDLED_FILES["deleted_files"]))
-        self.assertNotIn(
-            "foo-server-2015-02-08-042810.tar", HANDLED_FILES["deleted_files"]
-        )
+        self.assertNotIn("foo-server-2015-02-08-042810.tar", HANDLED_FILES["deleted_files"])

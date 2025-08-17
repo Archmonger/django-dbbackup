@@ -9,6 +9,7 @@ Always reference these instructions first and fallback to search or bash command
 ## Working Effectively
 
 Bootstrap, build, and test the repository:
+
 - `python -m pip install --upgrade pip hatch uv` - installs modern Python tooling (takes ~30 seconds)
 - `hatch test` - runs comprehensive unit test suite across all Python/Django versions. Takes ~30 seconds. NEVER CANCEL. **All tests must always pass - failures are never expected or allowed.**
 - `hatch run functional:test` - runs end-to-end functional tests for backup/restore workflows. Takes ~10 seconds. NEVER CANCEL.
@@ -16,12 +17,14 @@ Bootstrap, build, and test the repository:
 - `hatch run lint:format-check` - runs code formatting checks. Takes ~2 seconds. NEVER CANCEL.
 
 Build documentation:
+
 - `hatch run docs:build` - builds HTML documentation with MkDocs Material. Takes ~2 seconds. NEVER CANCEL.
 - `hatch run docs:serve` - serves documentation locally on http://localhost:8000 for development
 
 ## Testing and Validation
 
 Run tests in multiple configurations:
+
 - `hatch test` - unit test runner for all environments (30 seconds) **All tests must always pass - failures are never expected or allowed.**
 - `hatch test --python 3.12` - test on specific Python version (10 seconds)
 - `hatch run functional:test` - complete backup/restore test cycle in real filesystem environment (10 seconds)
@@ -29,6 +32,7 @@ Run tests in multiple configurations:
 - `hatch run lint:format` - auto-format code using Ruff (2 seconds)
 
 Expected test results:
+
 - Unit tests: >200 tests, completes in ~30 seconds across all environments **All tests must always pass - failures are never expected or allowed.**
 - Functional tests: database and media backup/restore cycles, completes in ~10 seconds
 - All tests use a SQLite filesystem database by default
@@ -38,11 +42,13 @@ Expected test results:
 Always test backup and restore functionality after making changes using functional test environment:
 
 1. **Database Backup/Restore Test:**
+
    ```bash
    hatch run functional:test  # Comprehensive automated test
    ```
 
 2. **Manual Database Test (if needed):**
+
    ```bash
    hatch shell functional
    python -m django migrate --noinput
@@ -54,12 +60,12 @@ Always test backup and restore functionality after making changes using function
 3. **Manual Media Test (if needed):**
    ```bash
    hatch shell functional
-   mkdir -p /tmp/media
-   echo "test file" > /tmp/media/test.txt
+   mkdir -p tmp/media
+   echo "test file" > tmp/media/test.txt
    python -m django mediabackup --noinput
-   rm /tmp/media/test.txt
+   rm tmp/media/test.txt
    python -m django mediarestore --noinput
-   ls /tmp/media/  # should show restored test.txt
+   ls tmp/media/  # should show restored test.txt
    ```
 
 ## Troubleshooting Known Issues
@@ -73,10 +79,11 @@ Always test backup and restore functionality after making changes using function
 ## Development Workflow
 
 Modern development process using Hatch:
+
 1. **Bootstrap environment**: `pip install --upgrade pip hatch uv`
 2. **Make your changes** to the codebase
 3. **Run unit tests**: `hatch test` (30 seconds) **All tests must always pass - failures are never expected or allowed.**
-4. **Run functional tests**: `hatch run functional:test` (10 seconds)  
+4. **Run functional tests**: `hatch run functional:test` (10 seconds)
 5. **Run linting**: `hatch run lint:check` (5 seconds)
 6. **Auto-format code**: `hatch run lint:format` (2 seconds)
 7. **Test documentation**: `hatch run docs:build` (2 seconds)
@@ -89,9 +96,10 @@ Always run `hatch run lint:check` before committing. The CI (.github/workflows/b
 ## Repository Structure and Navigation
 
 Key directories and files:
+
 - `dbbackup/` - main package code
   - `management/commands/` - Django management commands (dbbackup, dbrestore, etc.)
-  - `db/` - database connector implementations (MySQL, PostgreSQL, SQLite, etc.)  
+  - `db/` - database connector implementations (MySQL, PostgreSQL, SQLite, etc.)
   - `storage.py` - storage backend interface
   - `tests/` - comprehensive test suite
 - `docs/` - MkDocs Material documentation source
@@ -100,6 +108,7 @@ Key directories and files:
 - `conftest.py` - pytest configuration for Django test setup
 
 Key configuration files:
+
 - `pyproject.toml` - all tool configuration (hatch, ruff, pylint, pytest, coverage)
 - `.pre-commit-config.yaml` - git pre-commit hooks setup
 - `dbbackup/tests/settings.py` - Django test settings with EMAIL_BACKEND for testing
@@ -109,9 +118,10 @@ Key configuration files:
 The following are key commands for daily development:
 
 ### Development Commands
+
 ```bash
 hatch test                          # Run all tests across environments
-hatch test --python 3.12           # Test specific Python version  
+hatch test --python 3.12           # Test specific Python version
 hatch run functional:test           # End-to-end backup/restore tests
 hatch run lint:check               # Run linting (ruff + pylint)
 hatch run lint:format              # Auto-format code
@@ -122,6 +132,7 @@ hatch build                        # Build distribution packages
 ```
 
 ### Environment Management
+
 ```bash
 hatch env show                      # Show all environments
 hatch shell                         # Enter default shell
@@ -134,52 +145,60 @@ hatch run --env lint ruff --version # Run command in specific environment
 Modern isolated environments configured in pyproject.toml:
 
 ### Testing Environments
+
 - **hatch-test**: Unit testing across Python 3.9-3.13 and Django 4.2-5.2 combinations
 - **functional**: End-to-end testing with real filesystem storage
 
-### Development Environments  
+### Development Environments
+
 - **lint**: Code quality (ruff, pylint)
 - **docs**: Documentation building (mkdocs-material)
 - **precommit**: Git hooks management
 
 ### Test Configuration
-- Default database: SQLite file-based (`/tmp/test_db.sqlite3`)
+
+- Default database: SQLite file-based (`tmp/test_db.sqlite3` within the repository)
 - Email testing: Django locmem backend (`django.core.mail.backends.locmem.EmailBackend`)
 - Settings: `dbbackup.tests.settings`
 - Test data models: `dbbackup.tests.testapp.models`
 
 ### Build Timing Expectations
+
 - **NEVER CANCEL**: All commands complete within 60 seconds
 - Dependency installation: 5-30 seconds (hatch manages automatically)
 - Unit tests: 10-30 seconds (varies by environment matrix)
-- Functional tests: 5-10 seconds 
+- Functional tests: 5-10 seconds
 - Linting: 2-5 seconds
 - Documentation build: 1-2 seconds
 
 ### Environment Variables for Testing
+
 - `DJANGO_SETTINGS_MODULE` - Django settings (default: dbbackup.tests.settings)
 - `DB_ENGINE` - database engine (default: django.db.backends.sqlite3)
-- `DB_NAME` - database name (default: :memory: for unit tests, /tmp/test_db.sqlite3 for functional)
+- `DB_NAME` - database name (default: :memory: for unit tests, tmp/test_db.sqlite3 for functional)
 - `STORAGE` - storage backend (default: dbbackup.tests.utils.FakeStorage for unit, FileSystemStorage for functional)
-- `MEDIA_ROOT` - media files location (default: /tmp/media/)
+- `MEDIA_ROOT` - media files location (default: tmp/media/)
 
 ## Package Dependencies
 
 Modern dependency management via pyproject.toml:
 
 Core runtime dependencies:
+
 - django>=4.2
 - pytz
 
 Development dependencies (managed by hatch):
+
 - **Testing**: coverage, django-storages, psycopg2-binary, python-gnupg, testfixtures
-- **Linting**: ruff, pylint  
+- **Linting**: ruff, pylint
 - **Documentation**: mkdocs, mkdocs-material
 - **Pre-commit**: pre-commit
 
 ## CI/CD Pipeline
 
 Modern GitHub Actions workflow (.github/workflows/build.yml):
+
 - **Lint Python**: Code quality checks (temporarily set to pass)
 - **Test Python**: Matrix testing across Python 3.9-3.13 with coverage
 - **Functional Tests**: End-to-end backup/restore verification
@@ -192,8 +211,9 @@ Modern GitHub Actions workflow (.github/workflows/build.yml):
 
 - **This is a Django package**, not a standalone application - it provides management commands for Django projects
 - **Backup/restore functionality** works with SQLite, MySQL, PostgreSQL databases and various storage backends
-- **All builds and tests run quickly** - if something takes more than 60 seconds, investigate network connectivity  
+- **All builds and tests run quickly** - if something takes more than 60 seconds, investigate network connectivity
 - **Hatch environments provide full isolation** - no need to manage virtual environments manually
 - **The functional test environment is the gold standard** - it performs real backup and restore operations with filesystem storage
 - **Documentation updates are required** when making changes to Python source code
 - **Always update this file** when making changes to the development workflow, build process, or repository structure
+- **Tests use a repository-local tmp/ directory** instead of system /tmp for portability (especially on Windows) and cleaner CI artifacts.
