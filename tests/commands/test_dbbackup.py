@@ -74,6 +74,26 @@ class DbbackupCommandSaveNewBackupTest(TestCase):
             self.command.database = ""
             self.assertEqual(self.command._get_database_keys(), ["db-from-settings"])
 
+        with self.subTest("multiple databases"):
+            self.command.database = "db1,db2"
+            self.assertEqual(self.command._get_database_keys(), ["db1", "db2"])
+
+        with self.subTest("multiple databases with whitespace"):
+            self.command.database = " db1 , db2 "
+            self.assertEqual(self.command._get_database_keys(), ["db1", "db2"])
+
+        with self.subTest("filter out empty strings to prevent get_connector('') bug"):
+            self.command.database = "db1,,db2"
+            self.assertEqual(self.command._get_database_keys(), ["db1", "db2"])
+
+        with self.subTest("just comma returns empty list"):
+            self.command.database = ","
+            self.assertEqual(self.command._get_database_keys(), [])
+
+        with self.subTest("just spaces returns empty list"):
+            self.command.database = "  "
+            self.assertEqual(self.command._get_database_keys(), [])
+
 
 @patch("dbbackup.settings.GPG_RECIPIENT", "test@test")
 @patch("sys.stdout", DEV_NULL)

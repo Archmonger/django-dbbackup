@@ -104,7 +104,19 @@ class Command(BaseDbBackupCommand):
                 raise CommandError(err) from err
 
     def _get_database_keys(self):
-        return self.database.split(",") if self.database else settings.DATABASES
+        """
+        Get the list of database keys to backup.
+        
+        Returns the databases specified by the -d/--database option,
+        or falls back to the DBBACKUP_DATABASES setting if no option is provided.
+        """
+        if self.database:
+            # Split by comma and filter out empty strings to prevent
+            # get_connector('') from being called, which would fall back
+            # to the 'default' database and ignore DBBACKUP_DATABASES
+            keys = [key.strip() for key in self.database.split(",")]
+            return [key for key in keys if key]
+        return settings.DATABASES
 
     def _save_new_backup(self, database):
         """
