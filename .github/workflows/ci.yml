@@ -175,6 +175,37 @@ jobs:
                   name: coverage-report
                   path: htmlcov
 
+    publish-docs:
+        name: Publish Documentation
+        runs-on: ubuntu-latest
+        if: github.ref_name == 'master' || startsWith(github.ref, 'refs/tags/')
+        needs:
+            - lint-docs
+        permissions:
+            contents: write
+        concurrency:
+            group: publish-docs
+        steps:
+            - uses: actions/checkout@v4
+              with:
+                  fetch-depth: 0
+            - uses: actions/setup-python@v5
+              with:
+                  python-version: 3.x
+                  cache: pip
+            - name: Install dependencies
+              run: pip install --upgrade hatch uv
+            - name: Configure Git
+              run: |
+                  git config user.name github-actions
+                  git config user.email github-actions@github.com
+            - name: Publish Develop Docs
+              if: github.ref_name == 'master'
+              run: hatch run docs:deploy_develop
+            - name: Publish Latest Docs
+              if: startsWith(github.ref, 'refs/tags/')
+              run: hatch run docs:deploy_latest ${{ github.ref_name }}
+
     # This workflow relies on the user manually creating a "stub release" on GitHub with the correct version number in the tag.
     publish-github:
         name: Publish GitHub Release
