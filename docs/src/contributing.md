@@ -120,7 +120,7 @@ environment variables:
 
 **`DB_ENGINE`** - Default: `django.db.backends.sqlite3`
 
-Database engine to use. See `django.db.backend`s for default backends.
+Database engine to use. See `django.db.backends` for default backends.
 
 **`DB_NAME`** - Default: `:memory:`
 
