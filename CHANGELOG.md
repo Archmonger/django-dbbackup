@@ -31,6 +31,7 @@ Don't forget to remove deprecated code on each major release!
 
 ### Fixed
 
+- Fix `DBBACKUP_DATABASES` configuration being ignored when no `-d/--database` option is provided to the `dbbackup` command.
 - Fix encryption support when using `gnupg==5.x`.
 - Resolve SQLite backup temporary file locking issues on Windows.
 
