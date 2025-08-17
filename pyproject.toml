@@ -221,9 +221,9 @@ lint.extend-ignore = []
 addopts = ["--strict-config", "--strict-markers"]
 
 [tool.coverage]
-paths.source = ["dbbackup"]
 run.relative_files = true
 run.branch = true
 run.parallel = true
 run.source = ["dbbackup/"]
+paths.source = ["dbbackup/"]
 report.show_missing = true

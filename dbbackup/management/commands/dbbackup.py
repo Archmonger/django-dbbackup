@@ -26,8 +26,7 @@ class Command(BaseDbBackupCommand):
         make_option(
             "-d",
             "--database",
-            help="Database(s) to backup specified by key separated by"
-            " commas(default: all)",
+            help="Database(s) to backup specified by key separated by commas(default: all)",
         ),
         make_option(
             "-s",
@@ -48,18 +47,14 @@ class Command(BaseDbBackupCommand):
             default=False,
             help="Encrypt the backup files",
         ),
-        make_option(
-            "-o", "--output-filename", default=None, help="Specify filename on storage"
-        ),
+        make_option("-o", "--output-filename", default=None, help="Specify filename on storage"),
         make_option(
             "-O",
             "--output-path",
             default=None,
             help="Specify where to store on local filesystem",
         ),
-        make_option(
-            "-x", "--exclude-tables", default=None, help="Exclude tables from backup"
-        ),
+        make_option("-x", "--exclude-tables", default=None, help="Exclude tables from backup"),
         make_option(
             "-n",
             "--schema",
@@ -92,9 +87,7 @@ class Command(BaseDbBackupCommand):
         for database_key in self._get_database_keys():
             self.connector = get_connector(database_key)
             if self.connector and self.exclude_tables:
-                self.connector.exclude.extend(
-                    list(self.exclude_tables.replace(" ", "").split(","))
-                )
+                self.connector.exclude.extend(list(self.exclude_tables.replace(" ", "").split(",")))
             database = self.connector.settings
             try:
                 self._save_new_backup(database)
@@ -106,7 +99,7 @@ class Command(BaseDbBackupCommand):
     def _get_database_keys(self):
         """
         Get the list of database keys to backup.
-        
+
         Returns the databases specified by the -d/--database option,
         or falls back to the DBBACKUP_DATABASES setting if no option is provided.
         """
@@ -114,8 +107,7 @@ class Command(BaseDbBackupCommand):
             # Split by comma and filter out empty strings to prevent
             # get_connector('') from being called, which would fall back
             # to the 'default' database and ignore DBBACKUP_DATABASES
-            keys = [key.strip() for key in self.database.split(",")]
-            return [key for key in keys if key]
+            return [key.strip() for key in self.database.split(",") if key.strip()]
         return settings.DATABASES
 
     def _save_new_backup(self, database):
