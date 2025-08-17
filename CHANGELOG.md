@@ -69,8 +69,8 @@ Don't forget to remove deprecated code on each major release!
 ## [4.1.0] - 2024-01-14
 
 ### Added
-- Support Django 4.1, 4.2 and Python 3.11.
-- Support Python 3.12 and Django 5.0.
+- Support Python 3.11 and 3.12.
+- Support Django 4.1, 4.2, and 5.0.
 
 ### Changed
 - Update documentation for backup directory consistency and update links.
@@ -141,12 +141,127 @@ Don't forget to remove deprecated code on each major release!
 - Fix management commands when using Postgres on non-latin Windows.
 - Fix improper database name selection when performing a restore.
 
-[Unreleased]: https://github.com/Archmonger/django-dbbackup/compare/v4.3.0...HEAD
-[4.3.0]: https://github.com/Archmonger/django-dbbackup/compare/v4.2.1...v4.3.0
-[4.2.1]: https://github.com/Archmonger/django-dbbackup/compare/v4.2.0...v4.2.1
-[4.2.0]: https://github.com/Archmonger/django-dbbackup/compare/v4.1.0...v4.2.0
-[4.1.0]: https://github.com/Archmonger/django-dbbackup/compare/v4.0.2...v4.1.0
-[4.0.2]: https://github.com/Archmonger/django-dbbackup/compare/v4.0.1...v4.0.2
-[4.0.1]: https://github.com/Archmonger/django-dbbackup/compare/v4.0.0b0...v4.0.1
-[4.0.0b0]: https://github.com/Archmonger/django-dbbackup/compare/v3.3.0...v4.0.0b0
-[3.3.0]: https://github.com/Archmonger/django-dbbackup/releases/tag/3.3.0
+## [3.2.0] - 2017-09-18
+
+### Added
+- `PgDumpBinaryConnector` (binary `pg_dump` integration) with related functional tests.
+- Option to keep specific old backups (custom clean old backups logic).
+
+### Changed
+- Updated PostgreSQL documentation and help text for clarity.
+
+### Fixed
+- SFTP storage file attribute error ("SFTPStorageFile object has no attribute name").
+- Escaping of passwords passed to commands.
+- Corrected management command help text after flag logic change.
+
+## [3.1.3] - 2016-11-25
+
+### Fixed
+- Reverted a regression in `pg_dump` database name handling introduced shortly before.
+
+## [3.1.2] - 2016-11-25
+
+### Fixed
+- Correct `pg_dump` invocation: proper username and database (dbname) argument handling.
+
+## [3.1.1] - 2016-11-16
+
+### Fixed
+- Unicode handling issues with SQLite backups.
+
+## [3.1.0] - 2016-11-15
+
+### Added
+- Support for inheriting parent environment variables in command connectors (`USE_PARENT_ENV`).
+
+### Changed
+- Complete revamp of logging and error email notification system (more structured logging & tests).
+
+## [3.0.4] - 2016-11-14
+
+### Added
+- Ability to link / register custom connectors.
+
+### Changed
+- Use naïve (timezone-unaware) datetimes in backup filenames for broader compatibility.
+
+### Fixed
+- `mediabackup` timeout issue.
+- Improved PostgreSQL `dbrestore` error recognition.
+
+## [3.0.3] - 2016-09-15
+
+### Added
+- Server name filter for database and media backup/restore.
+- Ability to select multiple databases for backup.
+
+### Changed
+- Improved filename generation logic.
+
+### Fixed
+- Database filter logic and clean backup behavior.
+
+## [3.0.2] - 2016-08-06
+
+### Fixed
+- Disabled Django loggers inadvertently affecting application logging.
+
+## [3.0.1] - 2016-08-04
+
+### Added
+- New connector architecture with dedicated connectors for PostgreSQL, MySQL, SQLite (copy) and MongoDB.
+- Media backup & restore system overhaul (per-file processing, media restore command & tests).
+- Exclude table/data options, prefix & suffix options for connector commands.
+- Environment variable control for command execution.
+- GIS database engine mapping support.
+- Functional, integration and upgrade test suites; app & system checks integration.
+
+### Changed
+- Refactored and unified code between database & media backup/restore commands.
+- Renamed `mediabackup` option (`--no-compress` replaced by explicit `--compress`).
+
+### Removed
+- Legacy `DBCommand` code in favor of new connector system.
+
+## [2.5.0] - 2016-03-29
+
+### Added
+- `--filename` and `--path` options for `dbbackup` / `dbrestore` commands.
+- Binary size unit prefixes in output.
+
+### Changed
+- Dropbox storage updated to OAuth2 & Python 3 compatibility.
+
+### Fixed
+- NameError for missing `warnings` import.
+- Wildcard handling in generated filenames; proper server name derivation for SQLite paths.
+
+### Removed
+- `DBBACKUP_DROPBOX_ACCESS_TYPE` setting (deprecated by OAuth2 changes).
+
+## [2.3.3] - 2015-10-05
+
+### Fixed
+- Miscellaneous maintenance and minor bug fixes (pre-2.5 feature work).
+
+[Unreleased]: https://github.com/Archmonger/django-dbbackup/compare/4.3.0...HEAD
+[4.3.0]: https://github.com/Archmonger/django-dbbackup/compare/4.2.1...4.3.0
+[4.2.1]: https://github.com/Archmonger/django-dbbackup/compare/4.2.0...4.2.1
+[4.2.0]: https://github.com/Archmonger/django-dbbackup/compare/4.1.0...4.2.0
+[4.1.0]: https://github.com/Archmonger/django-dbbackup/compare/4.0.2...4.1.0
+[4.0.2]: https://github.com/Archmonger/django-dbbackup/compare/4.0.1...4.0.2
+[4.0.1]: https://github.com/Archmonger/django-dbbackup/compare/4.0.0b0...4.0.1
+[4.0.0b0]: https://github.com/Archmonger/django-dbbackup/compare/3.3.0...4.0.0b0
+[3.3.0]: https://github.com/Archmonger/django-dbbackup/compare/3.2.0...3.3.0
+[3.2.0]: https://github.com/Archmonger/django-dbbackup/compare/3.1.3...3.2.0
+[3.1.3]: https://github.com/Archmonger/django-dbbackup/compare/3.1.2...3.1.3
+[3.1.2]: https://github.com/Archmonger/django-dbbackup/compare/3.1.1...3.1.2
+[3.1.1]: https://github.com/Archmonger/django-dbbackup/compare/3.1.0...3.1.1
+[3.1.0]: https://github.com/Archmonger/django-dbbackup/compare/3.0.4...3.1.0
+[3.0.4]: https://github.com/Archmonger/django-dbbackup/compare/3.0.3...3.0.4
+[3.0.3]: https://github.com/Archmonger/django-dbbackup/compare/3.0.2...3.0.3
+[3.0.2]: https://github.com/Archmonger/django-dbbackup/compare/3.0.1...3.0.2
+[3.0.1]: https://github.com/Archmonger/django-dbbackup/compare/2.5.0...3.0.1
+[2.5.0]: https://github.com/Archmonger/django-dbbackup/compare/2.3.3...2.5.0
+[2.3.3]: https://github.com/Archmonger/django-dbbackup/releases/tag/2.3.3
