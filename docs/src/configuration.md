@@ -25,7 +25,7 @@ Default: `10*1024*1024`
 ### DBBACKUP_CLEANUP_KEEP and DBBACKUP_CLEANUP_KEEP_MEDIA
 
 When issuing `dbbackup` and `mediabackup` with `--clean <amount>` option,
-the backup keeps this amount of most recent files. Older files are removed. 
+the backup keeps this amount of most recent files. Older files are removed.
 
 Default: `10` (backups)
 
@@ -98,9 +98,11 @@ python manage.py dbrestore --decrypt
 
 Requirements:
 
-- Install the python package python-gnupg: `pip install python-gnupg>=0.5.0`.
-- You need a GPG key. ([GPG manual](https://www.gnupg.org/gph/en/manual/c14.html))
-- Set the setting `DBBACKUP_GPG_RECIPIENT` to the name of the GPG key.
+-   Install the python package python-gnupg: `pip install python-gnupg>=0.5.0`.
+-   You need a GPG key. ([GPG manual](https://www.gnupg.org/gph/en/manual/c14.html))
+-   Set the setting `DBBACKUP_GPG_RECIPIENT` to the name of the GPG key.
+
+Note (Windows): The `gpg` executable must be installed and on your PATH for encryption/decryption. If it is absent, django-dbbackup still works; only encryption-related features are unavailable. The test suite will automatically skip encryption tests when `gpg` is not found.
 
 ### DBBACKUP_GPG_ALWAYS_TRUST
 
@@ -139,7 +141,7 @@ email address).
 Default: `django.conf.settings.ADMINS`
 
 !!! warning
-    `DBBACKUP_FAILURE_RECIPIENTS` was used before and is now deprecated
+`DBBACKUP_FAILURE_RECIPIENTS` was used before and is now deprecated
 
 ### DBBACKUP_EMAIL_SUBJECT_PREFIX
 

@@ -57,61 +57,56 @@ jobs:
               run: hatch run scripts/validate_changelog.py
 
     test-python:
-        name: Python ${{ matrix.python-version }}
-        runs-on: ubuntu-latest
+        name: Python ${{ matrix.python-version }} (${{ matrix.os }})
+        runs-on: ${{ matrix.os }}
         needs:
             - lint-python
-
         strategy:
+            fail-fast: false
             matrix:
+                os: [ubuntu-latest, windows-latest]
                 python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
-
         steps:
             - uses: actions/checkout@v4
-
             - uses: actions/setup-python@v5
               with:
                   python-version: ${{ matrix.python-version }}
                   allow-prereleases: true
                   cache: pip
-
             - name: Install dependencies
               run: python -m pip install --upgrade pip hatch uv
-
             - name: Show environment
               run: hatch test --show --python ${{ matrix.python-version }}
-
             - name: Run tests
               run: |
                   hatch test --cover --python ${{ matrix.python-version }}
                   mv .coverage ".coverage.py${{ matrix.python-version }}"
-
             - name: Upload coverage data
               uses: actions/upload-artifact@v4
               with:
-                  name: "coverage-data-py${{ matrix.python-version }}"
+                  name: "coverage-data-${{ matrix.os }}-py${{ matrix.python-version }}"
                   path: ".coverage.py${{ matrix.python-version }}"
                   if-no-files-found: error
                   include-hidden-files: true
                   retention-days: 7
 
     test-functional:
-        name: Functional Tests
-        runs-on: ubuntu-latest
+        name: Functional Tests (${{ matrix.os }})
+        runs-on: ${{ matrix.os }}
         needs:
             - lint-python
-
+        strategy:
+            fail-fast: false
+            matrix:
+                os: [ubuntu-latest, windows-latest]
         steps:
             - uses: actions/checkout@v4
-
             - uses: actions/setup-python@v5
               with:
                   python-version: "3.12"
                   cache: pip
-
             - name: Install dependencies
               run: python -m pip install --upgrade pip hatch uv
-
             - name: Run functional tests
               run: hatch run functional:test
 

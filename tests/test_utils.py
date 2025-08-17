@@ -1,5 +1,7 @@
 import os
+import shutil
 import tempfile
+import unittest
 from datetime import datetime
 from io import StringIO
 from unittest.mock import patch
@@ -100,6 +102,10 @@ class Email_Uncaught_ExceptionTest(TestCase):
             self.assertIn('Exception("Foo")', error_mail.body)
 
 
+GPG_AVAILABLE = shutil.which("gpg") is not None
+
+
+@unittest.skipIf(not GPG_AVAILABLE, "gpg executable not available")
 class Encrypt_FileTest(TestCase):
     def setUp(self):
         self.path = tempfile.mktemp()
@@ -113,13 +119,12 @@ class Encrypt_FileTest(TestCase):
 
     def test_func(self, *args):
         with open(self.path, mode="rb") as fd:
-            encrypted_file, filename = utils.encrypt_file(
-                inputfile=fd, filename="foo.txt"
-            )
+            encrypted_file, filename = utils.encrypt_file(inputfile=fd, filename="foo.txt")
         encrypted_file.seek(0)
         self.assertTrue(encrypted_file.read())
 
 
+@unittest.skipIf(not GPG_AVAILABLE, "gpg executable not available")
 class Unencrypt_FileTest(TestCase):
     def setUp(self):
         add_private_gpg()
@@ -136,6 +141,7 @@ class Unencrypt_FileTest(TestCase):
         self.assertEqual(b"foo\n", uncryptfile.read())
 
 
+@unittest.skipIf(not GPG_AVAILABLE, "gpg executable not available")
 class Compress_FileTest(TestCase):
     def setUp(self):
         self.path = tempfile.mktemp()
@@ -147,9 +153,7 @@ class Compress_FileTest(TestCase):
 
     def test_func(self, *args):
         with open(self.path, mode="rb") as fd:
-            compressed_file, filename = utils.encrypt_file(
-                inputfile=fd, filename="foo.txt"
-            )
+            compressed_file, filename = utils.encrypt_file(inputfile=fd, filename="foo.txt")
 
 
 class Uncompress_FileTest(TestCase):
@@ -181,9 +185,7 @@ class TimestampTest(TestCase):
 
     def test_aware_value(self):
         with self.settings(USE_TZ=True) and self.settings(TIME_ZONE="Europe/Rome"):
-            timestamp = utils.timestamp(
-                datetime(2015, 8, 15, 8, 15, 12, 0, tzinfo=pytz.utc)
-            )
+            timestamp = utils.timestamp(datetime(2015, 8, 15, 8, 15, 12, 0, tzinfo=pytz.utc))
             self.assertEqual(timestamp, "2015-08-15-101512")
 
 

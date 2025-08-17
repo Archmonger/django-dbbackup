@@ -2,6 +2,7 @@
 Tests for dbrestore command.
 """
 
+import shutil
 from shutil import copyfileobj
 from tempfile import mktemp
 from unittest.mock import patch
@@ -30,6 +31,8 @@ from tests.utils import (
     get_dump_name,
 )
 
+GPG_AVAILABLE = shutil.which("gpg") is not None
+
 
 @patch("dbbackup.management.commands._base.input", return_value="y")
 class DbrestoreCommandRestoreBackupTest(TestCase):
@@ -56,9 +59,7 @@ class DbrestoreCommandRestoreBackupTest(TestCase):
 
     def test_no_filename(self, *args):
         # Prepare backup
-        HANDLED_FILES["written_files"].append(
-            (utils.filename_generate("default"), File(get_dump()))
-        )
+        HANDLED_FILES["written_files"].append((utils.filename_generate("default"), File(get_dump())))
         # Check
         self.command.path = None
         self.command.filename = None
@@ -72,26 +73,20 @@ class DbrestoreCommandRestoreBackupTest(TestCase):
 
     def test_uncompress(self, *args):
         self.command.path = None
-        compressed_file, self.command.filename = utils.compress_file(
-            get_dump(), get_dump_name()
-        )
-        HANDLED_FILES["written_files"].append(
-            (self.command.filename, File(compressed_file))
-        )
+        compressed_file, self.command.filename = utils.compress_file(get_dump(), get_dump_name())
+        HANDLED_FILES["written_files"].append((self.command.filename, File(compressed_file)))
         self.command.uncompress = True
         self.command._restore_backup()
 
     @patch("dbbackup.utils.getpass", return_value=None)
     def test_decrypt(self, *args):
+        if not GPG_AVAILABLE:
+            self.skipTest("gpg executable not available")
         add_private_gpg()
         self.command.path = None
         self.command.decrypt = True
-        encrypted_file, self.command.filename = utils.encrypt_file(
-            get_dump(), get_dump_name()
-        )
-        HANDLED_FILES["written_files"].append(
-            (self.command.filename, File(encrypted_file))
-        )
+        encrypted_file, self.command.filename = utils.encrypt_file(get_dump(), get_dump_name())
+        HANDLED_FILES["written_files"].append((self.command.filename, File(encrypted_file)))
         self.command._restore_backup()
 
     def test_path(self, *args):
@@ -174,6 +169,8 @@ class DbrestoreCommandGetDatabaseTest(TestCase):
 @patch("dbbackup.db.mongodb.MongoDumpConnector.restore_dump")
 class DbMongoRestoreCommandRestoreBackupTest(TestCase):
     def setUp(self):
+        if not GPG_AVAILABLE:
+            self.skipTest("gpg executable not available")
         self.command = DbrestoreCommand()
         self.command.stdout = DEV_NULL
         self.command.uncompress = False

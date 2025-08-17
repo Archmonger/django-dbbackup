@@ -1,5 +1,7 @@
 import os
+import shutil
 import tempfile
+import unittest
 from unittest.mock import patch
 
 from django.conf import settings
@@ -15,7 +17,10 @@ from tests.utils import (
     clean_gpg_keys,
 )
 
+GPG_AVAILABLE = shutil.which("gpg") is not None
 
+
+@unittest.skipIf(not GPG_AVAILABLE, "gpg executable not available")
 class DbBackupCommandTest(TestCase):
     def setUp(self):
         HANDLED_FILES.clean()
@@ -66,6 +71,7 @@ class DbBackupCommandTest(TestCase):
 
 
 @patch("dbbackup.management.commands._base.input", return_value="y")
+@unittest.skipIf(not GPG_AVAILABLE, "gpg executable not available")
 class DbRestoreCommandTest(TestCase):
     def setUp(self):
         HANDLED_FILES.clean()
@@ -144,6 +150,7 @@ class DbRestoreCommandTest(TestCase):
         self.assertTrue(restored)
 
 
+@unittest.skipIf(not GPG_AVAILABLE, "gpg executable not available")
 class MediaBackupCommandTest(TestCase):
     def setUp(self):
         HANDLED_FILES.clean()
@@ -185,6 +192,7 @@ class MediaBackupCommandTest(TestCase):
 
 
 @patch("dbbackup.management.commands._base.input", return_value="y")
+@unittest.skipIf(not GPG_AVAILABLE, "gpg executable not available")
 class MediaRestoreCommandTest(TestCase):
     def setUp(self):
         HANDLED_FILES.clean()

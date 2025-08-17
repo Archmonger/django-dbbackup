@@ -3,7 +3,10 @@ Tests for dbbackup command.
 """
 
 import os
+import shutil
 from unittest.mock import patch
+
+GPG_AVAILABLE = shutil.which("gpg") is not None
 
 from django.test import TestCase
 
@@ -40,6 +43,8 @@ class DbbackupCommandSaveNewBackupTest(TestCase):
         self.command._save_new_backup(TEST_DATABASE)
 
     def test_encrypt(self):
+        if not GPG_AVAILABLE:
+            self.skipTest("gpg executable not available")
         add_public_gpg()
         self.command.encrypt = True
         self.command._save_new_backup(TEST_DATABASE)

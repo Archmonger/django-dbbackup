@@ -1,8 +1,10 @@
+import contextlib
+import os
 import sqlite3
 import warnings
 from io import BytesIO
 from shutil import copyfileobj
-from tempfile import SpooledTemporaryFile, NamedTemporaryFile
+from tempfile import NamedTemporaryFile, SpooledTemporaryFile
 
 from django.db import IntegrityError, OperationalError
 
@@ -45,10 +47,7 @@ class SqliteConnector(BaseDBConnector):
             column_names = [str(table_info[1]) for table_info in res.fetchall()]
             q = """SELECT 'INSERT INTO "{0}" VALUES({1})' FROM "{0}";\n""".format(
                 table_name_ident,
-                ",".join(
-                    """'||quote("{}")||'""".format(col.replace('"', '""'))
-                    for col in column_names
-                ),
+                ",".join("""'||quote("{}")||'""".format(col.replace('"', '""')) for col in column_names),
             )
             query_res = cursor.execute(q)
             for row in query_res:
@@ -119,7 +118,8 @@ class SqliteBackupConnector(BaseDBConnector):
     Restore by copying the backup file over the
     database file.
     """
-    extension = 'sqlite3'
+
+    extension = "sqlite3"
 
     def _write_dump(self, fileobj):
         pass
@@ -132,13 +132,22 @@ class SqliteBackupConnector(BaseDBConnector):
         self.connection.ensure_connection()
         src_db_connection = self.connection.connection
 
-        bkp_db_file = NamedTemporaryFile()
+        # On Windows sqlite3 cannot open a NamedTemporaryFile that is still
+        # open by another handle. Use delete=False then reopen.
+        bkp_db_file = NamedTemporaryFile(delete=False)
         bkp_path = bkp_db_file.name
-        with sqlite3.connect(bkp_path) as bkp_db_connection:
-            src_db_connection.backup(bkp_db_connection)
-
-        bkp_db_file.seek(0)
-        return bkp_db_file
+        bkp_db_file.close()  # Close so sqlite can open it on Windows.
+        try:
+            with sqlite3.connect(bkp_path) as bkp_db_connection:
+                src_db_connection.backup(bkp_db_connection)
+            with open(bkp_path, "rb") as reopened:
+                spooled = SpooledTemporaryFile()
+                copyfileobj(reopened, spooled)
+            spooled.seek(0)
+            return spooled
+        finally:  # pragma: no cover - cleanup best effort
+            with contextlib.suppress(Exception):
+                os.remove(bkp_path)
 
     def restore_dump(self, dump):
         path = self.connection.settings_dict["NAME"]

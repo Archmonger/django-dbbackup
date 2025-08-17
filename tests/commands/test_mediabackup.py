@@ -4,7 +4,10 @@ Tests for mediabackup command.
 
 import contextlib
 import os
+import shutil
 import tempfile
+
+GPG_AVAILABLE = shutil.which("gpg") is not None
 
 from django.test import TestCase
 
@@ -42,6 +45,8 @@ class MediabackupBackupMediafilesTest(TestCase):
         self.assertTrue(HANDLED_FILES["written_files"][0][0].endswith(".gz"))
 
     def test_encrypt(self):
+        if not GPG_AVAILABLE:
+            self.skipTest("gpg executable not available")
         self.command.encrypt = True
         add_public_gpg()
         self.command.backup_mediafiles()
@@ -51,6 +56,8 @@ class MediabackupBackupMediafilesTest(TestCase):
         self.assertTrue(outputfile.read().startswith(b"-----BEGIN PGP MESSAGE-----"))
 
     def test_compress_and_encrypt(self):
+        if not GPG_AVAILABLE:
+            self.skipTest("gpg executable not available")
         self.command.compress = True
         self.command.encrypt = True
         add_public_gpg()
