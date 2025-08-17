@@ -219,13 +219,11 @@ lint.extend-ignore = []
 
 [tool.pytest.ini_options]
 addopts = ["--strict-config", "--strict-markers"]
-[tool.coverage.run]
-branch = true
-parallel = true
-source = ["dbbackup/", "tests/"]
 
-[tool.coverage.paths]
-source = ["dbbackup/"]
-
-[tool.coverage.report]
-show_missing = true
+[tool.coverage]
+paths.source = ["dbbackup"]
+run.relative_files = true
+run.branch = true
+run.parallel = true
+run.source = ["dbbackup/", "tests/"]
+report.show_missing = true
