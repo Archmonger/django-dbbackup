@@ -103,8 +103,6 @@ django = ["5.1"]
 python = ["3.10", "3.11", "3.12", "3.13"]
 django = ["5.2"]
 
-
-
 [tool.hatch.envs.hatch-test.overrides]
 matrix.django.dependencies = [
   { if = ["4.2"], value = "django>=4.2,<4.3" },
@@ -113,7 +111,7 @@ matrix.django.dependencies = [
   { if = ["5.2"], value = "django>=5.2,<5.3" },
 ]
 
-# >>> Hatch Documentation Scripts <<<
+# >>> Documentation Scripts <<<
 
 [tool.hatch.envs.docs]
 template = "docs"
@@ -127,7 +125,7 @@ dependencies = [
 serve = ["cd docs && mkdocs serve"]
 build = ["cd docs && mkdocs build --strict"]
 
-# >>> Hatch pre-commit <<<
+# >>> Pre-commit Environment <<<
 
 [tool.hatch.envs.precommit]
 template = "pre-commit"
@@ -138,7 +136,7 @@ dependencies = ["pre-commit>=3,<4"]
 check = ["pre-commit run --all-files"]
 update = ["pre-commit autoupdate"]
 
-# >>> Hatch Lint Environment <<<
+# >>> Lint Environment <<<
 
 [tool.hatch.envs.lint]
 extra-dependencies = [
@@ -151,7 +149,10 @@ check = ["ruff check dbbackup", "pylint dbbackup --rcfile=.pylintrc"]
 format = ["ruff format dbbackup"]
 format-check = ["ruff format --check dbbackup"]
 
-# >>> Hatch Functional Testing <<<
+# >>> CLI workflow tests <<<
+# TODO: Rewrite this in pytest using the following file as a guide:
+# https://github.com/Archmonger/django-dbbackup/blob/dee332b9c505f59fd43b2733f095e81162767f9d/functional.sh
+# Make sure we cover a variety of database backends.
 
 [tool.hatch.envs.functional]
 extra-dependencies = [
