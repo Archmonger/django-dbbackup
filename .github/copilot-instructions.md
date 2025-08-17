@@ -6,6 +6,8 @@ Always reference these instructions first and fallback to search or bash command
 
 **IMPORTANT**: This package has been fully migrated to modern Python tooling using Hatch. Always use Hatch commands for development workflows.
 
+**BUG INVESTIGATION**: When investigating whether a bug was already resolved in a previous version, always prioritize searching through `CHANGELOG.md` first before using Git history. Only search through Git history when no relevant changelog entries are found.
+
 ## Working Effectively
 
 Bootstrap, build, and test the repository:
