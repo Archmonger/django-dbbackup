@@ -163,7 +163,7 @@ Don't forget to remove deprecated code on each major release!
 ## [3.1.2] - 2016-11-25
 
 ### Fixed
-- Correct `pg_dump` invocation: proper username and database (dbname) argument handling.
+- Correct `pg_dump` invocation: proper username and database argument handling.
 
 ## [3.1.1] - 2016-11-16
 
@@ -184,7 +184,7 @@ Don't forget to remove deprecated code on each major release!
 - Ability to link / register custom connectors.
 
 ### Changed
-- Use naïve (timezone-unaware) datetimes in backup filenames for broader compatibility.
+- Use naïve (timezone-unaware) `datetime` in backup filenames for broader compatibility.
 
 ### Fixed
 - `mediabackup` timeout issue.
