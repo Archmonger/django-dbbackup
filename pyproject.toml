@@ -225,5 +225,5 @@ paths.source = ["dbbackup"]
 run.relative_files = true
 run.branch = true
 run.parallel = true
-run.source = ["dbbackup/", "tests/"]
+run.source = ["dbbackup/"]
 report.show_missing = true
