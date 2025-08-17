@@ -80,7 +80,7 @@ jobs:
             - name: Run tests
               run: |
                   hatch test --cover --python ${{ matrix.python-version }}
-                  mv .coverage ".coverage.py${{ matrix.python-version }}"
+                  mv .coverage ".coverage.${{ matrix.os }}.py${{ matrix.python-version }}"
             - name: Upload coverage data
               uses: actions/upload-artifact@v4
               with:
