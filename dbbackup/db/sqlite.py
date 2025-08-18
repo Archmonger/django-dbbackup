@@ -69,7 +69,7 @@ class SqliteConnector(BaseDBConnector):
 
     def _is_sql_command_complete(self, sql_command_bytes):
         """
-        Check if an SQL command is complete by ensuring that any closing ");\\n" 
+        Check if an SQL command is complete by ensuring that any closing ");\n" 
         is not within a quoted string literal.
         """
         sql_str = sql_command_bytes.decode("UTF-8")
