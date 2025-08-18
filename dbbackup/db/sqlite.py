@@ -43,14 +43,14 @@ class SqliteConnector(BaseDBConnector):
             fileobj.write(f"{sql};\n".encode())
 
             table_name_ident = table_name.replace('"', '""')
-            res = cursor.execute(f'PRAGMA table_info("{table_name_ident}")')
-            column_names = [str(table_info[1]) for table_info in res.fetchall()]
+            cursor.execute(f'PRAGMA table_info("{table_name_ident}")')
+            column_names = [str(table_info[1]) for table_info in cursor.fetchall()]
             q = """SELECT 'INSERT OR REPLACE INTO "{0}" VALUES({1})' FROM "{0}";\n""".format(
                 table_name_ident,
                 ",".join(f"""'||quote("{col.replace('"', '""')}")||'""" for col in column_names),
             )
-            query_res = cursor.execute(q)
-            for row in query_res:
+            cursor.execute(q)
+            for row in cursor:
                 fileobj.write(f"{row[0]};\n".encode())
 
         # Dump indexes, triggers, and views after all tables are created
