@@ -279,7 +279,7 @@ class MediaRestoreCommandTest(TestCase):
         
         # Remove the file and directory structure
         os.remove(test_file)
-        os.removedirs(media_subdir)
+        shutil.rmtree(media_subdir)
         
         # Restore backup
         execute_from_command_line(["", "mediarestore"])
