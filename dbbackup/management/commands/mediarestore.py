@@ -110,5 +110,5 @@ class Command(BaseDbBackupCommand):
             media_file = tar_file.extractfile(media_file_info)
             if media_file is None:
                 continue  # Skip directories
-            name = media_file_info.path.replace("media/", "")
+            name = media_file_info.path
             self._upload_file(name, media_file)

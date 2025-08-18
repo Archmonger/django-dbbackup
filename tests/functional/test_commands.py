@@ -210,8 +210,10 @@ class MediaRestoreCommandTest(TestCase):
             fd.write(b"foo")
 
     def _emtpy_media(self):
-        for fi in os.listdir(settings.MEDIA_ROOT):
-            os.remove(os.path.join(settings.MEDIA_ROOT, fi))
+        import shutil
+        if os.path.exists(settings.MEDIA_ROOT):
+            shutil.rmtree(settings.MEDIA_ROOT)
+        os.makedirs(settings.MEDIA_ROOT, exist_ok=True)
 
     def _is_restored(self):
         return bool(os.listdir(settings.MEDIA_ROOT))
@@ -262,3 +264,30 @@ class MediaRestoreCommandTest(TestCase):
         # Restore
         with self.assertRaises(SystemExit):
             execute_from_command_line(["", "mediarestore", "--uncompress"])
+
+    def test_restore_file_with_media_in_path(self, *args):
+        """Test that files with 'media' in their path are restored correctly."""
+        # Create a file with 'media' in the path - this was the bug
+        media_subdir = os.path.join(settings.MEDIA_ROOT, "uploads", "media", "images")
+        os.makedirs(media_subdir, exist_ok=True)
+        test_file = os.path.join(media_subdir, "test.jpg")
+        with open(test_file, "w") as f:
+            f.write("test image content")
+        
+        # Create backup
+        execute_from_command_line(["", "mediabackup"])
+        
+        # Remove the file and directory structure
+        os.remove(test_file)
+        os.removedirs(media_subdir)
+        
+        # Restore backup
+        execute_from_command_line(["", "mediarestore"])
+        
+        # Verify file was restored to correct location (not corrupted path)
+        self.assertTrue(os.path.exists(test_file), 
+                       "File should be restored to original path with 'media' in it")
+        
+        # Verify content is correct
+        with open(test_file, "r") as f:
+            self.assertEqual(f.read(), "test image content")
