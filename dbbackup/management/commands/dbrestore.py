@@ -2,6 +2,7 @@
 Restore database.
 """
 
+import io
 from django.conf import settings
 from django.core.management.base import CommandError
 from django.db import connection
@@ -125,6 +126,19 @@ class Command(BaseDbBackupCommand):
             uncompressed_file, input_filename = utils.uncompress_file(input_file, input_filename)
             input_file.close()
             input_file = uncompressed_file
+
+        # Convert remote storage files to SpooledTemporaryFile for compatibility with subprocess
+        # This fixes the issue with FTP and other remote storage backends that don't support fileno()
+        if not self.path:  # Only for remote storage files, not local files
+            try:
+                # Test if the file supports fileno() - required by subprocess.Popen
+                input_file.fileno()
+            except (AttributeError, io.UnsupportedOperation):
+                # File doesn't support fileno(), convert to SpooledTemporaryFile
+                self.logger.debug("Converting remote storage file to temporary file for subprocess compatibility")
+                temp_file = utils.create_spooled_temporary_file(fileobj=input_file)
+                input_file.close()
+                input_file = temp_file
 
         self.logger.info("Restore tempfile created: %s", utils.handle_size(input_file))
         if self.interactive:
