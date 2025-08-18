@@ -18,6 +18,10 @@ Bootstrap, build, and test the repository:
 - `hatch run lint:check` - runs linting on the main package. Takes ~5 seconds. NEVER CANCEL.
 - `hatch run lint:format-check` - runs code formatting checks. Takes ~2 seconds. NEVER CANCEL.
 
+**Interactive Development Shell:**
+
+- `hatch shell [ENV_NAME]` - Enter an interactive shell environment with all dependencies installed. ENV_NAME is optional and defaults to the main environment. Use `hatch shell functional` for the functional test environment, `hatch shell lint` for the linting environment, etc.
+
 Build documentation:
 
 - `hatch run docs:build` - builds HTML documentation with MkDocs Material. Takes ~2 seconds. NEVER CANCEL.
