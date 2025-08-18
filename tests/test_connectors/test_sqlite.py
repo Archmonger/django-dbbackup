@@ -137,6 +137,10 @@ class SqliteConnectorTest(TestCase):
         self.assertTrue(dump.read())
 
     def test_restore_dump_unique_conflict_updates_row(self):
+        """
+        Test that restoring a dump updates an existing row when a UNIQUE constraint conflict occurs,
+        verifying that INSERT OR REPLACE is used to restore the original data.
+        """
         # Create initial row
         obj = CharModel.objects.create(field="original")
         obj_id = obj.id
