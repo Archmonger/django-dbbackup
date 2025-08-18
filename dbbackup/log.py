@@ -16,9 +16,7 @@ class DbbackupAdminEmailHandler(AdminEmailHandler):
     def send_mail(self, subject, message, *args, **kwargs):
         from . import utils
 
-        utils.mail_admins(
-            subject, message, *args, connection=self.connection(), **kwargs
-        )
+        utils.mail_admins(subject, message, *args, connection=self.connection(), **kwargs)
 
 
 class MailEnabledFilter(logging.Filter):

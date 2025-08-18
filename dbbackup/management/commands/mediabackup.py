@@ -44,9 +44,7 @@ class Command(BaseDbBackupCommand):
             action="store_true",
             default=False,
         ),
-        make_option(
-            "-o", "--output-filename", default=None, help="Specify filename on storage"
-        ),
+        make_option("-o", "--output-filename", default=None, help="Specify filename on storage"),
         make_option(
             "-O",
             "--output-path",
@@ -111,9 +109,7 @@ class Command(BaseDbBackupCommand):
             filename = self.filename
         else:
             extension = f"tar{'.gz' if self.compress else ''}"
-            filename = utils.filename_generate(
-                extension, servername=self.servername, content_type=self.content_type
-            )
+            filename = utils.filename_generate(extension, servername=self.servername, content_type=self.content_type)
 
         tarball = self._create_tar(filename)
         # Apply trans

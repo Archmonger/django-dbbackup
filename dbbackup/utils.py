@@ -86,9 +86,7 @@ def handle_size(filehandle):
     return bytes_to_str(filehandle.tell())
 
 
-def mail_admins(
-    subject, message, fail_silently=False, connection=None, html_message=None
-):
+def mail_admins(subject, message, fail_silently=False, connection=None, html_message=None):
     """Sends a message to the admins, as defined by the DBBACKUP_ADMINS setting."""
     if not settings.ADMINS:
         return
@@ -144,9 +142,7 @@ def create_spooled_temporary_file(filepath=None, fileobj=None):
     :returns: Spooled temporary file
     :rtype: :class:`tempfile.SpooledTemporaryFile`
     """
-    spooled_file = tempfile.SpooledTemporaryFile(
-        max_size=settings.TMP_FILE_MAX_SIZE, dir=settings.TMP_DIR
-    )
+    spooled_file = tempfile.SpooledTemporaryFile(max_size=settings.TMP_FILE_MAX_SIZE, dir=settings.TMP_DIR)
     if filepath:
         fileobj = open(filepath, "r+b")
     if fileobj is not None:
@@ -175,9 +171,7 @@ def encrypt_file(inputfile, filename):
         filename = f"{filename}.gpg"
         filepath = os.path.join(tempdir, filename)
         if "b" not in inputfile.mode:
-            raise ValueError(
-                "Input file must be opened in binary mode."
-            )
+            raise ValueError("Input file must be opened in binary mode.")
         try:
             inputfile.seek(0)
             always_trust = settings.GPG_ALWAYS_TRUST
@@ -391,9 +385,7 @@ def filename_to_date(filename, datefmt=None):
         return datetime.strptime(datestring, datefmt)
 
 
-def filename_generate(
-    extension, database_name="", servername=None, content_type="db", wildcard=None
-):
+def filename_generate(extension, database_name="", servername=None, content_type="db", wildcard=None):
     """
     Create a new backup filename.
 

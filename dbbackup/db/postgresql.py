@@ -70,9 +70,7 @@ class PgDumpConnector(BaseCommandDBConnector):
 
         cmd += " {}".format(self.settings["NAME"])
         cmd = f"{self.restore_prefix} {cmd} {self.restore_suffix}"
-        stdout, stderr = self.run_command(
-            cmd, stdin=dump, env={**self.restore_env, **pg_env}
-        )
+        stdout, stderr = self.run_command(cmd, stdin=dump, env={**self.restore_env, **pg_env})
         return stdout, stderr
 
 
@@ -148,25 +146,13 @@ class PgDumpBinaryConnector(PgDumpConnector):
 
         # Flatten optional values
         if self.restore_prefix:
-            cmd.extend(
-                self.restore_prefix
-                if isinstance(self.restore_prefix, list)
-                else [self.restore_prefix]
-            )
+            cmd.extend(self.restore_prefix if isinstance(self.restore_prefix, list) else [self.restore_prefix])
 
         if self.restore_cmd:
-            cmd.extend(
-                self.restore_cmd
-                if isinstance(self.restore_cmd, list)
-                else [self.restore_cmd]
-            )
+            cmd.extend(self.restore_cmd if isinstance(self.restore_cmd, list) else [self.restore_cmd])
 
         if self.pg_options:
-            cmd.extend(
-                self.pg_options
-                if isinstance(self.pg_options, list)
-                else [self.pg_options]
-            )
+            cmd.extend(self.pg_options if isinstance(self.pg_options, list) else [self.pg_options])
 
         cmd.extend([dbname])
 
@@ -184,15 +170,9 @@ class PgDumpBinaryConnector(PgDumpConnector):
             cmd.extend(["--if-exists"])
 
         if self.restore_suffix:
-            cmd.extend(
-                self.restore_suffix
-                if isinstance(self.restore_suffix, list)
-                else [self.restore_suffix]
-            )
+            cmd.extend(self.restore_suffix if isinstance(self.restore_suffix, list) else [self.restore_suffix])
 
         cmd_str = " ".join(cmd)
-        stdout, _ = self.run_command(
-            cmd_str, stdin=dump, env={**self.dump_env, **pg_env}
-        )
+        stdout, _ = self.run_command(cmd_str, stdin=dump, env={**self.dump_env, **pg_env})
 
         return stdout

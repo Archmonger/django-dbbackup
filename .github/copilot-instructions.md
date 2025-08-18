@@ -90,10 +90,13 @@ Modern development process using Hatch:
 6. **Auto-format code**: `hatch run lint:format` (2 seconds)
 7. **Test documentation**: `hatch run docs:build` (2 seconds)
 8. **Update documentation** when making changes to Python source code (required)
+9. **Add changelog entry** for all significant changes (bug fixes, new features, breaking changes) to `CHANGELOG.md` under the "Unreleased" section
 
 Always run `hatch run lint:check` before committing. The CI (.github/workflows/build.yml) includes comprehensive checks across all supported Python/Django combinations.
 
 **IMPORTANT**: Documentation must be updated whenever changes are made to Python source code. This is enforced as part of the development workflow.
+
+**IMPORTANT**: Significant changes must always include a changelog entry in `CHANGELOG.md` under the appropriate category (Added, Changed, Deprecated, Removed, Fixed, Security) in the "Unreleased" section.
 
 ## Repository Structure and Navigation
 

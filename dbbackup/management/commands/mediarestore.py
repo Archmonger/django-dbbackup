@@ -21,14 +21,11 @@ class Command(BaseDbBackupCommand):
             action="store",
             help="Specify filename to backup from",
         ),
-        make_option(
-            "-I", "--input-path", help="Specify path on local filesystem to backup from"
-        ),
+        make_option("-I", "--input-path", help="Specify path on local filesystem to backup from"),
         make_option(
             "-s",
             "--servername",
-            help="If backup file is not specified, filter the existing ones with the "
-            "given servername",
+            help="If backup file is not specified, filter the existing ones with the given servername",
         ),
         make_option(
             "-e",
@@ -37,18 +34,14 @@ class Command(BaseDbBackupCommand):
             action="store_true",
             help="Decrypt data before restoring",
         ),
-        make_option(
-            "-p", "--passphrase", default=None, help="Passphrase for decrypt file"
-        ),
+        make_option("-p", "--passphrase", default=None, help="Passphrase for decrypt file"),
         make_option(
             "-z",
             "--uncompress",
             action="store_true",
             help="Uncompress gzip data before restoring",
         ),
-        make_option(
-            "-r", "--replace", help="Replace existing files", action="store_true"
-        ),
+        make_option("-r", "--replace", help="Replace existing files", action="store_true"),
     )
 
     def handle(self, *args, **options):
@@ -87,9 +80,7 @@ class Command(BaseDbBackupCommand):
         self.logger.info("Restoring: %s", input_filename)
 
         if self.decrypt:
-            unencrypted_file, input_filename = utils.unencrypt_file(
-                input_file, input_filename, self.passphrase
-            )
+            unencrypted_file, input_filename = utils.unencrypt_file(input_file, input_filename, self.passphrase)
             input_file.close()
             input_file = unencrypted_file
 

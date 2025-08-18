@@ -32,8 +32,7 @@ W005 = Warning(
 )
 W006 = Warning(
     "FAILURE_RECIPIENTS has been deprecated",
-    hint="settings.DBBACKUP_FAILURE_RECIPIENTS is replaced by "
-    "settings.DBBACKUP_ADMINS",
+    hint="settings.DBBACKUP_FAILURE_RECIPIENTS is replaced by settings.DBBACKUP_ADMINS",
     id="dbbackup.W006",
 )
 W007 = Warning(
@@ -97,16 +96,10 @@ def check_settings(app_configs, **kwargs):
     if not settings.STORAGE or not isinstance(settings.STORAGE, str):
         errors.append(W002)
 
-    if (
-        not callable(settings.FILENAME_TEMPLATE)
-        and "{datetime}" not in settings.FILENAME_TEMPLATE
-    ):
+    if not callable(settings.FILENAME_TEMPLATE) and "{datetime}" not in settings.FILENAME_TEMPLATE:
         errors.append(W003)
 
-    if (
-        not callable(settings.MEDIA_FILENAME_TEMPLATE)
-        and "{datetime}" not in settings.MEDIA_FILENAME_TEMPLATE
-    ):
+    if not callable(settings.MEDIA_FILENAME_TEMPLATE) and "{datetime}" not in settings.MEDIA_FILENAME_TEMPLATE:
         errors.append(W004)
 
     if re.search(r"[^A-Za-z0-9%_-]", settings.DATE_FORMAT):

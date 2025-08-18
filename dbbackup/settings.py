@@ -28,9 +28,7 @@ FILENAME_TEMPLATE = getattr(
     "DBBACKUP_FILENAME_TEMPLATE",
     "{databasename}-{servername}-{datetime}.{extension}",
 )
-MEDIA_FILENAME_TEMPLATE = getattr(
-    settings, "DBBACKUP_MEDIA_FILENAME_TEMPLATE", "{servername}-{datetime}.{extension}"
-)
+MEDIA_FILENAME_TEMPLATE = getattr(settings, "DBBACKUP_MEDIA_FILENAME_TEMPLATE", "{servername}-{datetime}.{extension}")
 
 GPG_ALWAYS_TRUST = getattr(settings, "DBBACKUP_GPG_ALWAYS_TRUST", False)
 GPG_RECIPIENT = GPG_ALWAYS_TRUST = getattr(settings, "DBBACKUP_GPG_RECIPIENT", None)

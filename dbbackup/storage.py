@@ -27,9 +27,7 @@ def get_storage(path=None, options=None):
     path = path or settings.STORAGE
     options = options or settings.STORAGE_OPTIONS
     if not path:
-        raise ImproperlyConfigured(
-            'You must specify a storage class using settings.STORAGES["dbbackup"] settings.'
-        )
+        raise ImproperlyConfigured('You must specify a storage class using settings.STORAGES["dbbackup"] settings.')
     return Storage(path, **options)
 
 
@@ -265,11 +263,7 @@ class Storage:
         :type keep_number: ``int`` or ``None``
         """
         if keep_number is None:
-            keep_number = (
-                settings.CLEANUP_KEEP
-                if content_type == "db"
-                else settings.CLEANUP_KEEP_MEDIA
-            )
+            keep_number = settings.CLEANUP_KEEP if content_type == "db" else settings.CLEANUP_KEEP_MEDIA
         keep_filter = settings.CLEANUP_KEEP_FILTER
         files = self.list_backups(
             encrypted=encrypted,

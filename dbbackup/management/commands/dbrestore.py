@@ -21,14 +21,11 @@ class Command(BaseDbBackupCommand):
     option_list = BaseDbBackupCommand.option_list + (
         make_option("-d", "--database", help="Database to restore"),
         make_option("-i", "--input-filename", help="Specify filename to backup from"),
-        make_option(
-            "-I", "--input-path", help="Specify path on local filesystem to backup from"
-        ),
+        make_option("-I", "--input-path", help="Specify path on local filesystem to backup from"),
         make_option(
             "-s",
             "--servername",
-            help="If backup file is not specified, filter the "
-            "existing ones with the given servername",
+            help="If backup file is not specified, filter the existing ones with the given servername",
         ),
         make_option(
             "-c",
@@ -37,9 +34,7 @@ class Command(BaseDbBackupCommand):
             action="store_true",
             help="Decrypt data before restoring",
         ),
-        make_option(
-            "-p", "--passphrase", help="Passphrase for decrypt file", default=None
-        ),
+        make_option("-p", "--passphrase", help="Passphrase for decrypt file", default=None),
         make_option(
             "-z",
             "--uncompress",
@@ -85,9 +80,7 @@ class Command(BaseDbBackupCommand):
             self.passphrase = options.get("passphrase")
             self.interactive = options.get("interactive")
             self.input_database_name = options.get("database")
-            self.database_name, self.database = self._get_database(
-                self.input_database_name
-            )
+            self.database_name, self.database = self._get_database(self.input_database_name)
             self.storage = get_storage()
             self.no_drop = options.get("no_drop")
             self.pg_options = options.get("pg_options", "")
@@ -100,10 +93,7 @@ class Command(BaseDbBackupCommand):
         """Get the database to restore."""
         if not database_name:
             if len(settings.DATABASES) > 1:
-                errmsg = (
-                    "Because this project contains more than one database, you"
-                    " must specify the --database option."
-                )
+                errmsg = "Because this project contains more than one database, you must specify the --database option."
                 raise CommandError(errmsg)
             database_name = list(settings.DATABASES.keys())[0]
         if database_name not in settings.DATABASES:
@@ -128,15 +118,11 @@ class Command(BaseDbBackupCommand):
         self.logger.info(f"Restoring: {input_filename}")
 
         if self.decrypt:
-            unencrypted_file, input_filename = utils.unencrypt_file(
-                input_file, input_filename, self.passphrase
-            )
+            unencrypted_file, input_filename = utils.unencrypt_file(input_file, input_filename, self.passphrase)
             input_file.close()
             input_file = unencrypted_file
         if self.uncompress:
-            uncompressed_file, input_filename = utils.uncompress_file(
-                input_file, input_filename
-            )
+            uncompressed_file, input_filename = utils.uncompress_file(input_file, input_filename)
             input_file.close()
             input_file = uncompressed_file
 

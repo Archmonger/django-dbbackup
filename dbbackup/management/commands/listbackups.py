@@ -45,9 +45,7 @@ class Command(BaseDbBackupCommand):
             default=None,
             dest="encrypted",
         ),
-        make_option(
-            "-c", "--content-type", help="Filter by content type 'db' or 'media'"
-        ),
+        make_option("-c", "--content-type", help="Filter by content type 'db' or 'media'"),
     )
 
     def handle(self, **options):
