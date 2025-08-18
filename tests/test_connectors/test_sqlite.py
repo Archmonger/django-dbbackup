@@ -77,8 +77,8 @@ class SqliteConnectorTest(TestCase):
         restored_obj = restored_objects.first()
         self.assertEqual(restored_obj.field, js_content, "Content should match exactly")
 
-    def test_restore_dump_no_warnings_for_clean_database(self):
-        """Test that restore produces no warnings when restoring to a clean database"""
+    def test_restore_dump_may_warn_for_already_exists(self):
+        """Test that restore may produce warnings for already existing objects"""
         import warnings
 
         # Create some test data
@@ -88,23 +88,17 @@ class SqliteConnectorTest(TestCase):
         connector = SqliteConnector()
         dump = connector.create_dump()
 
-        # Clear all data
+        # Clear all data but keep schema (tables/indexes still exist)
         CharModel.objects.all().delete()
         TextModel.objects.all().delete()
 
-        # Restore should produce no warnings
+        # Restore may produce warnings for already existing schema objects
         dump.seek(0)
         with warnings.catch_warnings(record=True) as warning_list:
             warnings.simplefilter("always")  # Capture all warnings
             connector.restore_dump(dump)
 
-        # Filter out warnings from this package only
-        dbbackup_warnings = [w for w in warning_list if "dbbackup" in str(w.filename)]
-        self.assertEqual(
-            len(dbbackup_warnings), 0, f"Expected no warnings, but got: {[str(w.message) for w in dbbackup_warnings]}"
-        )
-
-        # Verify data was restored
+        # Verify data was restored despite any warnings
         self.assertTrue(CharModel.objects.filter(field="test1").exists())
         self.assertTrue(TextModel.objects.filter(field="test content").exists())
 
@@ -178,17 +172,17 @@ class SqliteConnectorTest(TestCase):
         self.assertIn("CREATE TRIGGER IF NOT EXISTS", dump_content, "Triggers should use IF NOT EXISTS")
         self.assertIn("CREATE VIEW IF NOT EXISTS", dump_content, "Views should use IF NOT EXISTS")
 
-    def test_restore_ignores_already_exists_errors(self):
-        """Test that restore ignores 'already exists' errors"""
+    def test_restore_warns_about_already_exists_errors(self):
+        """Test that restore warns about 'already exists' errors"""
         import warnings
         from io import BytesIO
 
-        # Create dump content that would trigger "already exists" errors without IF NOT EXISTS
+        # Create dump content that would trigger "already exists" errors - WITHOUT IF NOT EXISTS
         dump_content = """
-CREATE TABLE IF NOT EXISTS test_exists (id INTEGER PRIMARY KEY);
-CREATE INDEX IF NOT EXISTS test_exists_idx ON test_exists(id);
-CREATE TRIGGER IF NOT EXISTS test_exists_trigger AFTER INSERT ON test_exists BEGIN UPDATE test_exists SET id = NEW.id; END;
-CREATE VIEW IF NOT EXISTS test_exists_view AS SELECT * FROM test_exists;
+CREATE TABLE test_exists (id INTEGER PRIMARY KEY);
+CREATE INDEX test_exists_idx ON test_exists(id);
+CREATE TRIGGER test_exists_trigger AFTER INSERT ON test_exists BEGIN UPDATE test_exists SET id = NEW.id; END;
+CREATE VIEW test_exists_view AS SELECT * FROM test_exists;
         """.strip()
 
         dump_file = BytesIO(dump_content.encode("utf-8"))
@@ -208,14 +202,12 @@ CREATE VIEW IF NOT EXISTS test_exists_view AS SELECT * FROM test_exists;
         # Filter warnings from this package
         dbbackup_warnings = [w for w in warning_list if "dbbackup" in str(w.filename)]
         
-        # Should not warn about "already exists" errors
-        self.assertEqual(len(dbbackup_warnings), 0, f"Should have no warnings for 'already exists' errors, got: {[str(w.message) for w in dbbackup_warnings]}")
+        # Should warn about "already exists" errors now that filtering is removed
+        self.assertGreater(len(dbbackup_warnings), 0, "Should have warnings for 'already exists' errors")
         
-        # Verify no warnings about "already exists"
-        for warning in dbbackup_warnings:
-            warning_text = str(warning.message).lower()
-            self.assertNotIn("already exists", warning_text, "Should not warn about 'already exists' errors")
-            self.assertNotIn("unique constraint failed", warning_text, "Should not warn about unique constraint failures")
+        # Verify we get warnings about "already exists"
+        already_exists_warnings = [w for w in dbbackup_warnings if "already exists" in str(w.message).lower()]
+        self.assertGreater(len(already_exists_warnings), 0, "Should warn about 'already exists' errors")
 
 
 @patch("dbbackup.db.sqlite.open", mock_open(read_data=b"foo"), create=True)
