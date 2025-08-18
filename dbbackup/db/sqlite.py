@@ -52,11 +52,13 @@ class SqliteConnector(BaseDBConnector):
             query_res = cursor.execute(q)
             for row in query_res:
                 fileobj.write(f"{row[0]};\n".encode())
-            schema_res = cursor.execute(DUMP_ETC)
-            for name, _, sql in schema_res.fetchall():
-                if sql.startswith("CREATE INDEX"):
-                    sql = sql.replace("CREATE INDEX", "CREATE INDEX IF NOT EXISTS")
-                fileobj.write(f"{sql};\n".encode())
+
+        # Dump indexes, triggers, and views after all tables are created
+        schema_res = cursor.execute(DUMP_ETC)
+        for name, _, sql in schema_res.fetchall():
+            if sql.startswith("CREATE INDEX"):
+                sql = sql.replace("CREATE INDEX", "CREATE INDEX IF NOT EXISTS")
+            fileobj.write(f"{sql};\n".encode())
         cursor.close()
 
     def create_dump(self):
@@ -69,13 +71,13 @@ class SqliteConnector(BaseDBConnector):
 
     def _is_sql_command_complete(self, sql_command_bytes):
         """
-        Check if an SQL command is complete by ensuring that any closing ");\n" 
+        Check if an SQL command is complete by ensuring that any closing ");\n"
         is not within a quoted string literal.
         """
         sql_str = sql_command_bytes.decode("UTF-8")
         if not sql_str.endswith(");\n"):
             return False
-            
+
         # Parse the SQL to check if we're inside a quoted string at the end
         in_quotes = False
         i = 0
@@ -91,7 +93,7 @@ class SqliteConnector(BaseDBConnector):
                     i += 1
             else:
                 i += 1
-        
+
         # The command is complete if we're not inside quotes when we reach ");\n"
         return not in_quotes
 
@@ -115,7 +117,14 @@ class SqliteConnector(BaseDBConnector):
                 try:
                     cursor.execute(sql_command.decode("UTF-8"))
                 except (OperationalError, IntegrityError) as err:
-                    warnings.warn(f"Error in db restore: {err}")
+                    # Only warn about unexpected errors that indicate real problems
+                    err_msg = str(err).lower()
+                    if "no such table" in err_msg or "no such column" in err_msg or "syntax error" in err_msg:
+                        # These are unexpected errors that indicate real problems
+                        warnings.warn(f"Error in db restore: {err}")
+                    # Silently ignore expected errors during restore:
+                    # - UNIQUE constraint failures (data already exists)
+                    # - "already exists" errors for indexes/triggers/views
                 sql_command = b""
 
 

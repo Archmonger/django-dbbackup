@@ -135,7 +135,9 @@ class Command(BaseDbBackupCommand):
                 input_file.fileno()
             except (AttributeError, io.UnsupportedOperation):
                 # File doesn't support fileno(), convert to SpooledTemporaryFile
-                self.logger.debug("Converting remote storage file to temporary file due to missing fileno() support required by subprocess")
+                self.logger.debug(
+                    "Converting remote storage file to temporary file due to missing fileno() support required by subprocess"
+                )
                 temp_file = utils.create_spooled_temporary_file(fileobj=input_file)
                 input_file.close()
                 input_file = temp_file
