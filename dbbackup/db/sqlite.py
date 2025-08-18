@@ -45,9 +45,9 @@ class SqliteConnector(BaseDBConnector):
             table_name_ident = table_name.replace('"', '""')
             res = cursor.execute(f'PRAGMA table_info("{table_name_ident}")')
             column_names = [str(table_info[1]) for table_info in res.fetchall()]
-            q = """SELECT 'INSERT INTO "{0}" VALUES({1})' FROM "{0}";\n""".format(
+            q = """SELECT 'INSERT OR REPLACE INTO "{0}" VALUES({1})' FROM "{0}";\n""".format(
                 table_name_ident,
-                ",".join("""'||quote("{}")||'""".format(col.replace('"', '""')) for col in column_names),
+                ",".join(f"""'||quote("{col.replace('"', '""')}")||'""" for col in column_names),
             )
             query_res = cursor.execute(q)
             for row in query_res:
@@ -117,12 +117,7 @@ class SqliteConnector(BaseDBConnector):
                 try:
                     cursor.execute(sql_command.decode("UTF-8"))
                 except (OperationalError, IntegrityError) as err:
-                    err_msg = str(err).lower()
-                    # Silently ignore expected errors during restore:
-                    # - UNIQUE constraint failures (data already exists)
-                    # - "already exists" errors for indexes/triggers/views
-                    if "unique constraint" not in err_msg and "already exists" not in err_msg:
-                        warnings.warn(f"Error in db restore: {err}")
+                    warnings.warn(f"Error in db restore: {err}")
 
                 sql_command = b""
 

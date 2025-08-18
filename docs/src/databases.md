@@ -105,7 +105,7 @@ SQLite uses by default `dbbackup.db.sqlite.SqliteConnector`.
 
 ### SqliteConnector
 
-It is in pure Python and copies the behavior of `.dump` command for creating a
+It is in pure Python and is similar to the Sqlite `.dump` command for creating a
 SQL dump.
 
 ### SqliteBackupConnector
@@ -114,7 +114,7 @@ The `dbbackup.db.sqlite.SqliteBackupConnector` makes a copy of the SQLite databa
 
 ### SqliteCPConnector
 
-You can also use `dbbackup.db.sqlite.SqliteCPConnector` for making a 
+You can also use `dbbackup.db.sqlite.SqliteCPConnector` for making a
 simple raw copy of your database file, like a snapshot.
 
 In-memory database aren't dumpable with it.

@@ -142,6 +142,20 @@ class SqliteConnectorTest(TestCase):
         dump = connector.create_dump()
         self.assertTrue(dump.read())
 
+    def test_restore_dump_unique_conflict_updates_row(self):
+        # Create initial row
+        obj = CharModel.objects.create(field="original")
+        obj_id = obj.id
+        # Backup
+        connector = SqliteConnector()
+        dump = connector.create_dump()
+        # Modify the existing row so that restoring will cause UNIQUE constraint failure on primary key
+        CharModel.objects.filter(id=obj_id).update(field="changed")
+        # Restore should update row back to original content via INSERT OR REPLACE retry
+        dump.seek(0)
+        connector.restore_dump(dump)
+        self.assertEqual(CharModel.objects.get(id=obj_id).field, "original")
+
 
 @patch("dbbackup.db.sqlite.open", mock_open(read_data=b"foo"), create=True)
 class SqliteCPConnectorTest(TestCase):
