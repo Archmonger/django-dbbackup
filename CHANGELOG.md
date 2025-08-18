@@ -23,10 +23,6 @@ Don't forget to remove deprecated code on each major release!
 
 - This repository has been transferred out of Jazzband due to logistical concerns.
 
-### Fixed
-
-- Fix FTP storage restore issue where file objects without `fileno()` support caused `io.UnsupportedOperation` error during database restore operations.
-
 ### Removed
 
 - Drop support for end-of-life Python 3.7 and 3.8.
@@ -39,6 +35,7 @@ Don't forget to remove deprecated code on each major release!
 - Fix encryption support when using `gnupg==5.x`.
 - Resolve SQLite backup temporary file locking issues on Windows.
 - Fix MediaRestore path corruption for files containing "media" in their paths.
+- Fix FTP storage restore issue where file objects without `fileno()` support caused `io.UnsupportedOperation` error during database restore operations.
 
 ### Security
 

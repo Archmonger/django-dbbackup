@@ -166,24 +166,28 @@ def validate_changelog(changelog_path="CHANGELOG.md"):
     order = ["### Added", "### Changed", "### Deprecated", "### Removed", "### Fixed", "### Security"]
     current_position_in_order = -1
     version_header = "UNKNOWN"
+    seen_sections = set()
     for _line in changelog_header_lines:
         line = _line.strip()
         # Reset current position if we are at a version header
         if line.startswith("## "):
             version_header = line
             current_position_in_order = -1
+            seen_sections = set()
 
         # Check if the current section is in the correct order
         if line in order:
             section_position = order.index(line)
+            # Duplicate detection (any repeat within the same version regardless of order)
+            if line in seen_sections:
+                errors.append(f"Duplicate section '{line}' found in version '{version_header}'.")
+            else:
+                seen_sections.add(line)
             if section_position < current_position_in_order:
                 errors.append(
                     f"Section '{line}' is out of order in version '{version_header}'. "
                     "Expected section order: [Added, Changed, Deprecated, Removed, Fixed, Security]"
                 )
-            # Additional check for duplicate sections
-            if section_position == current_position_in_order:
-                errors.append(f"Duplicate section '{line}' found in version '{version_header}'.")
             current_position_in_order = section_position
 
     # Find sections with missing bullet points

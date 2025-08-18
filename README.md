@@ -21,4 +21,6 @@ For more details, see the [official documentation](https://archmonger.github.io/
 
 DBBackup gives you a simple yet robust interface to backup, encrypt, transmit, and restore your database and media.
 
-In a few words, it is a pipe between your Django project and your backups. Behind the hood, your database's standard/best procedure is used to backup and restore data. Optionally, DBBackup can apply compression and/or encryption before transferring the data to nearly any storage system.
+In a few words, it is a pipe between your Django project and your backups. It is written to be far more efficient than Django's [backup](https://docs.djangoproject.com/en/stable/ref/django-admin/)/[restore](https://docs.djangoproject.com/en/5.2/ref/django-admin/#loaddata) commands by using your database's native/standard/best procedure(s) or tool(s) to perform backups.
+
+Ultimately, this helps simplify the task of "creating a backup" by removing the need for writing relational query commands, using complex tools, or creating scripts. Optionally, DBBackup can apply compression and/or encryption before transferring the data to nearly any storage system.
