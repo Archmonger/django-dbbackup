@@ -43,6 +43,42 @@ class SqliteConnectorTest(TestCase):
         dump = connector.create_dump()
         connector.restore_dump(dump)
 
+    def test_restore_dump_with_multiline_js_content(self):
+        """Test restore of objects with JavaScript/HTML content containing '); patterns"""
+        # Create content that contains "); patterns that could confuse the restore logic
+        js_content = '''function showAlert() {
+    alert("Hello world!");
+    console.log("Debug info");
+    return true;
+}
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        console.log("Ready!");
+    });
+</script>'''
+        
+        # Create, backup, delete, restore cycle
+        original_obj = TextModel.objects.create(field=js_content)
+        original_id = original_obj.id
+        
+        connector = SqliteConnector()
+        dump = connector.create_dump()
+        
+        # Delete the original
+        original_obj.delete()
+        self.assertFalse(TextModel.objects.filter(id=original_id).exists())
+        
+        # Restore and verify
+        dump.seek(0)
+        connector.restore_dump(dump)
+        
+        restored_objects = TextModel.objects.filter(id=original_id)
+        self.assertTrue(restored_objects.exists(), "Object should be restored")
+        
+        restored_obj = restored_objects.first()
+        self.assertEqual(restored_obj.field, js_content, "Content should match exactly")
+
     def test_create_dump_with_virtual_tables(self):
         with connection.cursor() as c:
             c.execute("CREATE VIRTUAL TABLE lookup USING fts5(field)")

@@ -67,6 +67,34 @@ class SqliteConnector(BaseDBConnector):
         dump_file.seek(0)
         return dump_file
 
+    def _is_sql_command_complete(self, sql_command_bytes):
+        """
+        Check if an SQL command is complete by ensuring that any closing ");\\n" 
+        is not within a quoted string literal.
+        """
+        sql_str = sql_command_bytes.decode("UTF-8")
+        if not sql_str.endswith(");\n"):
+            return False
+            
+        # Parse the SQL to check if we're inside a quoted string at the end
+        in_quotes = False
+        i = 0
+        while i < len(sql_str) - 3:  # -3 to avoid checking the final ");\n"
+            char = sql_str[i]
+            if char == "'":
+                if i + 1 < len(sql_str) and sql_str[i + 1] == "'":
+                    # Escaped single quote (''), skip both
+                    i += 2
+                else:
+                    # Toggle quote state
+                    in_quotes = not in_quotes
+                    i += 1
+            else:
+                i += 1
+        
+        # The command is complete if we're not inside quotes when we reach ");\\n"
+        return not in_quotes
+
     def restore_dump(self, dump):
         if not self.connection.is_usable():
             self.connection.connect()
@@ -79,8 +107,9 @@ class SqliteConnector(BaseDBConnector):
             if line_str.startswith("INSERT") and not line_str.endswith(");\n"):
                 sql_is_complete = False
                 continue
-            if not sql_is_complete and line_str.endswith(");\n"):
-                sql_is_complete = True
+            if not sql_is_complete:
+                # Check if the accumulated command is now complete
+                sql_is_complete = self._is_sql_command_complete(sql_command)
 
             if sql_is_complete:
                 try:
