@@ -92,7 +92,7 @@ class SqliteConnector(BaseDBConnector):
             else:
                 i += 1
         
-        # The command is complete if we're not inside quotes when we reach ");\\n"
+        # The command is complete if we're not inside quotes when we reach ");\n"
         return not in_quotes
 
     def restore_dump(self, dump):
