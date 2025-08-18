@@ -158,7 +158,9 @@ class SqliteConnectorTest(TestCase):
         with connection.cursor() as c:
             c.execute("CREATE TABLE test_schema (id INTEGER PRIMARY KEY, value TEXT)")
             c.execute("CREATE INDEX test_idx ON test_schema(value)")
-            c.execute("CREATE TRIGGER test_trigger AFTER INSERT ON test_schema BEGIN UPDATE test_schema SET value = NEW.value || '_triggered' WHERE id = NEW.id; END")
+            c.execute(
+                "CREATE TRIGGER test_trigger AFTER INSERT ON test_schema BEGIN UPDATE test_schema SET value = NEW.value || '_triggered' WHERE id = NEW.id; END"
+            )
             c.execute("CREATE VIEW test_view AS SELECT * FROM test_schema WHERE value IS NOT NULL")
 
         connector = SqliteConnector()
@@ -167,7 +169,7 @@ class SqliteConnectorTest(TestCase):
 
         # Check that the dump contains IF NOT EXISTS for all schema objects
         dump_content = dump_file.getvalue().decode("utf-8")
-        
+
         self.assertIn("CREATE INDEX IF NOT EXISTS", dump_content, "Indexes should use IF NOT EXISTS")
         self.assertIn("CREATE TRIGGER IF NOT EXISTS", dump_content, "Triggers should use IF NOT EXISTS")
         self.assertIn("CREATE VIEW IF NOT EXISTS", dump_content, "Views should use IF NOT EXISTS")
@@ -192,7 +194,9 @@ CREATE VIEW test_exists_view AS SELECT * FROM test_exists;
         with connection.cursor() as c:
             c.execute("CREATE TABLE test_exists (id INTEGER PRIMARY KEY)")
             c.execute("CREATE INDEX test_exists_idx ON test_exists(id)")
-            c.execute("CREATE TRIGGER test_exists_trigger AFTER INSERT ON test_exists BEGIN UPDATE test_exists SET id = NEW.id; END")
+            c.execute(
+                "CREATE TRIGGER test_exists_trigger AFTER INSERT ON test_exists BEGIN UPDATE test_exists SET id = NEW.id; END"
+            )
             c.execute("CREATE VIEW test_exists_view AS SELECT * FROM test_exists")
 
         with warnings.catch_warnings(record=True) as warning_list:
@@ -201,10 +205,10 @@ CREATE VIEW test_exists_view AS SELECT * FROM test_exists;
 
         # Filter warnings from this package
         dbbackup_warnings = [w for w in warning_list if "dbbackup" in str(w.filename)]
-        
+
         # Should warn about "already exists" errors now that filtering is removed
         self.assertGreater(len(dbbackup_warnings), 0, "Should have warnings for 'already exists' errors")
-        
+
         # Verify we get warnings about "already exists"
         already_exists_warnings = [w for w in dbbackup_warnings if "already exists" in str(w.message).lower()]
         self.assertGreater(len(already_exists_warnings), 0, "Should warn about 'already exists' errors")

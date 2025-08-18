@@ -38,7 +38,8 @@ Don't forget to remove deprecated code on each major release!
 - Fix FTP storage restore issue where file objects without `fileno()` support caused `io.UnsupportedOperation` error during database restore operations.
 - Fix SQLite restore failing when multi-line `TextField` content contains semicolons.
 - Fix SQLite duplicate index creation
-- Fix `UNIQUE constraint` errors shown during `dbrestore` when using `SqliteConnector`.
+- Fix SQLite `UNIQUE constraint` errors shown during `dbrestore`.
+- Fix SQLite `index`/`trigger`/`view` `<NAME> already exists` warnings.
 
 ### Security
 

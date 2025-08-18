@@ -54,14 +54,14 @@ class SqliteConnector(BaseDBConnector):
                 fileobj.write(f"{row[0]};\n".encode())
 
         # Dump indexes, triggers, and views after all tables are created
-        schema_res = cursor.execute(DUMP_ETC)
-        for name, _, sql in schema_res.fetchall():
+        cursor.execute(DUMP_ETC)
+        for name, _, sql in cursor.fetchall():
             if sql.startswith("CREATE INDEX"):
-                sql = sql.replace("CREATE INDEX", "CREATE INDEX IF NOT EXISTS")
+                sql = sql.replace("CREATE INDEX", "CREATE INDEX IF NOT EXISTS", 1)
             elif sql.startswith("CREATE TRIGGER"):
-                sql = sql.replace("CREATE TRIGGER", "CREATE TRIGGER IF NOT EXISTS")
+                sql = sql.replace("CREATE TRIGGER", "CREATE TRIGGER IF NOT EXISTS", 1)
             elif sql.startswith("CREATE VIEW"):
-                sql = sql.replace("CREATE VIEW", "CREATE VIEW IF NOT EXISTS")
+                sql = sql.replace("CREATE VIEW", "CREATE VIEW IF NOT EXISTS", 1)
             fileobj.write(f"{sql};\n".encode())
         cursor.close()
 
@@ -121,7 +121,12 @@ class SqliteConnector(BaseDBConnector):
                 try:
                     cursor.execute(sql_command.decode("UTF-8"))
                 except (OperationalError, IntegrityError) as err:
-                    warnings.warn(f"Error in db restore: {err}")
+                    err_str = str(err)
+                    if not (
+                        (err_str.startswith("index") or err_str.startswith("trigger") or err_str.startswith("view"))
+                        and err_str.endswith("already exists")
+                    ):
+                        warnings.warn(f"Error in db restore: {err}")
 
                 sql_command = b""
 
