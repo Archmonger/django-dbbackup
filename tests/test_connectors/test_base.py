@@ -1,5 +1,6 @@
 import os
 from tempfile import SpooledTemporaryFile
+from unittest.mock import patch
 
 from django.test import TestCase
 
@@ -37,6 +38,43 @@ class BaseCommandDBConnectorTest(TestCase):
         connector = BaseCommandDBConnector()
         with self.assertRaises(exceptions.CommandConnectorError):
             connector.run_command("echa 123")
+
+    def test_run_command_error_message_for_missing_command(self):
+        """Test error message when a database command is not found."""
+        connector = BaseCommandDBConnector()
+        with self.assertRaises(exceptions.CommandConnectorError) as cm:
+            connector.run_command("nonexistent_database_command_12345")
+        
+        error_message = str(cm.exception)
+        
+        # Check that the improved error message contains helpful information
+        self.assertIn("Database command 'nonexistent_database_command_12345' not found", error_message)
+        self.assertIn("Please ensure the required database client tools are installed", error_message)
+        self.assertIn("PostgreSQL: Install postgresql-client", error_message)
+        self.assertIn("MySQL: Install mysql-client", error_message)
+        self.assertIn("MongoDB: Install mongodb-tools", error_message)
+        self.assertIn("DUMP_CMD: Path to the dump command", error_message)
+        self.assertIn("RESTORE_CMD: Path to the restore command", error_message)
+
+    def test_run_command_error_message_for_other_os_errors(self):
+        """Test that non-ENOENT OSErrors still get the original error format."""
+        connector = BaseCommandDBConnector()
+        
+        # Mock OSError with a different errno to test the else branch
+        with patch('dbbackup.db.base.Popen') as mock_popen:
+            mock_popen.side_effect = OSError(13, "Permission denied")  # EACCES
+            
+            with self.assertRaises(exceptions.CommandConnectorError) as cm:
+                connector.run_command("some_command")
+            
+            error_message = str(cm.exception)
+            
+            # Should get the original error format for non-ENOENT errors
+            self.assertIn("Error running: some_command", error_message)
+            self.assertIn("Permission denied", error_message)
+            # Should NOT contain the helpful database installation message
+            self.assertNotIn("Database command", error_message)
+            self.assertNotIn("client tools are installed", error_message)
 
     def test_run_command_stdin(self):
         connector = BaseCommandDBConnector()

@@ -230,4 +230,20 @@ class BaseCommandDBConnector(BaseDBConnector):
             stderr.seek(0)
             return stdout, stderr
         except OSError as err:
-            raise exceptions.CommandConnectorError(f"Error running: {command}\n{str(err)}")
+            # Check if this is a "command not found" error (errno 2)
+            if err.errno == 2:  # No such file or directory
+                cmd_name = shlex.split(command)[0] if command else "command"
+                error_msg = (
+                    f"Database command '{cmd_name}' not found. "
+                    f"Please ensure the required database client tools are installed.\n\n"
+                    f"For PostgreSQL: Install postgresql-client (pg_dump, psql, pg_restore)\n"
+                    f"For MySQL: Install mysql-client (mysqldump, mysql)\n"
+                    f"For MongoDB: Install mongodb-tools (mongodump, mongorestore)\n\n"
+                    f"Alternatively, you can specify custom command paths using these settings:\n"
+                    f"- DUMP_CMD: Path to the dump command\n"
+                    f"- RESTORE_CMD: Path to the restore command\n\n"
+                    f"Original error: {str(err)}"
+                )
+                raise exceptions.CommandConnectorError(error_msg)
+            else:
+                raise exceptions.CommandConnectorError(f"Error running: {command}\n{str(err)}")
