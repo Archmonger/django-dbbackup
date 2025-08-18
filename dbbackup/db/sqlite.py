@@ -58,6 +58,10 @@ class SqliteConnector(BaseDBConnector):
         for name, _, sql in schema_res.fetchall():
             if sql.startswith("CREATE INDEX"):
                 sql = sql.replace("CREATE INDEX", "CREATE INDEX IF NOT EXISTS")
+            elif sql.startswith("CREATE TRIGGER"):
+                sql = sql.replace("CREATE TRIGGER", "CREATE TRIGGER IF NOT EXISTS")
+            elif sql.startswith("CREATE VIEW"):
+                sql = sql.replace("CREATE VIEW", "CREATE VIEW IF NOT EXISTS")
             fileobj.write(f"{sql};\n".encode())
         cursor.close()
 
@@ -117,7 +121,11 @@ class SqliteConnector(BaseDBConnector):
                 try:
                     cursor.execute(sql_command.decode("UTF-8"))
                 except (OperationalError, IntegrityError) as err:
-                    warnings.warn(f"Error in db restore: {err}")
+                    # Only warn about serious errors, not expected "already exists" errors
+                    err_str = str(err).lower()
+                    # Ignore common expected errors when using IF NOT EXISTS and INSERT OR REPLACE
+                    if not ("already exists" in err_str or "unique constraint failed" in err_str):
+                        warnings.warn(f"Error in db restore: {err}")
 
                 sql_command = b""
 

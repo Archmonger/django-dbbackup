@@ -156,6 +156,67 @@ class SqliteConnectorTest(TestCase):
         connector.restore_dump(dump)
         self.assertEqual(CharModel.objects.get(id=obj_id).field, "original")
 
+    def test_schema_objects_use_if_not_exists(self):
+        """Test that indexes, triggers, and views use IF NOT EXISTS syntax"""
+        from io import BytesIO
+
+        # Create a test table, index, trigger, and view
+        with connection.cursor() as c:
+            c.execute("CREATE TABLE test_schema (id INTEGER PRIMARY KEY, value TEXT)")
+            c.execute("CREATE INDEX test_idx ON test_schema(value)")
+            c.execute("CREATE TRIGGER test_trigger AFTER INSERT ON test_schema BEGIN UPDATE test_schema SET value = NEW.value || '_triggered' WHERE id = NEW.id; END")
+            c.execute("CREATE VIEW test_view AS SELECT * FROM test_schema WHERE value IS NOT NULL")
+
+        connector = SqliteConnector()
+        dump_file = BytesIO()
+        connector._write_dump(dump_file)
+
+        # Check that the dump contains IF NOT EXISTS for all schema objects
+        dump_content = dump_file.getvalue().decode("utf-8")
+        
+        self.assertIn("CREATE INDEX IF NOT EXISTS", dump_content, "Indexes should use IF NOT EXISTS")
+        self.assertIn("CREATE TRIGGER IF NOT EXISTS", dump_content, "Triggers should use IF NOT EXISTS")
+        self.assertIn("CREATE VIEW IF NOT EXISTS", dump_content, "Views should use IF NOT EXISTS")
+
+    def test_restore_ignores_already_exists_errors(self):
+        """Test that restore ignores 'already exists' errors"""
+        import warnings
+        from io import BytesIO
+
+        # Create dump content that would trigger "already exists" errors without IF NOT EXISTS
+        dump_content = """
+CREATE TABLE IF NOT EXISTS test_exists (id INTEGER PRIMARY KEY);
+CREATE INDEX IF NOT EXISTS test_exists_idx ON test_exists(id);
+CREATE TRIGGER IF NOT EXISTS test_exists_trigger AFTER INSERT ON test_exists BEGIN UPDATE test_exists SET id = NEW.id; END;
+CREATE VIEW IF NOT EXISTS test_exists_view AS SELECT * FROM test_exists;
+        """.strip()
+
+        dump_file = BytesIO(dump_content.encode("utf-8"))
+        connector = SqliteConnector()
+
+        # First create the schema objects to ensure "already exists" situations
+        with connection.cursor() as c:
+            c.execute("CREATE TABLE test_exists (id INTEGER PRIMARY KEY)")
+            c.execute("CREATE INDEX test_exists_idx ON test_exists(id)")
+            c.execute("CREATE TRIGGER test_exists_trigger AFTER INSERT ON test_exists BEGIN UPDATE test_exists SET id = NEW.id; END")
+            c.execute("CREATE VIEW test_exists_view AS SELECT * FROM test_exists")
+
+        with warnings.catch_warnings(record=True) as warning_list:
+            warnings.simplefilter("always")
+            connector.restore_dump(dump_file)
+
+        # Filter warnings from this package
+        dbbackup_warnings = [w for w in warning_list if "dbbackup" in str(w.filename)]
+        
+        # Should not warn about "already exists" errors
+        self.assertEqual(len(dbbackup_warnings), 0, f"Should have no warnings for 'already exists' errors, got: {[str(w.message) for w in dbbackup_warnings]}")
+        
+        # Verify no warnings about "already exists"
+        for warning in dbbackup_warnings:
+            warning_text = str(warning.message).lower()
+            self.assertNotIn("already exists", warning_text, "Should not warn about 'already exists' errors")
+            self.assertNotIn("unique constraint failed", warning_text, "Should not warn about unique constraint failures")
+
 
 @patch("dbbackup.db.sqlite.open", mock_open(read_data=b"foo"), create=True)
 class SqliteCPConnectorTest(TestCase):
