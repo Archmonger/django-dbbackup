@@ -7,7 +7,7 @@ import shutil
 from io import BytesIO
 from shutil import copyfileobj
 from tempfile import mktemp
-from unittest.mock import patch, Mock
+from unittest.mock import Mock, patch
 
 from django.conf import settings
 from django.core.files import File
@@ -145,26 +145,27 @@ class DbrestoreCommandRestoreBackupTest(TestCase):
 
 class MockFTPFile(BytesIO):
     """Mock file object similar to what FTP storage returns without fileno() support."""
-    
-    def __init__(self, content):
+
+    def __init__(self, content: bytes):
         super().__init__(content)
         self.name = "test-backup.psql.bin"
-        
+        # Keep original payload so repeated open() calls return a fresh BytesIO
+        # instance (mimics Django Storage behavior) and avoid dead-code warning.
+        self._file_content = content
+
     def fileno(self):
         """Simulate FTP file object that doesn't support fileno()."""
         raise io.UnsupportedOperation("fileno")
-    
-    def open(self, mode="rb"):
-        """Simulate Django storage file open method."""
-        if hasattr(self, '_file_content'):
-            return BytesIO(self._file_content)
-        return self
+
+    def open(self, mode: str = "rb"):
+        """Return a new readable stream each time open() is called."""
+        return BytesIO(self._file_content)
 
 
 @patch("dbbackup.management.commands._base.input", return_value="y")
 class DbrestoreCommandFTPFileTest(TestCase):
     """Test restore functionality with FTP-like file objects that don't support fileno()."""
-    
+
     def setUp(self):
         self.command = DbrestoreCommand()
         self.command.stdout = DEV_NULL
@@ -181,7 +182,7 @@ class DbrestoreCommandFTPFileTest(TestCase):
         self.command.database_name = "default"
         self.command.schemas = []
         HANDLED_FILES.clean()
-    
+
     @patch("dbbackup.management.commands.dbrestore.get_connector")
     def test_ftp_file_restore_with_postgresql(self, mock_get_connector, *args):
         """Test that restore works with FTP-like files that don't support fileno() using PostgreSQL."""
@@ -189,29 +190,29 @@ class DbrestoreCommandFTPFileTest(TestCase):
         mock_connector = Mock(spec=PgDumpConnector)
         mock_connector.schemas = []
         mock_get_connector.return_value = mock_connector
-        
+
         # Create mock FTP file with dump content
         dump_content = get_dump().read()
         ftp_file = MockFTPFile(dump_content)
-        
+
         # Mock the storage to return our FTP-like file
-        with patch.object(self.command.storage, 'read_file', return_value=ftp_file):
+        with patch.object(self.command.storage, "read_file", return_value=ftp_file):
             # Ensure the backup filename exists in storage
             HANDLED_FILES["written_files"].append((self.command.filename, File(BytesIO(dump_content))))
-            
+
             # Set up command with PostgreSQL connector
             self.command.connector = mock_connector
-            
+
             # This should not raise io.UnsupportedOperation: fileno when using external tools
             self.command.path = None
             self.command._restore_backup()
-            
+
             # Verify the restore_dump was called with a file object
             mock_connector.restore_dump.assert_called_once()
-            
+
             # Get the file object that was passed to restore_dump
             called_file = mock_connector.restore_dump.call_args[0][0]
-            
+
             # The file should be converted to a SpooledTemporaryFile with content
             self.assertIsNotNone(called_file)
             # Verify content is preserved
