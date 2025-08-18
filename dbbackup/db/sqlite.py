@@ -122,13 +122,16 @@ class SqliteConnector(BaseDBConnector):
                     cursor.execute(sql_command.decode("UTF-8"))
                 except (OperationalError, IntegrityError) as err:
                     err_str = str(err)
-                    if not (
-                        (err_str.startswith("index") or err_str.startswith("trigger") or err_str.startswith("view"))
-                        and err_str.endswith("already exists")
-                    ):
+                    if not self._should_suppress_error(err_str):
                         warnings.warn(f"Error in db restore: {err}")
 
                 sql_command = b""
+
+    @staticmethod
+    def _should_suppress_error(msg: str):
+        return (msg.startswith("index") or msg.startswith("trigger") or msg.startswith("view")) and msg.endswith(
+            "already exists"
+        )
 
 
 class SqliteCPConnector(BaseDBConnector):
