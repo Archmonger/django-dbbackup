@@ -9,7 +9,7 @@ except ImportError:
     checks = None
 
 
-def test_func(*args, **kwargs):
+def foobar_func(*args, **kwargs):
     return "foo"
 
 
@@ -33,7 +33,7 @@ class ChecksTest(TestCase):
         errors = checks.check_settings(DbbackupConfig)
         self.assertEqual(expected_errors, errors)
 
-    @patch("dbbackup.checks.settings.FILENAME_TEMPLATE", test_func)
+    @patch("dbbackup.checks.settings.FILENAME_TEMPLATE", foobar_func)
     def test_filename_template_is_callable(self):
         self.assertFalse(checks.check_settings(DbbackupConfig))
 
@@ -47,7 +47,7 @@ class ChecksTest(TestCase):
         errors = checks.check_settings(DbbackupConfig)
         self.assertEqual(expected_errors, errors)
 
-    @patch("dbbackup.checks.settings.MEDIA_FILENAME_TEMPLATE", test_func)
+    @patch("dbbackup.checks.settings.MEDIA_FILENAME_TEMPLATE", foobar_func)
     def test_media_filename_template_is_callable(self):
         self.assertFalse(checks.check_settings(DbbackupConfig))
 

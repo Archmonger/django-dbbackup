@@ -4,7 +4,7 @@ from unittest.mock import mock_open, patch
 from django.db import connection
 from django.test import TestCase
 
-from dbbackup.db.sqlite import SqliteConnector, SqliteCPConnector, SqliteBackupConnector
+from dbbackup.db.sqlite import SqliteBackupConnector, SqliteConnector, SqliteCPConnector
 from tests.testapp.models import CharModel, TextModel
 
 
@@ -29,9 +29,7 @@ class SqliteConnectorTest(TestCase):
         self.assertTrue(dump.read())
 
     def test_create_dump_with_newline(self):
-        TextModel.objects.create(
-            field=f'INSERT ({"foo" * 5000}\nbar\n WHERE \nbaz IS\n "great" );\n'
-        )
+        TextModel.objects.create(field=f'INSERT ({"foo" * 5000}\nbar\n WHERE \nbaz IS\n "great" );\n')
 
         connector = SqliteConnector()
         dump = connector.create_dump()
@@ -46,7 +44,7 @@ class SqliteConnectorTest(TestCase):
     def test_restore_dump_with_multiline_js_content(self):
         """Test restore of objects with JavaScript/HTML content containing '); patterns"""
         # Create content that contains "); patterns that could confuse the restore logic
-        js_content = '''function showAlert() {
+        js_content = """function showAlert() {
     alert("Hello world!");
     console.log("Debug info");
     return true;
@@ -56,55 +54,56 @@ class SqliteConnectorTest(TestCase):
     document.addEventListener("DOMContentLoaded", function() {
         console.log("Ready!");
     });
-</script>'''
-        
+</script>"""
+
         # Create, backup, delete, restore cycle
         original_obj = TextModel.objects.create(field=js_content)
         original_id = original_obj.id
-        
+
         connector = SqliteConnector()
         dump = connector.create_dump()
-        
+
         # Delete the original
         original_obj.delete()
         self.assertFalse(TextModel.objects.filter(id=original_id).exists())
-        
+
         # Restore and verify
         dump.seek(0)
         connector.restore_dump(dump)
-        
+
         restored_objects = TextModel.objects.filter(id=original_id)
         self.assertTrue(restored_objects.exists(), "Object should be restored")
-        
+
         restored_obj = restored_objects.first()
         self.assertEqual(restored_obj.field, js_content, "Content should match exactly")
 
     def test_restore_dump_no_warnings_for_clean_database(self):
         """Test that restore produces no warnings when restoring to a clean database"""
         import warnings
-        
+
         # Create some test data
         CharModel.objects.create(field="test1")
         TextModel.objects.create(field="test content")
-        
+
         connector = SqliteConnector()
         dump = connector.create_dump()
-        
+
         # Clear all data
         CharModel.objects.all().delete()
         TextModel.objects.all().delete()
-        
+
         # Restore should produce no warnings
         dump.seek(0)
         with warnings.catch_warnings(record=True) as warning_list:
             warnings.simplefilter("always")  # Capture all warnings
             connector.restore_dump(dump)
-        
+
         # Filter out warnings from this package only
-        dbbackup_warnings = [w for w in warning_list if 'dbbackup' in str(w.filename)]
-        self.assertEqual(len(dbbackup_warnings), 0, 
-                        f"Expected no warnings, but got: {[str(w.message) for w in dbbackup_warnings]}")
-        
+        dbbackup_warnings = [w for w in warning_list if "dbbackup" in str(w.filename)]
+        self.assertEqual(
+            len(dbbackup_warnings), 0, f"Expected no warnings, but got: {[str(w.message) for w in dbbackup_warnings]}"
+        )
+
         # Verify data was restored
         self.assertTrue(CharModel.objects.filter(field="test1").exists())
         self.assertTrue(TextModel.objects.filter(field="test content").exists())
@@ -113,25 +112,27 @@ class SqliteConnectorTest(TestCase):
         """Test that restore only warns for serious errors like 'no such table'"""
         import warnings
         from io import BytesIO
-        
+
         # Create a malformed dump with reference to non-existent table
         bad_dump = BytesIO()
         bad_dump.write(b"INSERT INTO nonexistent_table VALUES(1, 'test');\n")
         bad_dump.seek(0)
-        
+
         connector = SqliteConnector()
-        
+
         with warnings.catch_warnings(record=True) as warning_list:
             warnings.simplefilter("always")
             connector.restore_dump(bad_dump)
-        
+
         # Should warn about the serious error
-        dbbackup_warnings = [w for w in warning_list if 'dbbackup' in str(w.filename)]
+        dbbackup_warnings = [w for w in warning_list if "dbbackup" in str(w.filename)]
         self.assertTrue(len(dbbackup_warnings) > 0, "Should warn about 'no such table' error")
-        
+
         warning_messages = [str(w.message) for w in dbbackup_warnings]
-        self.assertTrue(any("no such table" in msg.lower() for msg in warning_messages),
-                       f"Should warn about 'no such table', got: {warning_messages}")
+        self.assertTrue(
+            any("no such table" in msg.lower() for msg in warning_messages),
+            f"Should warn about 'no such table', got: {warning_messages}",
+        )
 
     def test_create_dump_with_virtual_tables(self):
         with connection.cursor() as c:

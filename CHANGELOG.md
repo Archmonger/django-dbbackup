@@ -37,6 +37,7 @@ Don't forget to remove deprecated code on each major release!
 - Fix MediaRestore path corruption for files containing "media" in their paths.
 - Fix FTP storage restore issue where file objects without `fileno()` support caused `io.UnsupportedOperation` error during database restore operations.
 - Fix SQLite restore failing when multi-line `TextField` content contains semicolons.
+- Fix SQLite duplicate index creation
 
 ### Security
 

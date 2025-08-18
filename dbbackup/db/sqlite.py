@@ -117,14 +117,13 @@ class SqliteConnector(BaseDBConnector):
                 try:
                     cursor.execute(sql_command.decode("UTF-8"))
                 except (OperationalError, IntegrityError) as err:
-                    # Only warn about unexpected errors that indicate real problems
                     err_msg = str(err).lower()
-                    if "no such table" in err_msg or "no such column" in err_msg or "syntax error" in err_msg:
-                        # These are unexpected errors that indicate real problems
-                        warnings.warn(f"Error in db restore: {err}")
                     # Silently ignore expected errors during restore:
                     # - UNIQUE constraint failures (data already exists)
                     # - "already exists" errors for indexes/triggers/views
+                    if "unique constraint" not in err_msg and "already exists" not in err_msg:
+                        warnings.warn(f"Error in db restore: {err}")
+
                 sql_command = b""
 
 
