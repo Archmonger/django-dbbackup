@@ -1,6 +1,6 @@
 ---
 hide:
-    - navigation
+  - navigation
 ---
 
 ## Installing on your system
@@ -14,12 +14,12 @@ pip install django-dbbackup
 ### Getting the latest from GitHub
 
 In general, you should not be downloading and installing stuff
-directly from repositories -- especially not if you are backing
+directly from repositories — especially not if you are backing
 up sensitive data.
 
-Security is important, bypassing PyPi repositories is a bad habit,
-because it will bypass the fragile key signatures authentication
-that are at least present when using PyPi repositories.
+Security is important; bypassing PyPI repositories is a bad habit,
+because it will bypass the fragile key signature authentication
+that is at least present when using PyPI repositories.
 
 ```bash
 pip install -e git+https://github.com/Archmonger/django-dbbackup.git#egg=django-dbbackup
@@ -52,8 +52,8 @@ mkdir /my/backup/dir/
 ```
 
 !!! note
-    This configuration uses filesystem storage, but you can use any storage
-    supported by Django API. See [Storage settings](storage.md) for more information about it.
+This configuration uses filesystem storage, but you can use any storage
+supported by Django API. See [Storage settings](storage.md) for more information about it.
 
 ## Testing that everything worked
 
@@ -63,6 +63,6 @@ Now, you should be able to create your first backup by running:
 python manage.py dbbackup
 ```
 
-If your database was called `default` which is the normal Django behaviour
+If your database was called `default` which is the normal Django behavior
 of a single-database project, you should now see a new file in your backup
 directory.

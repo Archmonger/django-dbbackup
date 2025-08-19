@@ -1,12 +1,12 @@
 # Integration tutorials
 
 !!! note
-    If you have a custom and/or interesting way of use DBBackup, do not
-    hesitate to make a pull request.
+If you have a custom and/or interesting way of using DBBackup, do not
+hesitate to make a pull request.
 
 ## Django-Cron
 
-Example of cron job with [django-cron](https://github.com/Tivix/django-cron) with file system storage:
+Example recurring job using [django-cron](https://github.com/Tivix/django-cron) with filesystem storage:
 
 ```python
 import os
@@ -26,7 +26,7 @@ class Backup(CronJobBase):
 
 ## Django-Crontab
 
-Example of cron job with [django-crontab](https://github.com/kraiz/django-crontab) with file system storage:
+Example crontab entry using [django-crontab](https://github.com/kraiz/django-crontab) and filesystem storage:
 
 In `settings.py`:
 
@@ -50,8 +50,17 @@ def backup_job():
     print("[{}] Backup done!".format(datetime.now()))
 ```
 
-To add the cron job:
+Add the cron job:
 
 ```bash
 python manage.py crontab add
+```
+
+### Optional: periodic verification
+
+Consider scheduling a periodic restore test (e.g. weekly) into a throw-away
+database to ensure backups remain valid:
+
+```bash
+python manage.py dbrestore --database test_restore --noinput --verbosity 1
 ```

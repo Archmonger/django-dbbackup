@@ -1,12 +1,16 @@
 # Commands
 
-The primary usage of DBBackup is with command line tools. By default, commands will create backups and upload to your defined storage or download and restore the latest backup.
+DBBackup exposes Django management commands for creating and restoring
+database and media backups. Without extra arguments `dbbackup` and
+`mediabackup` create a backup and upload it to the configured
+`STORAGES['dbbackup']` backend; `dbrestore` / `mediarestore` download and
+restore the most recent matching backup.
 
-Arguments can be passed to commands to compress/uncompress and encrypt/decrypt.
+Use `python manage.py <command> --help` for full option details.
 
 ## dbbackup
 
-Backup of database.
+Create a database backup (optionally compressed/encrypted) and upload it.
 
 ```bash
 $ ./manage.py dbbackup
@@ -23,7 +27,7 @@ python manage.py dbbackup --help
 
 ## dbrestore
 
-Restore a database.
+Download the latest database backup (or a specified one) then restore it.
 
 ```bash
 $ ./manage.py dbrestore
@@ -41,7 +45,8 @@ python manage.py dbrestore --help
 
 ## mediabackup
 
-Backup media files, gather all in a tarball and encrypt or compress.
+Create an archive (tar) of media files, optionally compress/encrypt, and upload
+it to backup storage.
 
 ```bash
 $ ./manage.py mediabackup
@@ -57,7 +62,7 @@ python manage.py mediabackup --help
 
 ## mediarestore
 
-Restore media files, extract files from archive and put into media storage.
+Restore media files: extract files from the archive and put them into media storage.
 
 ```bash
 $ ./manage.py mediarestore
@@ -78,7 +83,7 @@ python manage.py mediarestore --help
 
 ## listbackups
 
-This command helps to list backups filtered by type (`'media'` or `'db'`), by compression or encryption.
+This command lists backups filtered by type (`'media'` or `'db'`), compression, or encryption.
 
 For detailed help information, run:
 
