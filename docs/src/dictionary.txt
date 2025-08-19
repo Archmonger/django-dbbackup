@@ -40,3 +40,5 @@ dumpable
 schemas
 redistributions
 whitespace
+pre
+post

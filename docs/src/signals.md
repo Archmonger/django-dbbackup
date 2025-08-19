@@ -4,87 +4,135 @@ Django-dbbackup now supports Django signals that allow you to hook into backup a
 
 ## Available Signals
 
-The following signals are available:
+The following signals are available. Each provide different arguments depending on the operation.
 
-### Database Signals
-
-- `dbbackup.signals.pre_backup` - Sent before a database backup starts
-- `dbbackup.signals.post_backup` - Sent after a database backup completes
-- `dbbackup.signals.pre_restore` - Sent before a database restore starts  
-- `dbbackup.signals.post_restore` - Sent after a database restore completes
-
-### Media Signals
-
-- `dbbackup.signals.pre_media_backup` - Sent before a media backup starts
-- `dbbackup.signals.post_media_backup` - Sent after a media backup completes
-- `dbbackup.signals.pre_media_restore` - Sent before a media restore starts
-- `dbbackup.signals.post_media_restore` - Sent after a media restore completes
-
-## Signal Arguments
-
-All signals provide different arguments depending on the operation:
+---
 
 ### Database Backup Signals
 
-**pre_backup:**
-- `sender` - The command class (DbBackupCommand)
-- `database` - Database configuration dict
-- `connector` - Database connector instance  
-- `servername` - Server name for the backup
+---
 
-**post_backup:**
-- `sender` - The command class (DbBackupCommand)
-- `database` - Database configuration dict
-- `connector` - Database connector instance
-- `servername` - Server name for the backup  
-- `filename` - Generated backup filename
-- `storage` - Storage backend instance
+**pre_backup** (`dbbackup.signals.pre_backup`)
+
+Sent before a database backup starts.
+
+| Parameter    | Description                           |
+| ------------ | ------------------------------------- |
+| `sender`     | The command class (`DbBackupCommand`) |
+| `database`   | Database configuration dict           |
+| `connector`  | Database connector instance           |
+| `servername` | Server name for the backup            |
+
+---
+
+**post_backup** (`dbbackup.signals.post_backup`)
+
+Sent after a database backup completes.
+
+| Parameter    | Description                           |
+| ------------ | ------------------------------------- |
+| `sender`     | The command class (`DbBackupCommand`) |
+| `database`   | Database configuration dict           |
+| `connector`  | Database connector instance           |
+| `servername` | Server name for the backup            |
+| `filename`   | Generated backup filename             |
+| `storage`    | Storage backend instance              |
+
+---
 
 ### Database Restore Signals
 
-**pre_restore:**
-- `sender` - The command class (DbRestoreCommand)
-- `database` - Database configuration dict
-- `database_name` - Name of the database being restored
-- `filename` - Backup filename being restored
-- `servername` - Server name
-- `storage` - Storage backend instance
+---
 
-**post_restore:**  
-- `sender` - The command class (DbRestoreCommand)
-- `database` - Database configuration dict
-- `database_name` - Name of the database being restored
-- `filename` - Backup filename being restored
-- `servername` - Server name
-- `connector` - Database connector instance
-- `storage` - Storage backend instance
+**pre_restore** (`dbbackup.signals.pre_restore`)
+
+Sent before a database restore starts.
+
+| Parameter       | Description                            |
+| --------------- | -------------------------------------- |
+| `sender`        | The command class (`DbRestoreCommand`) |
+| `database`      | Database configuration dict            |
+| `database_name` | Name of the database being restored    |
+| `filename`      | Backup filename being restored         |
+| `servername`    | Server name                            |
+| `storage`       | Storage backend instance               |
+
+---
+
+**post_restore** (`dbbackup.signals.post_restore`)
+
+Sent after a database restore completes.
+
+| Parameter       | Description                            |
+| --------------- | -------------------------------------- |
+| `sender`        | The command class (`DbRestoreCommand`) |
+| `database`      | Database configuration dict            |
+| `database_name` | Name of the database being restored    |
+| `filename`      | Backup filename being restored         |
+| `servername`    | Server name                            |
+| `connector`     | Database connector instance            |
+| `storage`       | Storage backend instance               |
+
+---
 
 ### Media Backup Signals
 
-**pre_media_backup:**
-- `sender` - The command class (MediaBackupCommand)
-- `servername` - Server name for the backup
-- `storage` - Storage backend instance
+---
 
-**post_media_backup:**
-- `sender` - The command class (MediaBackupCommand) 
-- `filename` - Generated backup filename
-- `servername` - Server name for the backup
-- `storage` - Storage backend instance
+**pre_media_backup** (`dbbackup.signals.pre_media_backup`)
+
+Sent before a media backup starts.
+
+| Parameter    | Description                              |
+| ------------ | ---------------------------------------- |
+| `sender`     | The command class (`MediaBackupCommand`) |
+| `servername` | Server name for the backup               |
+| `storage`    | Storage backend instance                 |
+
+---
+
+**post_media_backup** (`dbbackup.signals.post_media_backup`)
+
+Sent after a media backup completes.
+
+| Parameter    | Description                              |
+| ------------ | ---------------------------------------- |
+| `sender`     | The command class (`MediaBackupCommand`) |
+| `filename`   | Generated backup filename                |
+| `servername` | Server name for the backup               |
+| `storage`    | Storage backend instance                 |
+
+---
 
 ### Media Restore Signals
 
-**pre_media_restore:**
-- `sender` - The command class (MediaRestoreCommand)
-- `filename` - Backup filename being restored
-- `servername` - Server name
-- `storage` - Storage backend instance
+---
 
-**post_media_restore:**
-- `sender` - The command class (MediaRestoreCommand)
-- `filename` - Backup filename being restored  
-- `servername` - Server name
-- `storage` - Storage backend instance
+**pre_media_restore** (`dbbackup.signals.pre_media_restore`)
+
+Sent before a media restore starts.
+
+| Parameter    | Description                               |
+| ------------ | ----------------------------------------- |
+| `sender`     | The command class (`MediaRestoreCommand`) |
+| `filename`   | Backup filename being restored            |
+| `servername` | Server name                               |
+| `storage`    | Storage backend instance                  |
+
+---
+
+**post_media_restore** (`dbbackup.signals.post_media_restore`)
+
+Sent after a media restore completes.
+
+| Parameter    | Description                               |
+| ------------ | ----------------------------------------- |
+| `sender`     | The command class (`MediaRestoreCommand`) |
+| `filename`   | Backup filename being restored            |
+| `servername` | Server name                               |
+| `storage`    | Storage backend instance                  |
+
+---
 
 ## Usage Examples
 
@@ -98,7 +146,7 @@ from dbbackup import signals
 def backup_started(sender, database, **kwargs):
     print(f"Starting backup of database: {database['NAME']}")
 
-@receiver(signals.post_backup)  
+@receiver(signals.post_backup)
 def backup_completed(sender, database, filename, **kwargs):
     print(f"Completed backup of {database['NAME']} to {filename}")
 ```
@@ -122,7 +170,7 @@ def notify_backup_complete(sender, database, filename, **kwargs):
 @receiver(signals.post_restore)
 def notify_restore_complete(sender, database_name, filename, **kwargs):
     send_mail(
-        subject='Database Restore Complete', 
+        subject='Database Restore Complete',
         message=f'Successfully restored {database_name} from {filename}',
         from_email='backup@example.com',
         recipient_list=['admin@example.com'],
@@ -172,7 +220,7 @@ def validate_restore_conditions(sender, database_name, **kwargs):
 ### Integration with External Services
 
 ```python
-from django.dispatch import receiver  
+from django.dispatch import receiver
 from dbbackup import signals
 import requests
 
@@ -196,7 +244,7 @@ from django.apps import AppConfig
 
 class YourAppConfig(AppConfig):
     name = 'your_app'
-    
+
     def ready(self):
         import your_app.signals  # Import your signal handlers
 ```
