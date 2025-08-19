@@ -56,13 +56,11 @@ Add the cron job:
 python manage.py crontab add
 ```
 
-## Celery
+## Django-Celery-Beat
 
 Example setup using [Celery](https://docs.celeryq.dev/) with [django-celery-beat](https://django-celery-beat.readthedocs.io/) for scheduled backups:
 
-### Celery Tasks
-
-Create a `tasks.py` file in your app:
+First, create a `tasks.py` file in your app:
 
 ```python
 from celery import Celery
@@ -81,9 +79,7 @@ def backup_media():
     management.call_command('mediabackup')
 ```
 
-### Scheduled Backups with django-celery-beat
-
-Create a Django management command to set up periodic tasks (e.g., `management/commands/setup_backup_schedule.py`):
+Then, create a Django management command to set up periodic tasks (e.g., `management/commands/setup_backup_schedule.py`):
 
 ```python
 from django.core.management.base import BaseCommand
@@ -136,10 +132,10 @@ celery -A myproject worker --loglevel=info
 celery -A myproject beat --loglevel=info
 ```
 
-### Optional: periodic verification
+## Periodic Verification
 
 Consider scheduling a periodic restore test (e.g. weekly) into a throw-away
-database to ensure backups remain valid:
+database to ensure your backup or filesystem remains valid:
 
 ```bash
 python manage.py dbrestore --database test_restore --noinput --verbosity 1

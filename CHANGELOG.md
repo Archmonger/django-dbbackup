@@ -20,7 +20,6 @@ Don't forget to remove deprecated code on each major release!
 - Verified full Windows compatibility via new CI workflows.
 - Add Django Signals support for backup and restore operations. New signals include `pre_backup`, `post_backup`, `pre_restore`, `post_restore`, `pre_media_backup`, `post_media_backup`, `pre_media_restore`, and `post_media_restore`.
 - New `DjangoConnector` that provides database-agnostic backup and restore functionality using Django's built-in `dumpdata` and `loaddata` management commands.
-- Add Celery integration documentation with examples for scheduled backups using django-celery-beat.
 
 ### Changed
 
