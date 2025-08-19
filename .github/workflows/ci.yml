@@ -159,11 +159,11 @@ jobs:
               with:
                   merge-multiple: true
 
-            - name: Combine coverage and fail if it's <80%
+            - name: Combine coverage and fail if it's <95%
               run: |
                   python -m coverage combine
                   python -m coverage html --skip-covered --skip-empty
-                  python -m coverage report --fail-under=80
+                  python -m coverage report --fail-under=95
 
             - name: Upload HTML report
               uses: actions/upload-artifact@v4
