@@ -7,7 +7,7 @@ mainly based on the Django Storage API and extends its possibilities.
 Configure backup storage via the `STORAGES` setting using the key `'dbbackup'`.
 `BACKEND` is a dotted path to a Django storage class. For example use
 `'django.core.files.storage.FileSystemStorage'` for the local filesystem. A
-few common third party backends (via `django-storages`) are [documented below](storage.md#file-system-storage).
+few common third party backends (via `django-storages`) are [documented below](#file-system-storage).
 
 ```python
 STORAGES = {
@@ -167,7 +167,7 @@ AWS region for the bucket (e.g. `'us-east-1'`).
 
 **`endpoint_url`** - Optional
 
-Override the endpoint (for S3‑compatible services like MinIO). Must include
+Override the endpoint (for S3-compatible services like MinIO). Must include
 protocol, e.g. `https://minio.internal:9000`.
 
 If you set a custom endpoint also set **`region_name`**.

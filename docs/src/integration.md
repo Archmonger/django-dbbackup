@@ -58,7 +58,7 @@ python manage.py crontab add
 
 ### Optional: periodic verification
 
-Consider scheduling a periodic restore test (e.g. weekly) into a throw‑away
+Consider scheduling a periodic restore test (e.g. weekly) into a throw-away
 database to ensure backups remain valid:
 
 ```bash

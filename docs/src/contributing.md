@@ -123,7 +123,7 @@ Database engine to use. See `django.db.backends` for default backends.
 
 **`DB_NAME`** - Default: `:memory:`
 
-Database name. Adjust for non‑SQLite backends.
+Database name. Adjust for non-SQLite backends.
 
 **`DB_USER`** - Default: `None`
 
