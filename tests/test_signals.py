@@ -1,7 +1,9 @@
 """Test Django signals functionality."""
 
 from unittest.mock import Mock, patch
+
 from django.test import TestCase
+
 from dbbackup import signals
 from dbbackup.management.commands.dbbackup import Command as DbBackupCommand
 from dbbackup.management.commands.dbrestore import Command as DbRestoreCommand
@@ -19,15 +21,12 @@ class SignalsTestCase(TestCase):
 
     def signal_receiver(self, sender, **kwargs):
         """Generic signal receiver that records signal data."""
-        self.received_signals.append({
-            'sender': sender,
-            'kwargs': kwargs
-        })
+        self.received_signals.append({"sender": sender, "kwargs": kwargs})
 
     def test_pre_backup_signal_sent(self):
         """Test that pre_backup signal is sent before database backup."""
         signals.pre_backup.connect(self.signal_receiver)
-        
+
         command = DbBackupCommand()
         command.storage = get_storage()
         command.servername = "test-server"
@@ -37,11 +36,11 @@ class SignalsTestCase(TestCase):
         command.compress = False
         command.encrypt = False
         command.logger = Mock()
-        
+
         # Mock the connector and its methods
         mock_connector = Mock()
         mock_connector.generate_filename.return_value = "test_backup.sql"
-        
+
         # Create a proper mock for the file object
         mock_file = Mock()
         mock_file.size = 1024  # Mock size as integer
@@ -49,29 +48,29 @@ class SignalsTestCase(TestCase):
         mock_file.tell = Mock(return_value=1024)
         mock_connector.create_dump.return_value = mock_file
         command.connector = mock_connector
-        
+
         # Mock the write methods to avoid actual storage operations
         command.write_to_storage = Mock()
         command.write_local_file = Mock()
-        
+
         database = {"NAME": "test_db"}
-        
+
         command._save_new_backup(database)
-        
+
         # Verify pre_backup signal was sent
-        self.assertTrue(len(self.received_signals) >= 1)  # at least pre signal
+        self.assertEqual(len(self.received_signals), 1)
         pre_signal = self.received_signals[0]
-        self.assertEqual(pre_signal['sender'], DbBackupCommand)
-        self.assertEqual(pre_signal['kwargs']['database'], database)
-        self.assertEqual(pre_signal['kwargs']['connector'], mock_connector)
-        self.assertEqual(pre_signal['kwargs']['servername'], "test-server")
-        
+        self.assertEqual(pre_signal["sender"], DbBackupCommand)
+        self.assertEqual(pre_signal["kwargs"]["database"], database)
+        self.assertEqual(pre_signal["kwargs"]["connector"], mock_connector)
+        self.assertEqual(pre_signal["kwargs"]["servername"], "test-server")
+
         signals.pre_backup.disconnect(self.signal_receiver)
 
     def test_post_backup_signal_sent(self):
         """Test that post_backup signal is sent after database backup."""
         signals.post_backup.connect(self.signal_receiver)
-        
+
         command = DbBackupCommand()
         command.storage = get_storage()
         command.servername = "test-server"
@@ -81,11 +80,11 @@ class SignalsTestCase(TestCase):
         command.compress = False
         command.encrypt = False
         command.logger = Mock()
-        
+
         # Mock the connector and its methods
         mock_connector = Mock()
         mock_connector.generate_filename.return_value = "test_backup.sql"
-        
+
         # Create a proper mock for the file object
         mock_file = Mock()
         mock_file.size = 1024  # Mock size as integer
@@ -93,37 +92,36 @@ class SignalsTestCase(TestCase):
         mock_file.tell = Mock(return_value=1024)
         mock_connector.create_dump.return_value = mock_file
         command.connector = mock_connector
-        
+
         # Mock the write methods to avoid actual storage operations
         command.write_to_storage = Mock()
         command.write_local_file = Mock()
-        
+
         database = {"NAME": "test_db"}
-        
+
         command._save_new_backup(database)
-        
+
         # Verify post_backup signal was sent - it should be the last signal
         self.assertTrue(len(self.received_signals) >= 1)
         post_signal = self.received_signals[-1]  # Get the last signal
-        self.assertEqual(post_signal['sender'], DbBackupCommand)
-        self.assertEqual(post_signal['kwargs']['database'], database)
-        self.assertEqual(post_signal['kwargs']['connector'], mock_connector)
-        self.assertEqual(post_signal['kwargs']['servername'], "test-server")
-        self.assertEqual(post_signal['kwargs']['filename'], "test_backup.sql")
-        self.assertIn('storage', post_signal['kwargs'])
-        
+        self.assertEqual(post_signal["sender"], DbBackupCommand)
+        self.assertEqual(post_signal["kwargs"]["database"], database)
+        self.assertEqual(post_signal["kwargs"]["connector"], mock_connector)
+        self.assertEqual(post_signal["kwargs"]["servername"], "test-server")
+        self.assertEqual(post_signal["kwargs"]["filename"], "test_backup.sql")
+        self.assertIn("storage", post_signal["kwargs"])
+
         signals.post_backup.disconnect(self.signal_receiver)
 
     def test_pre_restore_signal_sent(self):
         """Test that pre_restore signal is sent before database restore."""
         signals.pre_restore.connect(self.signal_receiver)
-        
+
         command = DbRestoreCommand()
         command.storage = get_storage()
         command.servername = "test-server"
         command.database = {"NAME": "test_db"}
         command.database_name = "test_db"
-        command.input_database_name = "test_db"  # Add missing attribute
         command.path = None
         command.decrypt = False
         command.uncompress = False
@@ -132,7 +130,7 @@ class SignalsTestCase(TestCase):
         command.schemas = []
         command.no_drop = False
         command.pg_options = ""
-        
+
         # Mock the methods to avoid actual operations
         mock_file = Mock()
         mock_file.size = 1024
@@ -141,33 +139,32 @@ class SignalsTestCase(TestCase):
         mock_file.fileno = Mock(return_value=1)  # Mock fileno support
         command._get_backup_file = Mock(return_value=("test_backup.sql", mock_file))
         command.connector = Mock()
-        
-        with patch('dbbackup.management.commands.dbrestore.get_connector') as mock_get_connector:
+
+        with patch("dbbackup.management.commands.dbrestore.get_connector") as mock_get_connector:
             mock_get_connector.return_value = command.connector
-            
+
             command._restore_backup()
-        
+
         # Verify pre_restore signal was sent
         self.assertTrue(len(self.received_signals) >= 1)
         pre_signal = self.received_signals[0]
-        self.assertEqual(pre_signal['sender'], DbRestoreCommand)
-        self.assertEqual(pre_signal['kwargs']['database'], command.database)
-        self.assertEqual(pre_signal['kwargs']['database_name'], "test_db")
-        self.assertEqual(pre_signal['kwargs']['filename'], "test_backup.sql")
-        self.assertEqual(pre_signal['kwargs']['servername'], "test-server")
-        
+        self.assertEqual(pre_signal["sender"], DbRestoreCommand)
+        self.assertEqual(pre_signal["kwargs"]["database"], command.database)
+        self.assertEqual(pre_signal["kwargs"]["database_name"], "test_db")
+        self.assertEqual(pre_signal["kwargs"]["filename"], "test_backup.sql")
+        self.assertEqual(pre_signal["kwargs"]["servername"], "test-server")
+
         signals.pre_restore.disconnect(self.signal_receiver)
 
     def test_post_restore_signal_sent(self):
         """Test that post_restore signal is sent after database restore."""
         signals.post_restore.connect(self.signal_receiver)
-        
+
         command = DbRestoreCommand()
         command.storage = get_storage()
         command.servername = "test-server"
         command.database = {"NAME": "test_db"}
         command.database_name = "test_db"
-        command.input_database_name = "test_db"  # Add missing attribute
         command.path = None
         command.decrypt = False
         command.uncompress = False
@@ -176,7 +173,7 @@ class SignalsTestCase(TestCase):
         command.schemas = []
         command.no_drop = False
         command.pg_options = ""
-        
+
         # Mock the methods to avoid actual operations
         mock_file = Mock()
         mock_file.size = 1024
@@ -185,28 +182,28 @@ class SignalsTestCase(TestCase):
         mock_file.fileno = Mock(return_value=1)  # Mock fileno support
         command._get_backup_file = Mock(return_value=("test_backup.sql", mock_file))
         command.connector = Mock()
-        
-        with patch('dbbackup.management.commands.dbrestore.get_connector') as mock_get_connector:
+
+        with patch("dbbackup.management.commands.dbrestore.get_connector") as mock_get_connector:
             mock_get_connector.return_value = command.connector
-            
+
             command._restore_backup()
-        
+
         # Verify post_restore signal was sent
         self.assertTrue(len(self.received_signals) >= 1)
         post_signal = self.received_signals[-1]
-        self.assertEqual(post_signal['sender'], DbRestoreCommand)
-        self.assertEqual(post_signal['kwargs']['database'], command.database)
-        self.assertEqual(post_signal['kwargs']['database_name'], "test_db")
-        self.assertEqual(post_signal['kwargs']['filename'], "test_backup.sql")
-        self.assertEqual(post_signal['kwargs']['servername'], "test-server")
-        self.assertEqual(post_signal['kwargs']['connector'], command.connector)
-        
+        self.assertEqual(post_signal["sender"], DbRestoreCommand)
+        self.assertEqual(post_signal["kwargs"]["database"], command.database)
+        self.assertEqual(post_signal["kwargs"]["database_name"], "test_db")
+        self.assertEqual(post_signal["kwargs"]["filename"], "test_backup.sql")
+        self.assertEqual(post_signal["kwargs"]["servername"], "test-server")
+        self.assertEqual(post_signal["kwargs"]["connector"], command.connector)
+
         signals.post_restore.disconnect(self.signal_receiver)
 
     def test_pre_media_backup_signal_sent(self):
         """Test that pre_media_backup signal is sent before media backup."""
         signals.pre_media_backup.connect(self.signal_receiver)
-        
+
         command = MediaBackupCommand()
         command.storage = get_storage()
         command.servername = "test-server"
@@ -216,7 +213,7 @@ class SignalsTestCase(TestCase):
         command.encrypt = False
         command.logger = Mock()
         command.content_type = "media"
-        
+
         # Mock the methods to avoid actual operations
         mock_file = Mock()
         mock_file.size = 1024
@@ -225,22 +222,22 @@ class SignalsTestCase(TestCase):
         command._create_tar = Mock(return_value=mock_file)
         command.write_to_storage = Mock()
         command.write_local_file = Mock()
-        
+
         command.backup_mediafiles()
-        
+
         # Verify pre_media_backup signal was sent
         self.assertTrue(len(self.received_signals) >= 1)
         pre_signal = self.received_signals[0]
-        self.assertEqual(pre_signal['sender'], MediaBackupCommand)
-        self.assertEqual(pre_signal['kwargs']['servername'], "test-server")
-        self.assertIn('storage', pre_signal['kwargs'])
-        
+        self.assertEqual(pre_signal["sender"], MediaBackupCommand)
+        self.assertEqual(pre_signal["kwargs"]["servername"], "test-server")
+        self.assertIn("storage", pre_signal["kwargs"])
+
         signals.pre_media_backup.disconnect(self.signal_receiver)
 
     def test_post_media_backup_signal_sent(self):
         """Test that post_media_backup signal is sent after media backup."""
         signals.post_media_backup.connect(self.signal_receiver)
-        
+
         command = MediaBackupCommand()
         command.storage = get_storage()
         command.servername = "test-server"
@@ -250,7 +247,7 @@ class SignalsTestCase(TestCase):
         command.encrypt = False
         command.logger = Mock()
         command.content_type = "media"
-        
+
         # Mock the methods to avoid actual operations
         mock_file = Mock()
         mock_file.size = 1024
@@ -259,23 +256,23 @@ class SignalsTestCase(TestCase):
         command._create_tar = Mock(return_value=mock_file)
         command.write_to_storage = Mock()
         command.write_local_file = Mock()
-        
+
         command.backup_mediafiles()
-        
+
         # Verify post_media_backup signal was sent
         self.assertTrue(len(self.received_signals) >= 1)
         post_signal = self.received_signals[-1]
-        self.assertEqual(post_signal['sender'], MediaBackupCommand)
-        self.assertEqual(post_signal['kwargs']['servername'], "test-server")
-        self.assertIn('filename', post_signal['kwargs'])
-        self.assertIn('storage', post_signal['kwargs'])
-        
+        self.assertEqual(post_signal["sender"], MediaBackupCommand)
+        self.assertEqual(post_signal["kwargs"]["servername"], "test-server")
+        self.assertIn("filename", post_signal["kwargs"])
+        self.assertIn("storage", post_signal["kwargs"])
+
         signals.post_media_backup.disconnect(self.signal_receiver)
 
     def test_pre_media_restore_signal_sent(self):
         """Test that pre_media_restore signal is sent before media restore."""
         signals.pre_media_restore.connect(self.signal_receiver)
-        
+
         command = MediaRestoreCommand()
         command.storage = get_storage()
         command.servername = "test-server"
@@ -283,7 +280,7 @@ class SignalsTestCase(TestCase):
         command.uncompress = False
         command.interactive = False
         command.logger = Mock()
-        
+
         # Mock the methods to avoid actual operations
         mock_file = Mock()
         mock_file.size = 1024
@@ -291,28 +288,28 @@ class SignalsTestCase(TestCase):
         mock_file.tell = Mock(return_value=1024)
         command._get_backup_file = Mock(return_value=("test_media.tar", mock_file))
         command._upload_file = Mock()
-        
-        with patch('tarfile.open') as mock_tarfile_open:
+
+        with patch("tarfile.open") as mock_tarfile_open:
             mock_tar = Mock()
             mock_tar.__iter__ = Mock(return_value=iter([]))
             mock_tarfile_open.return_value = mock_tar
-            
+
             command._restore_backup()
-        
+
         # Verify pre_media_restore signal was sent
         self.assertTrue(len(self.received_signals) >= 1)
         pre_signal = self.received_signals[0]
-        self.assertEqual(pre_signal['sender'], MediaRestoreCommand)
-        self.assertEqual(pre_signal['kwargs']['filename'], "test_media.tar")
-        self.assertEqual(pre_signal['kwargs']['servername'], "test-server")
-        self.assertIn('storage', pre_signal['kwargs'])
-        
+        self.assertEqual(pre_signal["sender"], MediaRestoreCommand)
+        self.assertEqual(pre_signal["kwargs"]["filename"], "test_media.tar")
+        self.assertEqual(pre_signal["kwargs"]["servername"], "test-server")
+        self.assertIn("storage", pre_signal["kwargs"])
+
         signals.pre_media_restore.disconnect(self.signal_receiver)
 
     def test_post_media_restore_signal_sent(self):
         """Test that post_media_restore signal is sent after media restore."""
         signals.post_media_restore.connect(self.signal_receiver)
-        
+
         command = MediaRestoreCommand()
         command.storage = get_storage()
         command.servername = "test-server"
@@ -320,7 +317,7 @@ class SignalsTestCase(TestCase):
         command.uncompress = False
         command.interactive = False
         command.logger = Mock()
-        
+
         # Mock the methods to avoid actual operations
         mock_file = Mock()
         mock_file.size = 1024
@@ -328,40 +325,38 @@ class SignalsTestCase(TestCase):
         mock_file.tell = Mock(return_value=1024)
         command._get_backup_file = Mock(return_value=("test_media.tar", mock_file))
         command._upload_file = Mock()
-        
-        with patch('tarfile.open') as mock_tarfile_open:
+
+        with patch("tarfile.open") as mock_tarfile_open:
             mock_tar = Mock()
             mock_tar.__iter__ = Mock(return_value=iter([]))
             mock_tarfile_open.return_value = mock_tar
-            
+
             command._restore_backup()
-        
+
         # Verify post_media_restore signal was sent
         self.assertTrue(len(self.received_signals) >= 1)
         post_signal = self.received_signals[-1]
-        self.assertEqual(post_signal['sender'], MediaRestoreCommand)
-        self.assertEqual(post_signal['kwargs']['filename'], "test_media.tar")
-        self.assertEqual(post_signal['kwargs']['servername'], "test-server")
-        self.assertIn('storage', post_signal['kwargs'])
-        
+        self.assertEqual(post_signal["sender"], MediaRestoreCommand)
+        self.assertEqual(post_signal["kwargs"]["filename"], "test_media.tar")
+        self.assertEqual(post_signal["kwargs"]["servername"], "test-server")
+        self.assertIn("storage", post_signal["kwargs"])
+
         signals.post_media_restore.disconnect(self.signal_receiver)
 
     def test_all_signals_defined(self):
         """Test that all expected signals are defined in the signals module."""
         expected_signals = [
-            'pre_backup',
-            'post_backup', 
-            'pre_restore',
-            'post_restore',
-            'pre_media_backup',
-            'post_media_backup',
-            'pre_media_restore',
-            'post_media_restore'
+            "pre_backup",
+            "post_backup",
+            "pre_restore",
+            "post_restore",
+            "pre_media_backup",
+            "post_media_backup",
+            "pre_media_restore",
+            "post_media_restore",
         ]
-        
+
         for signal_name in expected_signals:
-            self.assertTrue(hasattr(signals, signal_name),
-                           f"Signal '{signal_name}' is not defined in signals module")
+            self.assertTrue(hasattr(signals, signal_name), f"Signal '{signal_name}' is not defined in signals module")
             signal = getattr(signals, signal_name)
-            self.assertTrue(hasattr(signal, 'send'),
-                           f"Signal '{signal_name}' does not have a send method")
+            self.assertTrue(hasattr(signal, "send"), f"Signal '{signal_name}' does not have a send method")

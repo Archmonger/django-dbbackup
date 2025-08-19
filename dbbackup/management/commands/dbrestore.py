@@ -3,13 +3,14 @@ Restore database.
 """
 
 import io
+
 from django.conf import settings
 from django.core.management.base import CommandError
 from django.db import connection
 
 from ... import utils
 from ...db.base import get_connector
-from ...signals import pre_restore, post_restore
+from ...signals import post_restore, pre_restore
 from ...storage import StorageError, get_storage
 from ._base import BaseDbBackupCommand, make_option
 
@@ -19,6 +20,9 @@ class Command(BaseDbBackupCommand):
     content_type = "db"
     no_drop = False
     pg_options = ""
+    input_database_name = None
+    database_name = None
+    database = None
 
     option_list = BaseDbBackupCommand.option_list + (
         make_option("-d", "--database", help="Database to restore"),
