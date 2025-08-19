@@ -52,7 +52,7 @@ class Command(BaseDbBackupCommand):
             "-O",
             "--output-path",
             default=None,
-            help="Specify where to store on local filesystem",
+            help="Specify where to store backup (local filesystem path or S3 URI like s3://bucket/path/)",
         ),
         make_option("-x", "--exclude-tables", default=None, help="Exclude tables from backup"),
         make_option(
@@ -141,6 +141,8 @@ class Command(BaseDbBackupCommand):
 
         if self.path is None:
             self.write_to_storage(outputfile, filename)
-
+        elif self.path.startswith("s3://"):
+            # Handle S3 URIs through storage backend
+            self.write_to_storage(outputfile, self.path)
         else:
             self.write_local_file(outputfile, self.path)

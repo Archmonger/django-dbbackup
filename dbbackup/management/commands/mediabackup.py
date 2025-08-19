@@ -49,7 +49,7 @@ class Command(BaseDbBackupCommand):
             "-O",
             "--output-path",
             default=None,
-            help="Specify where to store on local filesystem",
+            help="Specify where to store backup (local filesystem path or S3 URI like s3://bucket/path/)",
         ),
     )
 
@@ -122,5 +122,8 @@ class Command(BaseDbBackupCommand):
         tarball.seek(0)
         if self.path is None:
             self.write_to_storage(tarball, filename)
+        elif self.path.startswith("s3://"):
+            # Handle S3 URIs through storage backend
+            self.write_to_storage(tarball, self.path)
         else:
             self.write_local_file(tarball, self.path)
