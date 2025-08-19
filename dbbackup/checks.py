@@ -25,11 +25,14 @@ W004 = Warning(
     hint="Include {datetime} to settings.DBBACKUP_MEDIA_FILENAME_TEMPLATE",
     id="dbbackup.W004",
 )
-W006 = Warning(
+W005 = Warning(
     "Invalid DATE_FORMAT parameter",
     hint="settings.DBBACKUP_DATE_FORMAT can contain only [A-Za-z0-9%_-]",
     id="dbbackup.W005",
 )
+# W006: Historical - "FAILURE_RECIPIENTS has been deprecated" - checked for DBBACKUP_FAILURE_RECIPIENTS setting
+# W009: Historical - "Using removed DBBACKUP_STORAGE parameter" - checked for DBBACKUP_STORAGE setting  
+# W010: Historical - "Using removed DBBACKUP_STORAGE_OPTIONS parameter" - checked for DBBACKUP_STORAGE_OPTIONS setting
 W007 = Warning(
     "Invalid FILENAME_TEMPLATE parameter",
     hint="settings.DBBACKUP_FILENAME_TEMPLATE must not contain slashes ('/'). "
@@ -88,7 +91,7 @@ def check_settings(app_configs, **kwargs):
         errors.append(W004)
 
     if re.search(r"[^A-Za-z0-9%_-]", settings.DATE_FORMAT):
-        errors.append(W006)
+        errors.append(W005)
 
     errors += check_filename_templates()
 

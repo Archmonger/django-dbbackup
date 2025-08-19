@@ -63,7 +63,7 @@ class ChecksTest(TestCase):
 
     @patch("dbbackup.checks.settings.DATE_FORMAT", "foo@net.pt")
     def test_date_format_warning(self):
-        expected_errors = [checks.W006]
+        expected_errors = [checks.W005]
         errors = checks.check_settings(DbbackupConfig)
         self.assertEqual(expected_errors, errors)
 
