@@ -245,5 +245,4 @@ class BaseCommandDBConnector(BaseDBConnector):
                     f"Original error: {str(err)}"
                 )
                 raise exceptions.CommandConnectorError(error_msg)
-            else:
             raise exceptions.CommandConnectorError(f"Error running: {command}\n{str(err)}")
