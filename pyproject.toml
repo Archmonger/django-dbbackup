@@ -43,7 +43,7 @@ classifiers = [
   "Topic :: System :: Archiving :: Backup",
   "Topic :: System :: Archiving :: Compression",
 ]
-dependencies = ["django>=4.2", "pytz"]
+dependencies = ["django>=4.2"]
 dynamic = ["version"]
 urls.Changelog = "https://archmonger.github.io/django-dbbackup /latest/changelog/"
 urls.Documentation = "https://archmonger.github.io/django-dbbackup"

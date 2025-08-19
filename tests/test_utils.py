@@ -2,12 +2,11 @@ import os
 import shutil
 import tempfile
 import unittest
-from datetime import datetime
+from datetime import datetime, timezone
 from io import StringIO
 from unittest.mock import patch
 
 import django
-import pytz
 from django.core import mail
 from django.test import TestCase
 
@@ -222,7 +221,7 @@ class TimestampTest(TestCase):
 
     def test_aware_value(self):
         with self.settings(USE_TZ=True) and self.settings(TIME_ZONE="Europe/Rome"):
-            timestamp = utils.timestamp(datetime(2015, 8, 15, 8, 15, 12, 0, tzinfo=pytz.utc))
+            timestamp = utils.timestamp(datetime(2015, 8, 15, 8, 15, 12, 0, tzinfo=timezone.utc))
             self.assertEqual(timestamp, "2015-08-15-101512")
 
 

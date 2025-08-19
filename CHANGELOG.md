@@ -28,6 +28,7 @@ Don't forget to remove deprecated code on each major release!
 
 - Drop support for end-of-life Python 3.7 and 3.8.
 - Drop support for end-of-life Django 3.2.
+- Drop `pytz` dependency in favor of Python's standard library `zoneinfo` (following Django 4.0+ timezone implementation).
 - Drop support for `DBBACKUP_STORAGE` AND `DBBACKUP_STORAGE_OPTIONS` settings, use Django's `STORAGES['dbbackup']` setting instead.
 - Remove deprecated `DBBACKUP_FAILURE_RECIPIENTS` setting, use `DBBACKUP_ADMINS` instead.
 - Remove deprecated code for legacy Django version compatibility.
