@@ -6,7 +6,8 @@ The following databases are supported by this application:
 - MySQL
 - PostgreSQL
 - MongoDB
-- ...and any other that you might implement
+- Oracle (via Django native connector)
+- ...and any other Django-supported database (via Django native connector)
 
 By default DBBackup reuses connection details from `settings.DATABASES`.
 Sometimes you want different credentials or a different host (e.g. read-only
@@ -43,6 +44,7 @@ Absolute path to a connector class by default is:
 - `dbbackup.db.postgresql.PgDumpConnector` for `django.db.backends.postgresql`
 - `dbbackup.db.postgresql.PgDumpGisConnector` for `django.contrib.gis.db.backends.postgis`
 - `dbbackup.db.mongodb.MongoDumpConnector` for `django_mongodb_engine`
+- `dbbackup.db.django.DjangoConnector` for `django.db.backends.oracle` and any unmapped database engines
 
 All supported built-in connectors are described in more detail below.
 
@@ -243,6 +245,48 @@ Validate documents before inserting into the database (option `--objcheck` on th
 ### DROP
 
 Replace objects that are already in the database (option `--drop` on the command line); default is `True`.
+
+## Django Native
+
+The Django native connector (`dbbackup.db.django.DjangoConnector`) provides database-agnostic backup and restore functionality using Django's built-in `dumpdata` and `loaddata` management commands. This connector works with any Django-supported database backend.
+
+### Key Features
+
+- **Universal compatibility**: Works with any database backend supported by Django
+- **No external dependencies**: Uses Django's native serialization system
+- **Model-level backups**: Preserves foreign key relationships and data integrity
+- **JSON format**: Creates human-readable backups in JSON format
+
+### When to Use
+
+The Django connector is ideal for:
+
+- Oracle databases (used by default)
+- Custom or third-party database backends not explicitly supported
+- Development environments where simplicity is preferred
+- Cases where external database tools are not available
+
+### Limitations
+
+- **Performance**: Slower than native database tools for large datasets
+- **Database structure**: Only backs up data, not database schema, indices, or procedures  
+- **Memory usage**: Loads all data into memory during backup/restore operations
+
+### Configuration
+
+The Django connector is automatically used for Oracle databases and any unmapped database engines. You can explicitly configure it:
+
+```python
+DBBACKUP_CONNECTORS = {
+    'default': {
+        'CONNECTOR': 'dbbackup.db.django.DjangoConnector',
+    }
+}
+```
+
+### File Extension
+
+By default, backups use the `.json` extension.
 
 ## Custom connectors
 

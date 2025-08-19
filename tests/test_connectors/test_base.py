@@ -12,6 +12,36 @@ class GetConnectorTest(TestCase):
     def test_get_connector(self):
         connector = get_connector()
         self.assertIsInstance(connector, BaseDBConnector)
+    
+    def test_get_connector_oracle_fallback(self):
+        """Test that Oracle database uses Django connector as fallback."""
+        from unittest.mock import patch
+        from dbbackup.db.django import DjangoConnector
+        
+        # Mock the database connection to simulate Oracle
+        mock_connection = {
+            'ENGINE': 'django.db.backends.oracle'
+        }
+        
+        with patch('django.db.connections') as mock_connections:
+            mock_connections.__getitem__.return_value.settings_dict = mock_connection
+            connector = get_connector()
+            self.assertIsInstance(connector, DjangoConnector)
+    
+    def test_get_connector_unmapped_engine_fallback(self):
+        """Test that unmapped database engines use Django connector as fallback."""
+        from unittest.mock import patch
+        from dbbackup.db.django import DjangoConnector
+        
+        # Mock the database connection to simulate an unmapped engine
+        mock_connection = {
+            'ENGINE': 'some.custom.database.backend'
+        }
+        
+        with patch('django.db.connections') as mock_connections:
+            mock_connections.__getitem__.return_value.settings_dict = mock_connection
+            connector = get_connector()
+            self.assertIsInstance(connector, DjangoConnector)
 
 
 class BaseDBConnectorTest(TestCase):
