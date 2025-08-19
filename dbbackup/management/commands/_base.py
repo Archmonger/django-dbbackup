@@ -4,10 +4,8 @@ Abstract Command.
 
 import logging
 import sys
-from optparse import make_option as optparse_make_option
 from shutil import copyfileobj
 
-import django
 from django.core.management.base import BaseCommand, CommandError
 
 from ...storage import StorageError
@@ -62,10 +60,6 @@ class BaseDbBackupCommand(BaseCommand):
 
     def __init__(self, *args, **kwargs):
         self.option_list = self.base_option_list + self.option_list
-        if django.VERSION < (1, 10):
-            options = tuple(optparse_make_option(*_args, **_kwargs) for _args, _kwargs in self.option_list)
-
-            self.option_list = options + BaseCommand.option_list
         super().__init__(*args, **kwargs)
 
     def add_arguments(self, parser):

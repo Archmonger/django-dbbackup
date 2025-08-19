@@ -63,12 +63,6 @@ class ChecksTest(TestCase):
 
     @patch("dbbackup.checks.settings.DATE_FORMAT", "foo@net.pt")
     def test_date_format_warning(self):
-        expected_errors = [checks.W005]
-        errors = checks.check_settings(DbbackupConfig)
-        self.assertEqual(expected_errors, errors)
-
-    @patch("dbbackup.checks.settings.FAILURE_RECIPIENTS", "foo@net.pt")
-    def test_Failure_recipients_warning(self):
         expected_errors = [checks.W006]
         errors = checks.check_settings(DbbackupConfig)
         self.assertEqual(expected_errors, errors)
@@ -97,20 +91,4 @@ class ChecksTest(TestCase):
         errors = checks.check_settings(DbbackupConfig)
         self.assertEqual(expected_errors, errors)
 
-    @patch("dbbackup.checks.getattr")
-    def test_deprecated_dbbackup_storage_warning(self, mock_getattr):
-        mock_getattr.side_effect = lambda obj, key, default: (
-            "some.storage.path" if key == "DBBACKUP_STORAGE" else default
-        )
-        expected_errors = [checks.W009]
-        errors = checks.check_settings(DbbackupConfig)
-        self.assertEqual(expected_errors, errors)
 
-    @patch("dbbackup.checks.getattr")
-    def test_deprecated_dbbackup_storage_options_warning(self, mock_getattr):
-        mock_getattr.side_effect = lambda obj, key, default: (
-            {"option": "value"} if key == "DBBACKUP_STORAGE_OPTIONS" else default
-        )
-        expected_errors = [checks.W010]
-        errors = checks.check_settings(DbbackupConfig)
-        self.assertEqual(expected_errors, errors)

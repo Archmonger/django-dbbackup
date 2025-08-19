@@ -25,15 +25,10 @@ W004 = Warning(
     hint="Include {datetime} to settings.DBBACKUP_MEDIA_FILENAME_TEMPLATE",
     id="dbbackup.W004",
 )
-W005 = Warning(
+W006 = Warning(
     "Invalid DATE_FORMAT parameter",
     hint="settings.DBBACKUP_DATE_FORMAT can contain only [A-Za-z0-9%_-]",
     id="dbbackup.W005",
-)
-W006 = Warning(
-    "FAILURE_RECIPIENTS has been deprecated",
-    hint="settings.DBBACKUP_FAILURE_RECIPIENTS is replaced by settings.DBBACKUP_ADMINS",
-    id="dbbackup.W006",
 )
 W007 = Warning(
     "Invalid FILENAME_TEMPLATE parameter",
@@ -45,17 +40,7 @@ W008 = Warning(
     "Invalid MEDIA_FILENAME_TEMPLATE parameter",
     hint="settings.DBBACKUP_MEDIA_FILENAME_TEMPLATE must not contain slashes ('/')"
     "Did you mean to change the value for 'location'?",
-    id="dbbackup.W007",
-)
-W009 = Warning(
-    "Using removed DBBACKUP_STORAGE parameter",
-    hint="settings.DBBACKUP_STORAGE has been removed in favor of settings.STORAGES['dbbackup']",
-    id="dbbackup.W009",
-)
-W010 = Warning(
-    "Using removed DBBACKUP_STORAGE_OPTIONS parameter",
-    hint="settings.DBBACKUP_STORAGE_OPTIONS has been removed in favor of settings.STORAGES['dbbackup']['OPTIONS']",
-    id="dbbackup.W010",
+    id="dbbackup.W008",
 )
 
 
@@ -103,17 +88,8 @@ def check_settings(app_configs, **kwargs):
         errors.append(W004)
 
     if re.search(r"[^A-Za-z0-9%_-]", settings.DATE_FORMAT):
-        errors.append(W005)
-
-    if getattr(settings, "FAILURE_RECIPIENTS", None) is not None:
         errors.append(W006)
 
     errors += check_filename_templates()
-
-    if getattr(settings, "DBBACKUP_STORAGE", None) is not None:
-        errors.append(W009)
-
-    if getattr(settings, "DBBACKUP_STORAGE_OPTIONS", None) is not None:
-        errors.append(W010)
 
     return errors

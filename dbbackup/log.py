@@ -1,18 +1,9 @@
 import logging
 
-import django
 from django.utils.log import AdminEmailHandler
 
 
 class DbbackupAdminEmailHandler(AdminEmailHandler):
-    def emit(self, record):
-        # Monkey patch for old Django versions without send_mail method
-        if django.VERSION < (1, 8):
-            from . import utils
-
-            django.core.mail.mail_admins = utils.mail_admins
-        super().emit(record)
-
     def send_mail(self, subject, message, *args, **kwargs):
         from . import utils
 

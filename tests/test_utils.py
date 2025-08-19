@@ -87,7 +87,7 @@ class Email_Uncaught_ExceptionTest(TestCase):
         self.assertEqual(len(mail.outbox), 0)
 
     @patch("dbbackup.settings.SEND_EMAIL", True)
-    @patch("dbbackup.settings.FAILURE_RECIPIENTS", ["foo@bar"])
+    @patch("dbbackup.settings.ADMINS", ["foo@bar"])
     def test_raise_with_mail(self):
         def func():
             raise Exception("Foo")
@@ -347,7 +347,7 @@ class EncryptFileTest(TestCase):
 
 class EmailUncaughtExceptionEdgeCaseTest(TestCase):
     @patch("dbbackup.settings.SEND_EMAIL", True)
-    @patch("dbbackup.settings.FAILURE_RECIPIENTS", [])
+    @patch("dbbackup.settings.ADMINS", [])
     def test_email_uncaught_exception_empty_recipients(self):
         """Test email sending with empty recipients list"""
         def func():

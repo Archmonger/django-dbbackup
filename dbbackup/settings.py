@@ -47,9 +47,5 @@ DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 # Mail
 SEND_EMAIL = getattr(settings, "DBBACKUP_SEND_EMAIL", True)
 SERVER_EMAIL = getattr(settings, "DBBACKUP_SERVER_EMAIL", settings.SERVER_EMAIL)
-FAILURE_RECIPIENTS = getattr(settings, "DBBACKUP_FAILURE_RECIPIENTS", None)
-if FAILURE_RECIPIENTS is None:
-    ADMINS = getattr(settings, "DBBACKUP_ADMIN", settings.ADMINS)
-else:
-    ADMINS = FAILURE_RECIPIENTS
+ADMINS = getattr(settings, "DBBACKUP_ADMIN", settings.ADMINS)
 EMAIL_SUBJECT_PREFIX = getattr(settings, "DBBACKUP_EMAIL_SUBJECT_PREFIX", "[dbbackup] ")
