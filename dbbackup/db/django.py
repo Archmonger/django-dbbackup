@@ -36,7 +36,6 @@ class DjangoConnector(BaseDBConnector):
         in JSON format.
         """
         # Create a SpooledTemporaryFile in text mode for direct use with dumpdata
-        # This avoids the TextIOWrapper compatibility issues across Python versions
         dump_file = SpooledTemporaryFile(mode="w+t", encoding="utf-8")
 
         # Prepare arguments for dumpdata command
@@ -128,9 +127,8 @@ class DjangoConnector(BaseDBConnector):
                 chunk = dump.read(8192)  # 8KB chunks
                 if not chunk:
                     break
-                # Handle both text and binary data (for backward compatibility)
                 if isinstance(chunk, bytes):
-                    chunk = chunk.decode('utf-8')
+                    chunk = chunk.decode("utf-8")
                 temp_file.write(chunk)
             temp_file_path = temp_file.name
 
