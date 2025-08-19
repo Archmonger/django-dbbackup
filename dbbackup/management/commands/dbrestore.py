@@ -118,7 +118,7 @@ class Command(BaseDbBackupCommand):
             self.logger.info(f"Restoring schemas: {self.schemas}")
 
         self.logger.info(f"Restoring: {input_filename}")
-        
+
         # Send pre_restore signal
         pre_restore.send(
             sender=self.__class__,
@@ -164,7 +164,7 @@ class Command(BaseDbBackupCommand):
         self.connector.drop = not self.no_drop
         self.connector.pg_options = self.pg_options
         self.connector.restore_dump(input_file)
-        
+
         # Send post_restore signal
         post_restore.send(
             sender=self.__class__,

@@ -79,7 +79,7 @@ class Command(BaseDbBackupCommand):
         self.logger.info("Restoring backup for media files")
         input_filename, input_file = self._get_backup_file(servername=self.servername)
         self.logger.info("Restoring: %s", input_filename)
-        
+
         # Send pre_media_restore signal
         pre_media_restore.send(
             sender=self.__class__,
@@ -112,7 +112,7 @@ class Command(BaseDbBackupCommand):
                 continue  # Skip directories
             name = media_file_info.path
             self._upload_file(name, media_file)
-            
+
         # Send post_media_restore signal
         post_media_restore.send(
             sender=self.__class__,

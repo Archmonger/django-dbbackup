@@ -116,7 +116,7 @@ class Command(BaseDbBackupCommand):
         Save a new backup file.
         """
         self.logger.info("Backing Up Database: %s", database["NAME"])
-        
+
         # Send pre_backup signal
         pre_backup.send(
             sender=self.__class__,
@@ -124,7 +124,7 @@ class Command(BaseDbBackupCommand):
             connector=self.connector,
             servername=self.servername,
         )
-        
+
         # Get backup, schema and name
         filename = self.connector.generate_filename(self.servername)
 
@@ -156,7 +156,7 @@ class Command(BaseDbBackupCommand):
             self.write_to_storage(outputfile, self.path)
         else:
             self.write_local_file(outputfile, self.path)
-            
+
         # Send post_backup signal
         post_backup.send(
             sender=self.__class__,

@@ -111,7 +111,7 @@ class Command(BaseDbBackupCommand):
             servername=self.servername,
             storage=self.storage,
         )
-        
+
         # Check for filename option
         if self.filename:
             filename = self.filename
@@ -135,7 +135,7 @@ class Command(BaseDbBackupCommand):
             self.write_to_storage(tarball, self.path)
         else:
             self.write_local_file(tarball, self.path)
-            
+
         # Send post_media_backup signal
         post_media_backup.send(
             sender=self.__class__,
