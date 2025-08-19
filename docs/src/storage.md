@@ -1,15 +1,15 @@
 # Storage settings
 
 One of the most helpful features of django-dbbackup is the ability to store
-and retrieve backups from a local or a remote storage. This functionality is
-mainly based on Django Storage API and extends its possibilities.
+and retrieve backups from local or remote storage. This functionality is
+mainly based on the Django Storage API and extends its possibilities.
 
 You can choose your backup storage backend by setting `settings.STORAGES['dbbackup']`,
 it must be the full path of a storage class. For example:
-`django.core.files.storage.FileSystemStorage` to use file system storage. 
+`django.core.files.storage.FileSystemStorage` to use file system storage.
 Below, we'll list some of the available solutions and their options.
 
-The storage's option are gathered in `settings.STORAGES['dbbackup']['OPTIONS']` which
+The storage options are gathered in `settings.STORAGES['dbbackup']['OPTIONS']`, which
 is a dictionary of keywords representing how to configure it.
 
 ```python
@@ -27,22 +27,22 @@ STORAGES = {
 ```
 
 !!! warning
-    Do not configure backup storage with the same configuration as your media
-    files as you'll risk sharing backups inside public directories.
+Do not configure backup storage with the same configuration as your media
+files as you'll risk sharing backups inside public directories.
 
 By default DBBackup uses the [built-in file system storage](https://docs.djangoproject.com/en/stable/ref/files/storage/#the-filesystemstorage-class) to manage files on
 a local directory. Feel free to use any Django storage, you can find a variety
 of them at [Django Packages](https://djangopackages.org/grids/g/storage-backends/).
 
 !!! note
-    Storing backups to local disk may also be useful for Dropbox if you
-    already have the official Dropbox client installed on your system.
+Storing backups to local disk may also be useful for Dropbox if you
+already have the official Dropbox client installed on your system.
 
 ## File system storage
 
 ### Setup
 
-To store your backups on the local file system, simply setup the required
+To store your backups on the local file system, simply set up the required
 settings below.
 
 ```python
@@ -78,7 +78,7 @@ Our backend for Google cloud storage uses django-storages.
 
 ### Setup
 
-In order to backup to Google cloud storage, you'll first need to create an account at google. Once that is complete, you can follow the required setup below.
+To back-up to Google Cloud Storage, you'll first need to create an account at Google. Once that is complete, you can follow the required setup below.
 
 ```bash
 pip install django-storages[google]
@@ -105,8 +105,8 @@ Our S3 backend uses Django Storages which uses [boto3](https://boto3.amazonaws.c
 
 ### Setup
 
-In order to backup to Amazon S3, you'll first need to create an Amazon
-Web Services Account and setup your Amazon S3 bucket. Once that is
+To back-up to Amazon S3, you'll first need to create an Amazon
+Web Services Account and set up your Amazon S3 bucket. Once that is
 complete, you can follow the required setup below.
 
 ```bash
@@ -132,7 +132,7 @@ STORAGES = {
 ### Settings
 
 !!! note
-    See the [Django Storage S3 storage official documentation](https://django-storages.readthedocs.io/en/latest/backends/amazon-S3.html) for all options.
+See the [Django Storage S3 storage official documentation](https://django-storages.readthedocs.io/en/latest/backends/amazon-S3.html) for all options.
 
     The options listed here are a selection of dictionary keys returned by
     `get_default_settings` in django-storages' [`storages/backends/s3boto3.py`](https://github.com/jschneier/django-storages/blob/master/storages/backends/s3boto3.py#L293-L324),
@@ -169,7 +169,7 @@ If setting this, it is mandatory to also configure **`region_name`**.
 This setting can either be `'private'` or `'public'`. Since you want your
 backups to be secure you'll want to set `'default_acl'` to `'private'`.
 
-*NOTE: This value will be removed in a future version of django-storages.*
+_NOTE: This value will be removed in a future version of django-storages._
 See their [CHANGELOG](https://github.com/jschneier/django-storages/blob/master/CHANGELOG.rst) for details.
 
 **`location`** - Optional
@@ -180,8 +180,8 @@ You can specify a longer path with `'location': 'root_folder/sub_folder/sub_sub_
 
 ## Dropbox
 
-In order to backup to Dropbox, you'll first need to create a Dropbox account
-and set it up to communicate with the Django-DBBackup application. Don't
+To back-up to Dropbox, you'll first need to create a Dropbox account
+and set it up to communicate with the django-dbbackup application. Don't
 worry, all instructions are below.
 
 ### Setup
@@ -220,7 +220,7 @@ STORAGES = {
 ### Settings
 
 !!! note
-    See [django-storages dropbox official documentation](https://django-storages.readthedocs.io/en/latest/backends/dropbox.html) for more details.
+See [django-storages dropbox official documentation](https://django-storages.readthedocs.io/en/latest/backends/dropbox.html) for more details.
 
 **`oauth2_access_token`** - Required
 
@@ -233,7 +233,7 @@ Jail storage to this directory
 ## FTP
 
 To store your database backups on a remote filesystem via FTP, simply
-setup the required settings below.
+set up the required settings below.
 
 ### Setup
 
@@ -242,8 +242,8 @@ pip install django-storages
 ```
 
 !!! warning
-    This storage doesn't use a private connection for communication so don't use it
-    if you're not certain about the security of the link between the client and the server.
+This storage doesn't use a private connection for communication, so don't use it
+if you're not certain about the security of the link between the client and the server.
 
 ```python
 STORAGES = {
@@ -265,11 +265,11 @@ A FTP URI with optional user, password and port. example: `'ftp://anonymous@myft
 ## SFTP
 
 To store your database backups on a remote filesystem via SFTP, simply
-setup the required settings below.
+set up the required settings below.
 
 ### Setup
 
-This backend is from Django-Storages with the [paramiko](https://www.paramiko.org/) backend.
+This backend is from django-storages with the [Paramiko](https://www.paramiko.org/) backend.
 
 ```bash
 pip install paramiko django-storages
@@ -292,21 +292,21 @@ STORAGES = {
 
 **`host`** - Required
 
-Host name or address of the SSH server
+Host name or address of the SSH server.
 
 **`root_path`** - Default `~/`
 
-Jail storage to this directory
+Jail storage to this directory.
 
 **`params`** - Default `{}`
 
-Argument used by method:`paramiko.SSHClient.connect()`.
+Argument used by method: `paramiko.SSHClient.connect()`.
 See [paramiko SSHClient.connect() documentation](https://docs.paramiko.org/en/latest/api/client.html#paramiko.client.SSHClient.connect) for details.
 
 **`interactive`** - Default `False`
 
 A boolean indicating whether to prompt for a password if the connection cannot
-be made using keys, and there is not already a password in `params`.
+be made using keys and there is not already a password in `params`.
 
 **`file_mode`**
 
@@ -318,4 +318,4 @@ GID of the group that should be set on the files on the remote host.
 
 **`known_host_file`**
 
-Absolute path of known_hosts file, if it isn't set `"~/.ssh/known_hosts"` will be used.
+Absolute path of known_hosts file; if it isn't set `"~/.ssh/known_hosts"` will be used.

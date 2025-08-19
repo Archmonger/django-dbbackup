@@ -117,7 +117,7 @@ The `dbbackup.db.sqlite.SqliteBackupConnector` makes a copy of the SQLite databa
 You can also use `dbbackup.db.sqlite.SqliteCPConnector` for making a
 simple raw copy of your database file, like a snapshot.
 
-In-memory database aren't dumpable with it.
+In-memory databases aren't dumpable with it.
 
 ## MySQL
 
@@ -126,17 +126,17 @@ MySQL uses by default `dbbackup.db.mysql.MysqlDumpConnector`. It uses
 
 ## PostgreSQL
 
-Postgres uses by default `dbbackup.db.postgresql.PgDumpConnector`, but
+PostgreSQL uses by default `dbbackup.db.postgresql.PgDumpConnector`, but
 we advise you to use `dbbackup.db.postgresql.PgDumpBinaryConnector`. The
 first one uses `pg_dump` and `psql` for its job, creating RAW SQL files.
 
 The second uses `pg_restore` with binary dump files.
 
-They can also use `psql` for launching administration command.
+They can also use `psql` for launching administration commands.
 
 ### SINGLE_TRANSACTION
 
-When doing a restore, wrap everything in a single transaction, so errors
+When doing a restore, wrap everything in a single transaction so errors
 cause a rollback.
 
 This corresponds to `--single-transaction` argument of `psql` and
@@ -146,8 +146,8 @@ Default: `True`
 
 ### DROP
 
-With `PgDumpConnector`, it includes tables dropping statements in dump file.
-`PgDumpBinaryConnector` drops at restoring.
+With `PgDumpConnector`, it includes table-dropping statements in the dump file.
+`PgDumpBinaryConnector` drops during restore.
 
 This corresponds to `--clean` argument of `pg_dump` and `pg_restore`.
 
@@ -163,27 +163,25 @@ Default: `False`
 
 Set in `dbbackup.db.postgresql.PgDumpGisConnector`, it does the same as
 PostgreSQL but launches `CREATE EXTENSION IF NOT EXISTS postgis;` before
-restore database.
+restoring the database.
 
 ### PSQL_CMD
 
-Path to `psql` command used for administration tasks like enable PostGIS
-for example, default is `psql`.
+Path to the `psql` command used for administration tasks like enabling PostGIS;
+default is `psql`.
 
 ### PASSWORD
 
-If you fill this settings `PGPASSWORD` environment variable will be used
-with every commands. For security reason, we advise to use `.pgpass` file.
+If you fill this setting the `PGPASSWORD` environment variable will be used
+with every command. For security reasons, we advise using a `.pgpass` file.
 
 ### ADMIN_USER
 
-Username used for launch action with privileges, extension creation for
-example.
+Username used to launch actions requiring privileges, such as extension creation.
 
 ### ADMIN_PASSWORD
 
-Password used for launch action with privileges, extension creation for
-example.
+Password used to launch actions requiring privileges, such as extension creation.
 
 ### SCHEMAS
 
@@ -194,7 +192,7 @@ This feature is exclusive to PostgreSQL connectors, and users can choose multipl
 
 ## MongoDB
 
-MongoDB uses by default `dbbackup.db.mongodb.MongoDumpConnector`. it
+MongoDB uses by default `dbbackup.db.mongodb.MongoDumpConnector`. It
 uses `mongodump` and `mongorestore` for its job.
 
 For AuthEnabled MongoDB Connection, you need to add one custom option `AUTH_SOURCE` in your `DBBACKUP_CONNECTORS`.
@@ -221,15 +219,15 @@ DATABASES = {
 
 ### OBJECT_CHECK
 
-Validate documents before inserting in database (option `--objcheck` in command line), default is `True`.
+Validate documents before inserting into the database (option `--objcheck` on the command line); default is `True`.
 
 ### DROP
 
-Replace objects that are already in database, (option `--drop` in command line), default is `True`.
+Replace objects that are already in the database (option `--drop` on the command line); default is `True`.
 
 ## Custom connectors
 
-Creating your connector is easy; create a children class from
+Creating your connector is easy; create a child class from
 `dbbackup.db.base.BaseDBConnector` and create `_create_dump` and
 `_restore_dump`. If your connector uses a command line tool, inherit it from
 `dbbackup.db.base.BaseCommandDBConnector`

@@ -1,16 +1,16 @@
 # Contributing guide
 
-Django-dbbackup is a free license software where all help is welcomed. This
-documentation aims to help users or developers to bring their contributions
+django-dbbackup is free-licensed software where all help is welcome. This
+documentation aims to help users or developers bring their contributions
 to this project.
 
 ## Creating a development environment
 
 If you plan to make code changes to this repository, you will need to install the following dependencies first:
 
--   [Git](https://git-scm.com/downloads)
--   [Python 3.9+](https://www.python.org/downloads/)
--   [Hatch](https://hatch.pypa.io/latest/)
+- [Git](https://git-scm.com/downloads)
+- [Python 3.9+](https://www.python.org/downloads/)
+- [Hatch](https://hatch.pypa.io/latest/)
 
 Once you finish installing these dependencies, you can clone this repository:
 
@@ -25,13 +25,13 @@ By utilizing `hatch`, the following commands are available to manage the develop
 
 ### Tests
 
-| Command | Description |
-| --- | --- |
-| `hatch test` | Run Python tests using the current environment's Python version |
-| `hatch test --all` | Run tests using all compatible Python and Django versions |
-| `hatch test --python 3.9` | Run tests using a specific Python version |
-| `hatch test --include "django=5.1"` | Run tests using a specific Django version |
-| `hatch test -k test_backup_filter` | Run only a specific test |
+| Command                             | Description                                                     |
+| ----------------------------------- | --------------------------------------------------------------- |
+| `hatch test`                        | Run Python tests using the current environment's Python version |
+| `hatch test --all`                  | Run tests using all compatible Python and Django versions       |
+| `hatch test --python 3.9`           | Run tests using a specific Python version                       |
+| `hatch test --include "django=5.1"` | Run tests using a specific Django version                       |
+| `hatch test -k test_backup_filter`  | Run only a specific test                                        |
 
 ??? question "What other arguments are available to me?"
 
@@ -41,13 +41,13 @@ By utilizing `hatch`, the following commands are available to manage the develop
 
 ### Linting and Formatting
 
-| Command | Description |
-| --- | --- |
-| `hatch run lint:format` | Run formatters to fix code style |
-| `hatch run lint:format-check` | Check code formatting without making changes |
-| `hatch run lint:check` | Run all linters |
-| `hatch run precommit:check` | Run all [`pre-commit`](https://pre-commit.com/) checks configured within this repository |
-| `hatch run precommit:update` | Update the [`pre-commit`](https://pre-commit.com/) hooks configured within this repository |
+| Command                       | Description                                                                                |
+| ----------------------------- | ------------------------------------------------------------------------------------------ |
+| `hatch run lint:format`       | Run formatters to fix code style                                                           |
+| `hatch run lint:format-check` | Check code formatting without making changes                                               |
+| `hatch run lint:check`        | Run all linters                                                                            |
+| `hatch run precommit:check`   | Run all [`pre-commit`](https://pre-commit.com/) checks configured within this repository   |
+| `hatch run precommit:update`  | Update the [`pre-commit`](https://pre-commit.com/) hooks configured within this repository |
 
 ??? tip "Configure your IDE for linting"
 
@@ -57,26 +57,26 @@ By utilizing `hatch`, the following commands are available to manage the develop
 
 ### Functional Testing
 
-| Command | Description |
-| --- | --- |
+| Command                     | Description                             |
+| --------------------------- | --------------------------------------- |
 | `hatch run functional:test` | Run end-to-end backup and restore tests |
 
 The functional tests perform real database and media backup/restore cycles to ensure the commands work correctly.
 
 ### Documentation
 
-| Command | Description |
-| --- | --- |
+| Command                | Description                                                                        |
+| ---------------------- | ---------------------------------------------------------------------------------- |
 | `hatch run docs:serve` | Start the [`mkdocs`](https://www.mkdocs.org/) server to view documentation locally |
-| `hatch run docs:build` | Build the documentation |
+| `hatch run docs:build` | Build the documentation                                                            |
 
 ### Environment Management
 
-| Command | Description |
-| --- | --- |
-| `hatch build --clean` | Build the package from source |
-| `hatch env prune` | Delete all virtual environments created by `hatch` |
-| `hatch python install 3.12` | Install a specific Python version to your system |
+| Command                     | Description                                        |
+| --------------------------- | -------------------------------------------------- |
+| `hatch build --clean`       | Build the package from source                      |
+| `hatch env prune`           | Delete all virtual environments created by `hatch` |
+| `hatch python install 3.12` | Install a specific Python version to your system   |
 
 ??? tip "Check out Hatch for all available commands!"
 
@@ -86,7 +86,7 @@ The functional tests perform real database and media backup/restore cycles to en
 
 ## Submit a bug, issue or enhancement
 
-All communication are made with [GitHub issues](https://github.com/Archmonger/django-dbbackup/issues). Do not hesitate to open a
+All communication is handled with [GitHub issues](https://github.com/Archmonger/django-dbbackup/issues). Do not hesitate to open an
 issue if:
 
 - You have an improvement idea
@@ -108,9 +108,9 @@ of requests we advise you to:
 7. Bother us until we give you an answer
 
 !!! note
-    We recommend testing with multiple Python and Django versions using
-    `hatch test --all` before pushing. DBBackup uses a lot of file operations,
-    so breaks between versions are possible.
+We recommend testing with multiple Python and Django versions using
+`hatch test --all` before pushing. DBBackup uses a lot of file operations,
+so breaks between versions are possible.
 
 ## Test environment configuration
 

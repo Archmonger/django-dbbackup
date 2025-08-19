@@ -41,7 +41,7 @@ python manage.py dbrestore --help
 
 ## mediabackup
 
-Backup media files, gather all in a tarball and encrypt or compress.
+back-up media files, gather all in a tarball, and optionally encrypt or compress.
 
 ```bash
 $ ./manage.py mediabackup
@@ -57,7 +57,7 @@ python manage.py mediabackup --help
 
 ## mediarestore
 
-Restore media files, extract files from archive and put into media storage.
+Restore media files: extract files from the archive and put them into media storage.
 
 ```bash
 $ ./manage.py mediarestore
@@ -78,7 +78,7 @@ python manage.py mediarestore --help
 
 ## listbackups
 
-This command helps to list backups filtered by type (`'media'` or `'db'`), by compression or encryption.
+This command lists backups filtered by type (`'media'` or `'db'`), compression, or encryption.
 
 For detailed help information, run:
 
