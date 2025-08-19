@@ -53,10 +53,35 @@ class DjangoConnectorTest(TestCase):
         self.assertIn('"username": "test"', content)
 
     @patch('dbbackup.db.django.call_command')
-    def test_create_dump_with_exclude(self, mock_call_command):
-        """Test dump creation with exclude parameter."""
-        # Set exclude parameter
-        self.connector.exclude = ['auth.user', 'sessions.session']
+    def test_create_dump_with_exclude_app_model_format(self, mock_call_command):
+        """Test dump creation with exclude parameter in app.model format."""
+        # Set exclude parameter with app.model format for available apps
+        self.connector.exclude = ['testapp.CharModel']
+        
+        # Mock the dumpdata command
+        def mock_dumpdata(*args, **kwargs):
+            if 'stdout' in kwargs:
+                kwargs['stdout'].write('[]')
+        
+        mock_call_command.side_effect = mock_dumpdata
+        
+        # Create the dump
+        dump = self.connector.create_dump()
+        
+        # Verify call_command was called with correct exclude parameter
+        mock_call_command.assert_called_once()
+        call_args = mock_call_command.call_args
+        # Should have exclude parameter since testapp.CharModel exists
+        self.assertIn('exclude', call_args[1])
+        self.assertEqual(call_args[1]['exclude'], ['testapp.CharModel'])
+        self.assertIsInstance(dump, SpooledTemporaryFile)
+
+    @patch('dbbackup.db.django.call_command')
+    def test_create_dump_with_exclude_table_names(self, mock_call_command):
+        """Test dump creation with exclude parameter as table names."""
+        # Set exclude parameter with table names that won't be converted
+        # since auth app is not available in test environment
+        self.connector.exclude = ['auth_user', 'django_session']
         
         # Mock the dumpdata command
         def mock_dumpdata(*args, **kwargs):
@@ -70,6 +95,57 @@ class DjangoConnectorTest(TestCase):
         
         # Verify call_command was called
         mock_call_command.assert_called_once()
+        call_args = mock_call_command.call_args
+        # Should NOT have exclude parameter since auth/sessions apps don't exist
+        # and table names can't be converted
+        self.assertNotIn('exclude', call_args[1])
+        self.assertIsInstance(dump, SpooledTemporaryFile)
+
+    @patch('dbbackup.db.django.call_command')
+    def test_create_dump_with_exclude_mixed_format(self, mock_call_command):
+        """Test dump creation with exclude parameter in mixed formats."""
+        # Set exclude parameter with mixed formats - valid and invalid
+        self.connector.exclude = ['testapp.TextModel', 'auth_user', 'unknown_table']
+        
+        # Mock the dumpdata command
+        def mock_dumpdata(*args, **kwargs):
+            if 'stdout' in kwargs:
+                kwargs['stdout'].write('[]')
+        
+        mock_call_command.side_effect = mock_dumpdata
+        
+        # Create the dump
+        dump = self.connector.create_dump()
+        
+        # Verify call_command was called with properly handled exclude parameter
+        mock_call_command.assert_called_once()
+        call_args = mock_call_command.call_args
+        # Should have exclude parameter with only the valid testapp.TextModel
+        self.assertIn('exclude', call_args[1])
+        self.assertEqual(call_args[1]['exclude'], ['testapp.TextModel'])
+        self.assertIsInstance(dump, SpooledTemporaryFile)
+
+    @patch('dbbackup.db.django.call_command')
+    def test_create_dump_with_exclude_invalid_only(self, mock_call_command):
+        """Test dump creation with exclude parameter containing only invalid entries."""
+        # Set exclude parameter with only invalid entries
+        self.connector.exclude = ['nonexistent.Model', 'auth_user', 'unknown_table']
+        
+        # Mock the dumpdata command
+        def mock_dumpdata(*args, **kwargs):
+            if 'stdout' in kwargs:
+                kwargs['stdout'].write('[]')
+        
+        mock_call_command.side_effect = mock_dumpdata
+        
+        # Create the dump
+        dump = self.connector.create_dump()
+        
+        # Verify call_command was called without exclude parameter
+        mock_call_command.assert_called_once()
+        call_args = mock_call_command.call_args
+        # Should NOT have exclude parameter since all entries are invalid
+        self.assertNotIn('exclude', call_args[1])
         self.assertIsInstance(dump, SpooledTemporaryFile)
 
     @patch('dbbackup.db.django.call_command')

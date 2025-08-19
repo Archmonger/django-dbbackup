@@ -8,7 +8,6 @@ any Django-supported database backend.
 
 import tempfile
 import os
-from io import StringIO
 from tempfile import SpooledTemporaryFile
 
 from django.core.management import call_command
@@ -36,14 +35,18 @@ class DjangoConnector(BaseDBConnector):
         Returns a file-like object containing the serialized database data
         in JSON format.
         """
-        # Use StringIO to capture the output
-        output = StringIO()
+        # Create a SpooledTemporaryFile directly to avoid memory duplication
+        dump_file = SpooledTemporaryFile(mode="w+b")
+        
+        # Create a text wrapper for the binary file to write Unicode
+        import io
+        text_wrapper = io.TextIOWrapper(dump_file, encoding="utf-8", write_through=True)
 
         # Prepare arguments for dumpdata command
         dump_args = []
         dump_kwargs = {
             "format": "json",
-            "stdout": output,
+            "stdout": text_wrapper,
             "verbosity": 0,
             "use_natural_foreign_keys": True,
             "use_natural_primary_keys": True,
@@ -51,26 +54,73 @@ class DjangoConnector(BaseDBConnector):
 
         # Handle exclude parameter if specified
         if self.exclude:
-            dump_kwargs["exclude"] = [f"{app}.{model}" for app in self.exclude for model in ["*"]]
-            # If exclude contains table names, convert them to app.model format
-            # For now, we'll pass exclude as-is since dumpdata expects app.model format
-            # This might need refinement based on how exclude is typically used
-            if all("." not in item for item in self.exclude):
-                # If exclude items don't contain dots, they're likely table names
-                # We'll exclude them by app label (this is a best-effort conversion)
-                pass  # For now, we'll handle this in a future iteration
+            exclude_list = []
+            for item in self.exclude:
+                if "." in item:
+                    # Already in app.model format - validate it exists before adding
+                    try:
+                        from django.apps import apps
+                        app_label, model_name = item.split(".", 1)
+                        apps.get_model(app_label, model_name)
+                        exclude_list.append(item)
+                    except (LookupError, ValueError):
+                        # Skip invalid app.model combinations silently
+                        # This allows for graceful handling of non-existent models
+                        pass
+                else:
+                    # Handle table name format - convert only well-known Django patterns
+                    # For unknown table names, skip them rather than risk errors
+                    converted = None
+                    if item.startswith("auth_"):
+                        # Handle Django auth tables (only if auth app is available)
+                        try:
+                            from django.apps import apps
+                            apps.get_app_config('auth')  # Check if auth app exists
+                            model_name = item[5:]  # Remove 'auth_' prefix
+                            if model_name == "user":
+                                converted = "auth.User"
+                            elif model_name == "group":
+                                converted = "auth.Group"
+                            elif model_name == "permission":
+                                converted = "auth.Permission"
+                        except LookupError:
+                            pass  # Auth app not installed, skip
+                    elif item.startswith("django_"):
+                        # Handle Django internal tables (only if apps are available)
+                        model_name = item[7:]  # Remove 'django_' prefix
+                        try:
+                            from django.apps import apps
+                            if model_name == "session":
+                                apps.get_app_config('sessions')
+                                converted = "sessions.Session"
+                            elif model_name == "content_type":
+                                apps.get_app_config('contenttypes')
+                                converted = "contenttypes.ContentType"
+                            elif model_name == "admin_log":
+                                apps.get_app_config('admin')
+                                converted = "admin.LogEntry"
+                        except LookupError:
+                            pass  # Required app not installed, skip
+                    
+                    # Only add converted names that we're confident about
+                    if converted:
+                        exclude_list.append(converted)
+                    # For unknown table names, we skip them to avoid Django validation errors
+                    # This is safer than trying to guess the correct app.model format
+            
+            if exclude_list:
+                dump_kwargs["exclude"] = exclude_list
 
-        # Run dumpdata command
-        call_command("dumpdata", *dump_args, **dump_kwargs)
+        try:
+            # Run dumpdata command - this streams directly to the file
+            call_command("dumpdata", *dump_args, **dump_kwargs)
+        finally:
+            # Ensure the text wrapper is properly closed to flush any remaining data
+            text_wrapper.flush()
+            text_wrapper.detach()  # Detach without closing the underlying binary file
 
-        # Get the JSON content and create a file-like object
-        json_content = output.getvalue()
-
-        # Create a SpooledTemporaryFile to return
-        dump_file = SpooledTemporaryFile(mode="w+b")
-        dump_file.write(json_content.encode("utf-8"))
+        # Reset file position to beginning for reading
         dump_file.seek(0)
-
         return dump_file
 
     def _restore_dump(self, dump):
@@ -82,19 +132,27 @@ class DjangoConnector(BaseDBConnector):
         """
         # Create a temporary file for loaddata to read from
         with tempfile.NamedTemporaryFile(mode="w+b", suffix=".json", delete=False) as temp_file:
-            # Copy dump content to temporary file
+            # Stream copy dump content to temporary file to avoid loading everything into memory
             if isinstance(dump, File):
                 dump.seek(0)
-                content = dump.read()
-                if isinstance(content, str):
-                    content = content.encode("utf-8")
-                temp_file.write(content)
+                # Use chunked reading for memory efficiency
+                while True:
+                    chunk = dump.read(8192)  # 8KB chunks
+                    if not chunk:
+                        break
+                    if isinstance(chunk, str):
+                        chunk = chunk.encode("utf-8")
+                    temp_file.write(chunk)
             else:
                 dump.seek(0)
-                content = dump.read()
-                if isinstance(content, str):
-                    content = content.encode("utf-8")
-                temp_file.write(content)
+                # Use chunked reading for memory efficiency
+                while True:
+                    chunk = dump.read(8192)  # 8KB chunks
+                    if not chunk:
+                        break
+                    if isinstance(chunk, str):
+                        chunk = chunk.encode("utf-8")
+                    temp_file.write(chunk)
 
             temp_file_path = temp_file.name
 
