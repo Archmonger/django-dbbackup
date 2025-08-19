@@ -64,6 +64,73 @@ class DbbackupCommandSaveNewBackupTest(TestCase):
 
         self.assertIsNone(result)
 
+    @patch("dbbackup.management.commands._base.BaseDbBackupCommand.write_to_storage")
+    def test_path_s3_uri(self, mock_write_to_storage):
+        """Test that S3 URIs in output path are handled by write_to_storage instead of write_local_file."""
+        self.command.path = "s3://mybucket/backups/db.bak"
+        self.command._save_new_backup(TEST_DATABASE)
+        self.assertTrue(mock_write_to_storage.called)
+        # Verify the S3 path was passed correctly to write_to_storage
+        args, kwargs = mock_write_to_storage.call_args
+        self.assertEqual(args[1], "s3://mybucket/backups/db.bak")
+
+    @patch("dbbackup.management.commands._base.BaseDbBackupCommand.write_to_storage")
+    def test_path_s3_uri_variants(self, mock_write_to_storage):
+        """Test various S3 URI formats."""
+        test_cases = [
+            "s3://bucket/file.bak",
+            "s3://bucket/folder/file.bak", 
+            "s3://bucket-with-dashes/nested/folders/file.bak",
+            "s3://bucket/path/without/trailing/slash",
+        ]
+        
+        for s3_uri in test_cases:
+            with self.subTest(s3_uri=s3_uri):
+                mock_write_to_storage.reset_mock()
+                self.command.path = s3_uri
+                self.command._save_new_backup(TEST_DATABASE)
+                self.assertTrue(mock_write_to_storage.called)
+                args, kwargs = mock_write_to_storage.call_args
+                self.assertEqual(args[1], s3_uri)
+
+    def test_path_local_file_still_works(self):
+        """Test that regular local file paths still use write_local_file."""
+        local_tmp = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "tmp")
+        os.makedirs(local_tmp, exist_ok=True)
+        
+        # Test with a real local path that should work
+        local_path = os.path.join(local_tmp, "test_local.bak")
+        self.command.path = local_path
+        self.command._save_new_backup(TEST_DATABASE)
+        
+        # Verify the file was created (meaning write_local_file was used)
+        self.assertTrue(os.path.exists(local_path))
+        
+        # Cleanup
+        os.remove(local_path)
+        
+        # Test that paths containing 's3' but not starting with 's3://' are treated as local
+        with patch("dbbackup.management.commands._base.BaseDbBackupCommand.write_local_file") as mock_write_local_file:
+            mock_write_local_file.side_effect = FileNotFoundError("Mocked error")
+            
+            test_cases = [
+                "/path/with/s3/in/name/backup.bak",
+                "s3_backup.bak",  # starts with s3 but not s3://
+                "bucket-s3-backup.bak",
+            ]
+            
+            for local_path in test_cases:
+                with self.subTest(local_path=local_path):
+                    mock_write_local_file.reset_mock()
+                    self.command.path = local_path
+                    # This should call write_local_file (and raise our mocked error)
+                    with self.assertRaises(FileNotFoundError):
+                        self.command._save_new_backup(TEST_DATABASE)
+                    # Verify write_local_file was called
+                    self.assertTrue(mock_write_local_file.called)
+                    args, kwargs = mock_write_local_file.call_args
+                    self.assertEqual(args[1], local_path)
+
     @patch("dbbackup.settings.DATABASES", ["db-from-settings"])
     def test_get_database_keys(self):
         with self.subTest("use --database from CLI"):
