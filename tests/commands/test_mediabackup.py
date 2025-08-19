@@ -77,3 +77,19 @@ class MediabackupBackupMediafilesTest(TestCase):
         self.command.filename = "my_new_name.tar"
         self.command.backup_mediafiles()
         self.assertEqual(HANDLED_FILES["written_files"][0][0], self.command.filename)
+
+    def test_s3_uri_output_path(self):
+        """Test that S3 URIs in output path are handled correctly for mediabackup."""
+        from unittest.mock import patch
+        
+        with patch("dbbackup.management.commands._base.BaseDbBackupCommand.write_to_storage") as mock_write_to_storage:
+            self.command.path = "s3://mybucket/media/backup.tar"
+            self.command.backup_mediafiles()
+            
+            # Verify write_to_storage was called with the S3 path
+            self.assertTrue(mock_write_to_storage.called)
+            args, kwargs = mock_write_to_storage.call_args
+            self.assertEqual(args[1], "s3://mybucket/media/backup.tar")
+            
+            # Verify no files were written to local storage
+            self.assertEqual(0, len(HANDLED_FILES["written_files"]))

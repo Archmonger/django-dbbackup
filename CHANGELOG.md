@@ -32,6 +32,7 @@ Don't forget to remove deprecated code on each major release!
 
 ### Fixed
 
+- Fixed `-O` flag to properly handle S3 URIs. Now `python manage.py dbbackup -O s3://bucket/path/` and `python manage.py mediabackup -O s3://bucket/path/` correctly route S3 URIs to the storage backend instead of attempting to write to local filesystem.
 - Fix issues with parsing excess whitespace within `dbbackup -d "<COMMA_SEPARATED_ARGS>"`
 - Fix encryption support when using `gnupg==5.x`.
 - Resolve SQLite backup temporary file locking issues on Windows.
