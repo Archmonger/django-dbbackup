@@ -178,7 +178,7 @@ extra-dependencies = [
   "python-gnupg>=0.5.0",
   "testfixtures",
   "django",
-  # "psycopg2-binary",
+  "psycopg2-binary",
   # "mysqlclient",
 ]
 
@@ -206,6 +206,12 @@ test = [
   "python -m django mediarestore --noinput",
   "python -c \"import os; assert os.path.exists('tmp/media/test.txt'); print('Media test passed!')\"",
   "python -c \"import os; os.path.exists('tmp/test_db.sqlite3') and os.remove('tmp/test_db.sqlite3')\"",
+]
+postgres-test = [
+  "python scripts/postgres_live_test.py --connector PgDumpConnector --verbose",
+]
+postgres-test-all = [
+  "python scripts/postgres_live_test.py --all --verbose",
 ]
 
 # >>> Generic Tools <<<
