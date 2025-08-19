@@ -140,8 +140,8 @@ email address).
 
 Default: `django.conf.settings.ADMINS`
 
-!!! warning
-`DBBACKUP_FAILURE_RECIPIENTS` was used before and is now deprecated
+!!! note
+    `DBBACKUP_FAILURE_RECIPIENTS` was removed in version 4.3.0. Use `DBBACKUP_ADMINS` instead.
 
 ### DBBACKUP_EMAIL_SUBJECT_PREFIX
 

@@ -32,6 +32,10 @@ Don't forget to remove deprecated code on each major release!
 - Drop support for end-of-life Python 3.7 and 3.8.
 - Drop support for end-of-life Django 3.2.
 - Drop support for `DBBACKUP_STORAGE` AND `DBBACKUP_STORAGE_OPTIONS` settings, use Django's `STORAGES['dbbackup']` setting instead.
+- Remove deprecated `DBBACKUP_FAILURE_RECIPIENTS` setting, use `DBBACKUP_ADMINS` instead.
+- Remove Django version compatibility code for unsupported Django versions (< 1.8, < 1.10, < 3.2).
+- Remove `default_app_config` usage that was only needed for Django < 3.2.
+- Remove legacy optparse compatibility code for Django < 1.10.
 
 ### Fixed
 
