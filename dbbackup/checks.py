@@ -30,9 +30,8 @@ W005 = Warning(
     hint="settings.DBBACKUP_DATE_FORMAT can contain only [A-Za-z0-9%_-]",
     id="dbbackup.W005",
 )
-# W006: Historical - "FAILURE_RECIPIENTS has been deprecated" - checked for DBBACKUP_FAILURE_RECIPIENTS setting
-# W009: Historical - "Using removed DBBACKUP_STORAGE parameter" - checked for DBBACKUP_STORAGE setting  
-# W010: Historical - "Using removed DBBACKUP_STORAGE_OPTIONS parameter" - checked for DBBACKUP_STORAGE_OPTIONS setting
+# W006: Historical - "FAILURE_RECIPIENTS has been deprecated"
+
 W007 = Warning(
     "Invalid FILENAME_TEMPLATE parameter",
     hint="settings.DBBACKUP_FILENAME_TEMPLATE must not contain slashes ('/'). "
@@ -45,6 +44,9 @@ W008 = Warning(
     "Did you mean to change the value for 'location'?",
     id="dbbackup.W008",
 )
+
+# W009: Historical - "Using removed DBBACKUP_STORAGE parameter"
+# W010: Historical - "Using removed DBBACKUP_STORAGE_OPTIONS parameter"
 
 
 def check_filename_templates():
