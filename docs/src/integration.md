@@ -56,6 +56,86 @@ Add the cron job:
 python manage.py crontab add
 ```
 
+## Celery
+
+Example setup using [Celery](https://docs.celeryq.dev/) with [django-celery-beat](https://django-celery-beat.readthedocs.io/) for scheduled backups:
+
+### Celery Tasks
+
+Create a `tasks.py` file in your app:
+
+```python
+from celery import Celery
+from django.core import management
+
+app = Celery()
+
+
+@app.task
+def backup_db():
+    management.call_command('dbbackup')
+
+
+@app.task
+def backup_media():
+    management.call_command('mediabackup')
+```
+
+### Scheduled Backups with django-celery-beat
+
+Create a Django management command to set up periodic tasks (e.g., `management/commands/setup_backup_schedule.py`):
+
+```python
+from django.core.management.base import BaseCommand
+from django_celery_beat.models import CrontabSchedule, PeriodicTask
+import pytz
+
+
+class Command(BaseCommand):
+    help = 'Creates crontab schedule objects and periodic tasks that use them'
+
+    def handle(self, *args, **options):
+        # Schedule for daily backups at midnight UTC
+        every_day, _ = CrontabSchedule.objects.get_or_create(
+            minute='0',
+            hour='0',
+            day_of_week='*',
+            day_of_month='*',
+            month_of_year='*',
+            timezone=pytz.timezone('UTC')
+        )
+
+        # Create periodic tasks
+        PeriodicTask.objects.get_or_create(
+            crontab=every_day,
+            name='Backup DB',
+            task='myapp.tasks.backup_db',
+        )
+
+        PeriodicTask.objects.get_or_create(
+            crontab=every_day,
+            name='Backup Media',
+            task='myapp.tasks.backup_media',
+        )
+
+        self.stdout.write(
+            self.style.SUCCESS('Successfully created backup schedule')
+        )
+```
+
+Run the setup command:
+
+```bash
+python manage.py setup_backup_schedule
+```
+
+Make sure your Celery worker and beat scheduler are running:
+
+```bash
+celery -A myproject worker --loglevel=info
+celery -A myproject beat --loglevel=info
+```
+
 ### Optional: periodic verification
 
 Consider scheduling a periodic restore test (e.g. weekly) into a throw-away
