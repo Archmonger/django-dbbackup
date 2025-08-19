@@ -6,8 +6,7 @@ The following databases are supported by this application:
 - MySQL
 - PostgreSQL
 - MongoDB
-- Oracle (via Django native connector)
-- ...and any other Django-supported database (via Django native connector)
+- ... and any other Django-supported database (via `DjangoConnector`)
 
 By default DBBackup reuses connection details from `settings.DATABASES`.
 Sometimes you want different credentials or a different host (e.g. read-only
@@ -31,34 +30,19 @@ DBBackup uses “connector” classes to implement backend specific dump and
 restore logic. Each connector may expose additional settings documented
 below.
 
-## Common
+## Common Settings
 
 All connectors have the following parameters:
 
-### CONNECTOR
+| Setting   | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                  | Default                     |
+| --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------- |
+| CONNECTOR | Absolute path to connector class. Defaults by engine: `dbbackup.db.sqlite.SqliteConnector` (sqlite3), `dbbackup.db.mysql.MysqlDumpConnector` (mysql), `dbbackup.db.postgresql.PgDumpConnector` (postgresql), `dbbackup.db.postgresql.PgDumpGisConnector` (postgis), `dbbackup.db.mongodb.MongoDumpConnector` (django_mongodb_engine), `dbbackup.db.django.DjangoConnector` (fallback / any unmapped). Prometheus wrappers are also supported mapping to the same connectors. | Auto-detected from `ENGINE` |
+| EXCLUDE   | List of table names to exclude from dump (may be unsupported for raw file copy snapshot approaches). Example below.                                                                                                                                                                                                                                                                                                                                                          | None                        |
+| EXTENSION | File extension used for the generated dump archive.                                                                                                                                                                                                                                                                                                                                                                                                                          | `dump`                      |
 
-Absolute path to a connector class by default is:
+All supported built-in connectors are described in more detail below. Following database wrappers from `django-prometheus` are supported: `django_prometheus.db.backends.postgresql` (-> `PgDumpBinaryConnector`), `django_prometheus.db.backends.sqlite3` (-> `SqliteConnector`), `django_prometheus.db.backends.mysql` (-> `MysqlDumpConnector`), `django_prometheus.db.backends.postgis` (-> `PgDumpGisConnector`).
 
-- `dbbackup.db.sqlite.SqliteConnector` for `'django.db.backends.sqlite3'`
-- `dbbackup.db.mysql.MysqlDumpConnector` for `django.db.backends.mysql`
-- `dbbackup.db.postgresql.PgDumpConnector` for `django.db.backends.postgresql`
-- `dbbackup.db.postgresql.PgDumpGisConnector` for `django.contrib.gis.db.backends.postgis`
-- `dbbackup.db.mongodb.MongoDumpConnector` for `django_mongodb_engine`
-- `dbbackup.db.django.DjangoConnector` for `django.db.backends.oracle` and any unmapped database engines
-
-All supported built-in connectors are described in more detail below.
-
-Following database wrappers from `django-prometheus` module are supported:
-
-- `django_prometheus.db.backends.postgresql` for `dbbackup.db.postgresql.PgDumpBinaryConnector`
-- `django_prometheus.db.backends.sqlite3` for `dbbackup.db.sqlite.SqliteConnector`
-- `django_prometheus.db.backends.mysql` for `dbbackup.db.mysql.MysqlDumpConnector`
-- `django_prometheus.db.backends.postgis` for `dbbackup.db.postgresql.PgDumpGisConnector`
-
-### EXCLUDE
-
-List of table names to exclude from the dump. Not all connectors support this
-when using snapshot/copy approaches (e.g. raw file copy). Example:
+Example for `EXCLUDE` usage:
 
 ```python
 DBBACKUP_CONNECTORS = {
@@ -68,42 +52,18 @@ DBBACKUP_CONNECTORS = {
 }
 ```
 
-### EXTENSION
-
-File extension used for the generated dump archive. Default `'dump'`.
-
-## Command connectors
-
 Some connectors use a command line tool as a dump engine, `mysqldump` for
 example. These kinds of tools have common attributes:
 
-### DUMP_CMD
-
-Path to the command used to create a backup; default is the appropriate
-command supposed to be in your PATH, for example: `'mysqldump'` for MySQL.
-
-This setting is useful only for connectors using command line tools (children
-of `dbbackup.db.base.BaseCommandDBConnector`)
-
-### RESTORE_CMD
-
-Same as `DUMP_CMD` but used when restoring.
-
-### DUMP_PREFIX and RESTORE_PREFIX
-
-String to include as prefix of dump or restore command. It will be added with
-a space between the launched command and its prefix.
-
-### DUMP_SUFFIX and RESTORE_SUFFIX
-
-String to include as suffix of dump or restore command. It will be added with
-a space between the launched command and its suffix.
-
-### ENV, DUMP_ENV and RESTORE_ENV
-
-Environment variables injected when running the external dump/restore
-commands. `ENV` applies to every command; `DUMP_ENV` / `RESTORE_ENV` override
-or extend it for their respective phases. Defaults: all `{}`.
+| Setting                      | Description                                                                                                                                                           | Default                                |
+| ---------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------- |
+| DUMP_CMD                     | Path to command used to create a backup (e.g. `mysqldump`, `pg_dump`, `mongodump`). Applies only to command-line connectors (subclasses of `BaseCommandDBConnector`). | Tool name inferred / must be in `PATH` |
+| RESTORE_CMD                  | Path to command used for restore (e.g. `mysql`, `psql`, `pg_restore`, `mongorestore`).                                                                                | Tool name inferred / must be in `PATH` |
+| DUMP_PREFIX / RESTORE_PREFIX | String inserted (with a space) before the actual dump/restore command (e.g. to add `time` or `nice`).                                                                 | None                                   |
+| DUMP_SUFFIX / RESTORE_SUFFIX | String appended (with a space) after the dump/restore command (e.g. to pipe or redirect).                                                                             | None                                   |
+| ENV                          | Base environment variables applied to every external command.                                                                                                         | `{}`                                   |
+| DUMP_ENV / RESTORE_ENV       | Environment overrides/extensions applied only to dump / restore phases.                                                                                               | `{}`                                   |
+| USE_PARENT_ENV               | Whether to inherit parent process environment (e.g. to keep `PATH`).                                                                                                  | `True`                                 |
 
 Example forcing a specific SSL mode for PostgreSQL dump:
 
@@ -115,102 +75,71 @@ DBBACKUP_CONNECTORS = {
 }
 ```
 
-### USE_PARENT_ENV
+## Built-in Database Connectors
 
-Specify if the connector will use its parent's environment variables. By
-default it is `True` to keep `PATH`.
+These connectors are provided by default and are designed to work with specific database engines. They provide optimized backup and restore functionality.
 
-## SQLite
+### SQLite
 
-SQLite defaults to `dbbackup.db.sqlite.SqliteConnector`.
-
-### SqliteConnector
+#### SqliteConnector
 
 It is in pure Python and is similar to the Sqlite `.dump` command for creating a
 SQL dump.
 
-### SqliteBackupConnector
+This is the default connector for SQLite databases.
+
+#### SqliteBackupConnector
 
 The `dbbackup.db.sqlite.SqliteBackupConnector` makes a copy of the SQLite database file using the `.backup` command, which is safe to execute while the database has ongoing/active connections. Additionally, it supports dumping in-memory databases by construction.
 
-### SqliteCPConnector
+#### SqliteCPConnector
 
 You can also use `dbbackup.db.sqlite.SqliteCPConnector` for making a
 simple raw copy of your database file, like a snapshot.
 
 In-memory databases aren't dumpable with it.
 
-## MySQL
+### MySQL
 
 MySQL defaults to `dbbackup.db.mysql.MysqlDumpConnector` which shells out to
 `mysqldump` for creation and `mysql` for restore.
 
-## PostgreSQL
+### PostgreSQL
 
 PostgreSQL uses by default `dbbackup.db.postgresql.PgDumpConnector`, but
 we advise you to use `dbbackup.db.postgresql.PgDumpBinaryConnector`. The
 first one uses `pg_dump` and `psql` for its job, creating RAW SQL files.
 
-The second uses `pg_restore` with binary dump files for faster, parallel-
-capable restores.
+The second uses `pg_restore` with binary dump files for faster, parallel-capable
+restores.
 
 Both may invoke `psql` for ancillary administrative statements.
 
-### SINGLE_TRANSACTION
+#### Settings
 
-When doing a restore, wrap everything in a single transaction so errors
-cause a rollback.
+| Setting            | Description                                                                                                                             | Default |
+| ------------------ | --------------------------------------------------------------------------------------------------------------------------------------- | ------- |
+| SINGLE_TRANSACTION | Wrap restore in a single transaction so errors cause full rollback (`--single-transaction` for `psql` / `pg_restore`).                  | `True`  |
+| DROP               | Include / execute drop statements when restoring (`--clean` with `pg_dump` / `pg_restore`). In binary mode drops happen during restore. | `True`  |
+| IF_EXISTS          | Add `IF EXISTS` to destructive statements in clean mode.                                                                                | `False` |
 
-This corresponds to `--single-transaction` argument of `psql` and
-`pg_restore`.
-
-Default: `True`
-
-### DROP
-
-With `PgDumpConnector`, it includes table-dropping statements in the dump file.
-`PgDumpBinaryConnector` drops during restore.
-
-This corresponds to `--clean` argument of `pg_dump` and `pg_restore`.
-
-Default: `True`
-
-### IF_EXISTS
-
-Adds `IF EXISTS` to destructive statements in `--clean` mode of `pg_dump`.
-
-Default: `False`
-
-## PostGIS
+### PostGIS
 
 Set in `dbbackup.db.postgresql.PgDumpGisConnector`, it does the same as
 PostgreSQL but launches `CREATE EXTENSION IF NOT EXISTS postgis;` before
 restoring the database.
 
-### PSQL_CMD
+#### Settings
 
-Path to the `psql` command used for administration tasks like enabling PostGIS;
-default is `psql`.
+| Setting        | Description                                                                     | Default                |
+| -------------- | ------------------------------------------------------------------------------- | ---------------------- |
+| PSQL_CMD       | Path to `psql` used for admin tasks (extension creation, etc.).                 | `psql`                 |
+| PASSWORD       | If provided sets `PGPASSWORD` for all commands (prefer `.pgpass` for security). | None                   |
+| ADMIN_USER     | Privileged user for administrative actions like enabling PostGIS.               | None                   |
+| ADMIN_PASSWORD | Password for `ADMIN_USER` when needed.                                          | None                   |
+| SCHEMAS        | Limit dump to specific schemas (PostgreSQL connectors only).                    | All non-system schemas |
 
-### PASSWORD
-
-If you fill this setting the `PGPASSWORD` environment variable will be used
-with every command. For security reasons, we advise using a `.pgpass` file.
-
-### ADMIN_USER
-
-Username used to launch actions requiring privileges, such as extension creation.
-
-### ADMIN_PASSWORD
-
-Password used to launch actions requiring privileges, such as extension creation.
-
-### SCHEMAS
-
-Limit the dump to specific schemas (PostgreSQL connectors only). If omitted,
-all non system schemas are included. Provide a list of schema names.
-
-## MongoDB
+### MongoDB
 
 MongoDB uses by default `dbbackup.db.mongodb.MongoDumpConnector`. It
 uses `mongodump` and `mongorestore` for its job.
@@ -227,7 +156,7 @@ DBBACKUP_CONNECTORS = {
 }
 ```
 
-Or in `DATABASES` one:
+... or in `DATABASES`:
 
 ```python
 DATABASES = {
@@ -238,22 +167,31 @@ DATABASES = {
 }
 ```
 
-### OBJECT_CHECK
+#### Settings
 
-Validate documents before inserting into the database (option `--objcheck` on the command line); default is `True`.
+| Setting      | Description                                         | Default |
+| ------------ | --------------------------------------------------- | ------- |
+| OBJECT_CHECK | Validate documents before inserting (`--objcheck`). | `True`  |
+| DROP         | Replace existing objects during restore (`--drop`). | `True`  |
 
-### DROP
+## Django Connector
 
-Replace objects that are already in the database (option `--drop` on the command line); default is `True`.
+The Django connector (`dbbackup.db.django.DjangoConnector`) provides database-agnostic backup and restore functionality using Django's built-in `dumpdata` and `loaddata` management commands. This connector works with any Django-supported database backend.
 
-## Django Native
+This connector is automatically used for any unmapped database engines. If needed, you can explicitly configure it:
 
-The Django native connector (`dbbackup.db.django.DjangoConnector`) provides database-agnostic backup and restore functionality using Django's built-in `dumpdata` and `loaddata` management commands. This connector works with any Django-supported database backend.
+```python
+DBBACKUP_CONNECTORS = {
+    'default': {
+        'CONNECTOR': 'dbbackup.db.django.DjangoConnector',
+    }
+}
+```
 
 ### Key Features
 
 - **Universal compatibility**: Works with any database backend supported by Django
-- **No external dependencies**: Uses Django's native serialization system
+- **No external dependencies**: Uses Django's serialization system
 - **Model-level backups**: Preserves foreign key relationships and data integrity
 - **JSON format**: Creates human-readable backups in JSON format
 
@@ -269,26 +207,14 @@ The Django connector is ideal for:
 ### Limitations
 
 - **Performance**: Slower than native database tools for large datasets
-- **Database structure**: Only backs up data, not database schema, indices, or procedures  
+- **Database structure**: Only backs up data, not database schema, indices, or procedures
 - **Memory usage**: Loads all data into memory during backup/restore operations
-
-### Configuration
-
-The Django connector is automatically used for Oracle databases and any unmapped database engines. You can explicitly configure it:
-
-```python
-DBBACKUP_CONNECTORS = {
-    'default': {
-        'CONNECTOR': 'dbbackup.db.django.DjangoConnector',
-    }
-}
-```
 
 ### File Extension
 
 By default, backups use the `.json` extension.
 
-## Custom connectors
+## Custom Connectors
 
 To implement a custom connector, subclass `dbbackup.db.base.BaseDBConnector`
 and implement `_create_dump` / `_restore_dump`. If you need to run external
