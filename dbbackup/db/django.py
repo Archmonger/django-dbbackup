@@ -35,19 +35,15 @@ class DjangoConnector(BaseDBConnector):
         Returns a file-like object containing the serialized database data
         in JSON format.
         """
-        # Create a SpooledTemporaryFile directly to avoid memory duplication
-        dump_file = SpooledTemporaryFile(mode="w+b")
-
-        # Create a text wrapper for the binary file to write Unicode
-        import io
-
-        text_wrapper = io.TextIOWrapper(dump_file, encoding="utf-8", write_through=True)
+        # Create a SpooledTemporaryFile in text mode for direct use with dumpdata
+        # This avoids the TextIOWrapper compatibility issues across Python versions
+        dump_file = SpooledTemporaryFile(mode="w+t", encoding="utf-8")
 
         # Prepare arguments for dumpdata command
         dump_args = []
         dump_kwargs = {
             "format": "json",
-            "stdout": text_wrapper,
+            "stdout": dump_file,
             "verbosity": 0,
             "use_natural_foreign_keys": True,
             "use_natural_primary_keys": True,
@@ -109,13 +105,8 @@ class DjangoConnector(BaseDBConnector):
             if exclude_list:
                 dump_kwargs["exclude"] = exclude_list
 
-        try:
-            # Run dumpdata command - this streams directly to the file
-            call_command("dumpdata", *dump_args, **dump_kwargs)
-        finally:
-            # Ensure the text wrapper is properly closed to flush any remaining data
-            text_wrapper.flush()
-            text_wrapper.detach()  # Detach without closing the underlying binary file
+        # Run dumpdata command - this streams directly to the text file
+        call_command("dumpdata", *dump_args, **dump_kwargs)
 
         # Reset file position to beginning for reading
         dump_file.seek(0)
@@ -129,7 +120,7 @@ class DjangoConnector(BaseDBConnector):
             dump: File-like object containing JSON fixture data
         """
         # Create a temporary file for loaddata to read from
-        with tempfile.NamedTemporaryFile(mode="w+b", suffix=".json", delete=False) as temp_file:
+        with tempfile.NamedTemporaryFile(mode="w+t", suffix=".json", encoding="utf-8", delete=False) as temp_file:
             # Stream copy dump content to temporary file to avoid loading everything into memory
             dump.seek(0)
             # Use chunked reading for memory efficiency
@@ -137,8 +128,9 @@ class DjangoConnector(BaseDBConnector):
                 chunk = dump.read(8192)  # 8KB chunks
                 if not chunk:
                     break
-                if isinstance(chunk, str):
-                    chunk = chunk.encode("utf-8")
+                # Handle both text and binary data (for backward compatibility)
+                if isinstance(chunk, bytes):
+                    chunk = chunk.decode('utf-8')
                 temp_file.write(chunk)
             temp_file_path = temp_file.name
 

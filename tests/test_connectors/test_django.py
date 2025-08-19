@@ -48,7 +48,7 @@ class DjangoConnectorTest(TestCase):
         # Verify dump content
         self.assertIsInstance(dump, SpooledTemporaryFile)
         dump.seek(0)
-        content = dump.read().decode('utf-8')
+        content = dump.read()  # Already a string in text mode
         self.assertIn('"model": "auth.user"', content)
         self.assertIn('"username": "test"', content)
 
@@ -152,10 +152,10 @@ class DjangoConnectorTest(TestCase):
     @patch('dbbackup.db.django.os.unlink')
     def test_restore_dump(self, mock_unlink, mock_call_command):
         """Test dump restoration using Django's loaddata."""
-        # Create a mock dump file
+        # Create a mock dump file in text mode (consistent with new create_dump behavior)
         dump_content = '[{"model": "auth.user", "pk": 1, "fields": {"username": "test"}}]'
-        dump = SpooledTemporaryFile(mode='w+b')
-        dump.write(dump_content.encode('utf-8'))
+        dump = SpooledTemporaryFile(mode='w+t', encoding='utf-8')
+        dump.write(dump_content)
         dump.seek(0)
         
         # Restore the dump
@@ -199,10 +199,10 @@ class DjangoConnectorTest(TestCase):
         # Make unlink raise an exception
         mock_unlink.side_effect = OSError("File not found")
         
-        # Create a mock dump file
+        # Create a mock dump file in text mode (consistent with new create_dump behavior)
         dump_content = '[]'
-        dump = SpooledTemporaryFile(mode='w+b')
-        dump.write(dump_content.encode('utf-8'))
+        dump = SpooledTemporaryFile(mode='w+t', encoding='utf-8')
+        dump.write(dump_content)
         dump.seek(0)
         
         # This should not raise an exception despite unlink failure
