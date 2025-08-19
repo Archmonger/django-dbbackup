@@ -245,3 +245,50 @@ class SqliteBackupConnectorTest(TestCase):
         connector = SqliteBackupConnector()
         dump = connector.create_dump()
         connector.restore_dump(dump)
+
+
+class SqliteConnectionHandlingTest(TestCase):
+    """Test connection handling edge cases"""
+    
+    def test_sqlite_connector_restore_dump_with_unusable_connection(self):
+        """Test restore_dump when connection is not usable"""
+        from unittest.mock import Mock, patch
+        from dbbackup.db.sqlite import SqliteConnector
+        from io import BytesIO
+        
+        connector = SqliteConnector()
+        
+        # Mock the connection to be unusable
+        mock_connection = Mock()
+        mock_connection.is_usable.return_value = False
+        mock_cursor = Mock()
+        mock_connection.cursor.return_value = mock_cursor
+        connector.connection = mock_connection
+        
+        # Create a simple dump
+        dump = BytesIO(b"SELECT 1;\n")
+        
+        # Call restore_dump which should reconnect
+        connector.restore_dump(dump)
+        
+        # Verify connection.connect() was called
+        mock_connection.connect.assert_called_once()
+
+    def test_sqlite_backup_connector_create_dump_with_unusable_connection(self):
+        """Test SqliteBackupConnector create_dump when connection is not usable"""
+        from unittest.mock import Mock
+        from dbbackup.db.sqlite import SqliteBackupConnector
+        
+        connector = SqliteBackupConnector()
+        
+        # Mock the connection to be unusable
+        mock_connection = Mock()
+        mock_connection.is_usable.return_value = False
+        connector.connection = mock_connection
+        
+        # Call create_dump which should reconnect
+        # This will call the _write_dump method which is a pass
+        connector.create_dump()
+        
+        # Verify connection.connect() was called
+        mock_connection.connect.assert_called_once()

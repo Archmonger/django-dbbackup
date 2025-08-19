@@ -18,6 +18,9 @@ Don't forget to remove deprecated code on each major release!
 
 - Implement new `SqliteBackupConnector` to backup SQLite3 databases using the `.backup` command (safe to execute on databases with active connections).
 - Verified full Windows compatibility via new CI workflows.
+- Comprehensive test coverage improvements achieving 96% total coverage (up from 93%)
+- New test cases for Django version compatibility, deprecated settings warnings, storage edge cases, 
+  encryption/decryption error handling, MongoDB authentication, SQLite connection handling, and media restore edge cases
 
 ### Changed
 

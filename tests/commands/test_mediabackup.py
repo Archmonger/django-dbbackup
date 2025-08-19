@@ -6,6 +6,7 @@ import contextlib
 import os
 import shutil
 import tempfile
+from unittest.mock import patch
 
 GPG_AVAILABLE = shutil.which("gpg") is not None
 

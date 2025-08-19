@@ -255,3 +255,15 @@ class StorageEdgeCasesTest(TestCase):
         # This should test the except block in get_storage_class
         storage_class = get_storage_class()
         self.assertIsNotNone(storage_class)
+
+    def test_get_older_backup_file_not_found(self):
+        """Test get_older_backup when no files are available"""
+        from dbbackup.storage import FileNotFound
+        
+        storage = get_storage()
+        HANDLED_FILES.clean()  # Ensure no backup files exist
+        
+        with self.assertRaises(FileNotFound) as context:
+            storage.get_older_backup()
+        
+        self.assertIn("There's no backup file available", str(context.exception))
