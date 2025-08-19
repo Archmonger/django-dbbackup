@@ -96,10 +96,10 @@ class DjangoConnector(BaseDBConnector):
                                 apps.get_app_config("sessions")
                                 converted = "sessions.Session"
                     # Only add converted names that we're confident about
+                    # For unknown table names, we skip them to avoid Django validation errors
+                    # This is safer than trying to guess the correct app.model format
                     if converted:
                         exclude_list.append(converted)
-                        # For unknown table names, we skip them to avoid Django validation errors
-                        # This is safer than trying to guess the correct app.model format
 
             if exclude_list:
                 dump_kwargs["exclude"] = exclude_list
