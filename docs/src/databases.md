@@ -128,7 +128,7 @@ MySQL uses by default `dbbackup.db.mysql.MysqlDumpConnector`. It uses
 
 Postgres uses by default `dbbackup.db.postgresql.PgDumpConnector`, but
 we advise you to use `dbbackup.db.postgresql.PgDumpBinaryConnector`. The
-first one uses `pg_dump` and `pqsl` for its job, creating RAW SQL files.
+first one uses `pg_dump` and `psql` for its job, creating RAW SQL files.
 
 The second uses `pg_restore` with binary dump files.
 
