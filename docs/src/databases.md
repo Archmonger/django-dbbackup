@@ -94,10 +94,9 @@ The `dbbackup.db.sqlite.SqliteBackupConnector` makes a copy of the SQLite databa
 
 #### SqliteCPConnector
 
-You can also use `dbbackup.db.sqlite.SqliteCPConnector` for making a
-simple raw copy of your database file, like a snapshot.
+The `dbbackup.db.sqlite.SqliteCPConnector` connector can be used to make a simple raw copy of your database file, like a snapshot.
 
-In-memory databases aren't dumpable with it.
+In-memory databases aren't dumpable with it. Since it works by copying the database file directly, it is not suitable for databases that are have active connections.
 
 ### MySQL
 
@@ -106,14 +105,7 @@ MySQL defaults to `dbbackup.db.mysql.MysqlDumpConnector` which shells out to
 
 ### PostgreSQL
 
-PostgreSQL uses by default `dbbackup.db.postgresql.PgDumpConnector`, but
-we advise you to use `dbbackup.db.postgresql.PgDumpBinaryConnector`. The
-first one uses `pg_dump` and `psql` for its job, creating RAW SQL files.
-
-The second uses `pg_restore` with binary dump files for faster, parallel-capable
-restores.
-
-Both may invoke `psql` for ancillary administrative statements.
+All PostgreSQL connectors have the following settings:
 
 #### Settings
 
@@ -122,6 +114,18 @@ Both may invoke `psql` for ancillary administrative statements.
 | SINGLE_TRANSACTION | Wrap restore in a single transaction so errors cause full rollback (`--single-transaction` for `psql` / `pg_restore`).                  | `True`  |
 | DROP               | Include / execute drop statements when restoring (`--clean` with `pg_dump` / `pg_restore`). In binary mode drops happen during restore. | `True`  |
 | IF_EXISTS          | Add `IF EXISTS` to destructive statements in clean mode.                                                                                | `False` |
+
+#### PgDumpConnector
+
+The `dbbackup.db.postgresql.PgDumpConnector` uses `pg_dump` to create RAW SQL files and `psql` to restore them.
+
+This is the default connector for PostgreSQL databases, however, it is recommended to use the binary connector for better performance.
+
+#### PgDumpBinaryConnector
+
+The `dbbackup.db.postgresql.PgDumpBinaryConnector` is similar to PgDumpConnector, but it uses `pg_dump` in binary mode and restores using `pg_restore`.
+
+This allows for faster and parallel-capable restores. It may still invoke `psql` for administrative tasks.
 
 ### PostGIS
 
@@ -208,7 +212,6 @@ The Django connector is ideal for:
 
 - **Performance**: Slower than native database tools for large datasets
 - **Database structure**: Only backs up data, not database schema, indices, or procedures
-- **Memory usage**: Loads all data into memory during backup/restore operations
 
 ### File Extension
 

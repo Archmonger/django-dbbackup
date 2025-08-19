@@ -19,6 +19,7 @@ Don't forget to remove deprecated code on each major release!
 - Implement new `SqliteBackupConnector` to backup SQLite3 databases using the `.backup` command (safe to execute on databases with active connections).
 - Verified full Windows compatibility via new CI workflows.
 - Add Django Signals support for backup and restore operations. New signals include `pre_backup`, `post_backup`, `pre_restore`, `post_restore`, `pre_media_backup`, `post_media_backup`, `pre_media_restore`, and `post_media_restore`.
+- New `DjangoConnector` that provides database-agnostic backup and restore functionality using Django's built-in `dumpdata` and `loaddata` management commands.
 
 ### Changed
 

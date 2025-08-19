@@ -103,8 +103,8 @@ class PgDumpGisConnector(PgDumpConnector):
 
 class PgDumpBinaryConnector(PgDumpConnector):
     """
-    PostgreSQL connector, it uses pg_dump`` to create an SQL text file
-    and ``pg_restore`` for restore it.
+    PostgreSQL connector, it uses `pg_dump` to create an SQL text file
+    and `pg_restore` for restore it.
     """
 
     extension = "psql.bin"
