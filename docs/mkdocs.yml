@@ -8,6 +8,7 @@ nav:
     - Commands: commands.md
     - Signals: signals.md
     - Integration: integration.md
+    - PostgreSQL Live Tests: postgresql_live_tests.md
   - About:
     - Changelog: changelog.md
     - Contributor Guide: contributing.md

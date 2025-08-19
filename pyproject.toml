@@ -211,7 +211,10 @@ postgres-test = [
   "python scripts/postgres_live_test.py --connector PgDumpConnector --verbose",
 ]
 postgres-test-all = [
-  "python scripts/postgres_live_test.py --all --verbose",
+  "python scripts/postgres_live_test_simple.py --all --verbose",
+]
+postgres-test-isolated = [
+  "python scripts/postgres_live_test_simple.py --connector PgDumpConnector --verbose",
 ]
 
 # >>> Generic Tools <<<
