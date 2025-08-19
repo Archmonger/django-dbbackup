@@ -4,13 +4,23 @@ One of the most helpful features of django-dbbackup is the ability to store
 and retrieve backups from local or remote storage. This functionality is
 mainly based on the Django Storage API and extends its possibilities.
 
-You can choose your backup storage backend by setting `settings.STORAGES['dbbackup']`,
-it must be the full path of a storage class. For example:
-`django.core.files.storage.FileSystemStorage` to use file system storage.
-Below, we'll list some of the available solutions and their options.
+Configure backup storage via the `STORAGES` setting using the key `'dbbackup'`.
+`BACKEND` is a dotted path to a Django storage class. For example use
+`'django.core.files.storage.FileSystemStorage'` for the local filesystem. A
+few common third party backends (via `django-storages`) are [documented below](storage.md#file-system-storage).
 
-The storage options are gathered in `settings.STORAGES['dbbackup']['OPTIONS']`, which
-is a dictionary of keywords representing how to configure it.
+```python
+STORAGES = {
+    "dbbackup": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+        "OPTIONS": {
+            "location": "/my/backup/dir/",
+        },
+    },
+}
+```
+
+For more granularity, per backend options go into the nested `OPTIONS` dict:
 
 ```python
 STORAGES = {
@@ -30,9 +40,10 @@ STORAGES = {
 Do not configure backup storage with the same configuration as your media
 files as you'll risk sharing backups inside public directories.
 
-By default DBBackup uses the [built-in file system storage](https://docs.djangoproject.com/en/stable/ref/files/storage/#the-filesystemstorage-class) to manage files on
-a local directory. Feel free to use any Django storage, you can find a variety
-of them at [Django Packages](https://djangopackages.org/grids/g/storage-backends/).
+If no explicit `STORAGES['dbbackup']` is provided the default File System Storage
+is used (pointing at your project media root). Consider isolating backups in a
+dedicated directory with restricted permissions. Browse additional providers
+at [Django Packages](https://djangopackages.org/grids/g/storage-backends/).
 
 !!! note
 Storing backups to local disk may also be useful for Dropbox if you
@@ -78,13 +89,14 @@ Our backend for Google cloud storage uses django-storages.
 
 ### Setup
 
-To back-up to Google Cloud Storage, you'll first need to create an account at Google. Once that is complete, you can follow the required setup below.
+Create a Google Cloud project and bucket, then install:
 
 ```bash
 pip install django-storages[google]
 ```
 
-Add the following to your project's settings. Strictly speaking only `bucket_name` is required, but we'd recommend to add the other two as well. You can also find more settings in the documentation for [django-storages](https://django-storages.readthedocs.io/en/latest/backends/gcloud.html)
+Add the following to settings (only `bucket_name` is strictly required). See
+the [django-storages docs](https://django-storages.readthedocs.io/en/latest/backends/gcloud.html) for advanced options.
 
 ```python
 STORAGES = {
@@ -105,15 +117,13 @@ Our S3 backend uses Django Storages which uses [boto3](https://boto3.amazonaws.c
 
 ### Setup
 
-To back-up to Amazon S3, you'll first need to create an Amazon
-Web Services Account and set up your Amazon S3 bucket. Once that is
-complete, you can follow the required setup below.
+Create an AWS account and S3 bucket, then install dependencies:
 
 ```bash
 pip install django-storages[boto3]
 ```
 
-Add the following to your project's settings:
+Add this snippet to settings:
 
 ```python
 STORAGES = {
@@ -141,7 +151,7 @@ See the [Django Storage S3 storage official documentation](https://django-storag
 
 **`access_key`** - Required
 
-Your AWS access key as string. This can be found on your [Amazon Account Security Credentials page](https://console.aws.amazon.com/iam/home#security_credential).
+Your AWS access key. Create one via the IAM console; avoid using root keys.
 
 **`secret_key`** - Required
 
@@ -149,40 +159,34 @@ Your Amazon Web Services secret access key, as a string.
 
 **`bucket_name`** - Required
 
-Your Amazon Web Services storage bucket name, as a string. This directory must
-exist before attempting to create your first backup.
+Name of the existing bucket to store backups.
 
 **`region_name`** - Optional
 
-Specify the Amazon region, e.g. `'us-east-1'`.
+AWS region for the bucket (e.g. `'us-east-1'`).
 
 **`endpoint_url`** - Optional
 
-Set this to fully override the endpoint, e.g. to use an alternative S3 service,
-which is compatible with AWS S3. The value must contain the protocol, e.g.
-`'https://compatible-s3-service.example.com'`.
+Override the endpoint (for S3‑compatible services like MinIO). Must include
+protocol, e.g. `https://minio.internal:9000`.
 
-If setting this, it is mandatory to also configure **`region_name`**.
+If you set a custom endpoint also set **`region_name`**.
 
 **`default_acl`** - Required
 
-This setting can either be `'private'` or `'public'`. Since you want your
-backups to be secure you'll want to set `'default_acl'` to `'private'`.
+Allowed values: `'private'` or `'public'`. Use `'private'` for backups.
 
 _NOTE: This value will be removed in a future version of django-storages._
 See their [CHANGELOG](https://github.com/jschneier/django-storages/blob/master/CHANGELOG.rst) for details.
 
 **`location`** - Optional
 
-If you want to store your backups inside a particular folder in your bucket you need to specify the `'location'`.
-The folder can be specified as `'folder_name/'`.
-You can specify a longer path with `'location': 'root_folder/sub_folder/sub_sub_folder/'`.
+Prefix inside the bucket; include trailing slash. Example:
+`location: 'backups/prod/'`.
 
 ## Dropbox
 
-To back-up to Dropbox, you'll first need to create a Dropbox account
-and set it up to communicate with the django-dbbackup application. Don't
-worry, all instructions are below.
+Create a Dropbox app and obtain an access token, then configure the backend.
 
 ### Setup
 
@@ -224,11 +228,11 @@ See [django-storages dropbox official documentation](https://django-storages.rea
 
 **`oauth2_access_token`** - Required
 
-Your OAuth access token
+OAuth 2 access token generated for the app.
 
 **`root_path`**
 
-Jail storage to this directory
+Restrict storage operations to this folder prefix.
 
 ## FTP
 
@@ -260,7 +264,8 @@ STORAGES = {
 
 **`location`** - Required
 
-A FTP URI with optional user, password and port. example: `'ftp://anonymous@myftp.net'`
+FTP URI including optional credentials and port. Example:
+`ftp://user:pass@ftp.example.com:21`.
 
 ## SFTP
 

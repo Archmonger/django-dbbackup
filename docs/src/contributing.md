@@ -1,8 +1,7 @@
 # Contributing guide
 
-django-dbbackup is free-licensed software where all help is welcome. This
-documentation aims to help users or developers bring their contributions
-to this project.
+django-dbbackup is free licensed software and community contributions are
+welcome. This guide explains how to develop, test, and propose changes.
 
 ## Creating a development environment
 
@@ -21,7 +20,7 @@ cd django-dbbackup
 
 ## Executing test environment commands
 
-By utilizing `hatch`, the following commands are available to manage the development environment.
+`hatch` manages isolated environments; the commands below cover common tasks.
 
 ### Tests
 
@@ -86,7 +85,8 @@ The functional tests perform real database and media backup/restore cycles to en
 
 ## Submit a bug, issue or enhancement
 
-All communication is handled with [GitHub issues](https://github.com/Archmonger/django-dbbackup/issues). Do not hesitate to open an
+Track bugs, feature proposals, and questions via
+[GitHub Issues](https://github.com/Archmonger/django-dbbackup/issues). Open an
 issue if:
 
 - You have an improvement idea
@@ -96,8 +96,8 @@ issue if:
 
 ## Make a patch
 
-We use [GitHub pull requests](https://github.com/Archmonger/django-dbbackup/pulls) to manage all patches. For a better handling
-of requests we advise you to:
+We use [pull requests](https://github.com/Archmonger/django-dbbackup/pulls) for
+all code changes. To streamline review:
 
 1. Fork the project and make a new branch
 2. Make your changes with tests if possible and documentation if needed
@@ -105,7 +105,7 @@ of requests we advise you to:
 4. Run `hatch run lint:check` to ensure code quality
 5. Push changes to your fork repository and test it with GitHub Actions
 6. If it succeeds, open a pull request
-7. Bother us until we give you an answer
+7. Follow up politely if there's no feedback after a few days
 
 !!! note
 We recommend testing with multiple Python and Django versions using
@@ -114,9 +114,8 @@ so breaks between versions are possible.
 
 ## Test environment configuration
 
-DBBackup contains a test Django project at `dbbackup.tests` and its
-`settings` module. This configuration takes care of the following
-environment variables:
+The test suite uses a self contained Django project (`dbbackup.tests`). These
+environment variables adjust its behavior:
 
 **`DB_ENGINE`** - Default: `django.db.backends.sqlite3`
 
@@ -124,7 +123,7 @@ Database engine to use. See `django.db.backends` for default backends.
 
 **`DB_NAME`** - Default: `:memory:`
 
-Database name. Should be set correctly if a database other than sqlite3 is used.
+Database name. Adjust for non‑SQLite backends.
 
 **`DB_USER`** - Default: `None`
 
@@ -140,13 +139,13 @@ Database host
 
 **`MEDIA_ROOT`** - Default= `tempfile.mkdtemp()`
 
-Django's `MEDIA_ROOT`, useful if you want test media backup from filesystem
+Django `MEDIA_ROOT`; override to test media backup from a custom path.
 
 **`STORAGE`** - Default: `dbbackup.tests.utils.FakeStorage`
 
-Storage used for backups
+Storage class used for backups.
 
 **`STORAGE_OPTIONS`**
 
-Options for instantiating the chosen storage. It must be formatted as
-`"key1=foo,key2=bar"` and will be converted into a `dict`.
+Comma separated `key=value` pairs parsed into a dict passed to the storage
+constructor.

@@ -11,9 +11,18 @@ Default: `list(settings.DATABASES.keys())` (keys of all entries listed)
 
 ### DBBACKUP_TMP_DIR
 
-Directory to be used in local filesystem for temporary files.
+Local directory used for creating temporary files (for example while streaming
+command output before uploading to storage).
 
 Default: `tempfile.gettempdir()`
+
+### DBBACKUP_TMP_FILE_READ_SIZE
+
+Read chunk size (in bytes) when streaming temporary files. Increase this if
+you're working with very large backups and want fewer read system calls; decrease
+for memory constrained environments.
+
+Default: `1024 * 1000` (≈1 MB)
 
 ### DBBACKUP_TMP_FILE_MAX_SIZE
 
@@ -24,25 +33,25 @@ Default: `10*1024*1024`
 
 ### DBBACKUP_CLEANUP_KEEP and DBBACKUP_CLEANUP_KEEP_MEDIA
 
-When issuing `dbbackup` and `mediabackup` with `--clean <amount>` option,
-the backup keeps this amount of most recent files. Older files are removed.
+Number of most recent backups to keep when you pass the `--clean <amount>`
+option to `dbbackup` or `mediabackup`. Older files beyond this count are
+deleted. `DBBACKUP_CLEANUP_KEEP_MEDIA` defaults to the same value unless set.
 
-Default: `10` (backups)
+Default: `10`
 
 ### DBBACKUP_CLEANUP_KEEP_FILTER
 
-A callable that takes a filename (of an old backup, to be cleaned) and returns
-a boolean indicating whether the backup should be kept (`True`) or deleted
-(`False`).
+Optional callable for custom retention logic run during cleanup. Receives the
+filename of a candidate backup slated for deletion and returns `True` to keep
+or `False` to delete. Combine this with `--clean` to implement e.g. “keep all
+end of month backups”.
 
 Default: `lambda filename: False`
 
-This can be used to keep monthly backups, for example.
-
 ### DBBACKUP_DATE_FORMAT
 
-Date format to use for naming files. It must contain only alphanumeric
-characters, `'_'`, `'-'` or `'%'`.
+`strftime` format string used when expanding `{datetime}` in filename
+templates. Must contain only alphanumeric characters plus `_ - %`.
 
 Default: `'%Y-%m-%d-%H%M%S'`
 
@@ -54,9 +63,10 @@ Default: `socket.gethostname()`
 
 ### DBBACKUP_FILENAME_TEMPLATE
 
-The template to use when generating the backup filename. By default this is
-`'{databasename}-{servername}-{datetime}.{extension}'`. This setting can
-also be made a function which takes the following keyword arguments:
+Template used to construct database backup filenames. May be a format string
+or a callable. Default: `'{databasename}-{servername}-{datetime}.{extension}'`.
+If you supply a function it must accept the keyword arguments shown below and
+return the complete filename string (without path).
 
 ```python
 def backup_filename(databasename, servername, datetime, extension, content_type):
@@ -65,23 +75,28 @@ def backup_filename(databasename, servername, datetime, extension, content_type)
 DBBACKUP_FILENAME_TEMPLATE = backup_filename
 ```
 
-This allows you to modify the entire format of the filename, for example, if
-you want to take advantage of Amazon S3's automatic expiry feature, you need
-to prefix your backups differently based on when you want them to expire.
-
-`{datetime}` is rendered with `DBBACKUP_DATE_FORMAT`.
+Use a custom function if you need hierarchical prefixes (e.g. `year/month/`),
+or naming compatible with automatic life cycle / expiration rules of your
+object storage provider. `{datetime}` is rendered using `DBBACKUP_DATE_FORMAT`.
 
 ### DBBACKUP_MEDIA_FILENAME_TEMPLATE
 
-Same as `DBBACKUP_FILENAME_TEMPLATE` but for media files backups.
+Same as `DBBACKUP_FILENAME_TEMPLATE`, but used for media backups.
+
+Default: `'{servername}-{datetime}.{extension}'`
+
+### DBBACKUP_MEDIA_PATH
+
+Filesystem path whose contents are archived by the `mediabackup` command. By
+default this is `settings.MEDIA_ROOT`.
+
+Default: `settings.MEDIA_ROOT`
 
 ## Encrypting your backups
 
-Considering that you might be putting secure data on external servers and
-perhaps untrusted servers where it gets forgotten over time, it's always a
-good idea to encrypt backups.
-
-Just remember to keep the encryption keys safe, too!
+Backups may contain personal or otherwise sensitive data. When storing them
+outside trusted infrastructure you should encrypt them. Keep your private
+keys secure and ensure you have tested decryption in a disaster scenario.
 
 You can encrypt a backup with the `--encrypt` option. The backup is done
 using GPG.
@@ -106,14 +121,31 @@ Note (Windows): The `gpg` executable must be installed and on your PATH for encr
 
 ### DBBACKUP_GPG_ALWAYS_TRUST
 
-The encryption of the backup file fails if GPG does not trust the public
-encryption key. The solution is to set the option 'trust-model' to 'always'.
-By default this value is `False`. Set this to `True` to enable this option.
+If GPG does not fully trust the public key, encryption can fail. Setting this
+to `True` adds `--trust-model always` to bypass trust checks (only do this in
+controlled environments).
 
 ### DBBACKUP_GPG_RECIPIENT
 
-The name of the key that is used for encryption. This setting is only used
-when making a backup with the `--encrypt` or `--decrypt` option.
+Recipient (key ID, fingerprint, or email) used for GPG encryption. Required
+when using `--encrypt` and for automatic decryption with `--decrypt`.
+
+### DBBACKUP_CONNECTORS
+
+Optional per database override mapping similar to `DATABASES`. Lets you define
+different credentials / hosts exclusively for backup / restore operations
+(e.g. read from a replica). Keys correspond to database aliases.
+
+Default: `{}`
+
+### DBBACKUP_CONNECTOR_MAPPING
+
+Map custom database engine names (e.g. from wrappers like `transaction_hooks`
+or third party observability packages) to an existing DBBackup connector class path.
+Useful when a third party backend subclasses a supported Django backend but
+uses a different engine string.
+
+Default: `{}`
 
 ## Email configuration
 
@@ -133,10 +165,9 @@ Default: `django.conf.settings.SERVER_EMAIL`
 
 ### DBBACKUP_ADMINS
 
-A list of all the people who get code error notifications. When `DEBUG=False`
-and an operation raises an exception, DBBackup will email these people with the
-full exception information. This should be a tuple of (Full name,
-email address).
+A list of recipients that receive error emails when `DEBUG=False` and an
+unhandled exception occurs in a DBBackup command. Follows Django's standard
+`ADMINS` tuple-of-tuples structure: `(('Full Name', 'email@example.com'), ...)`.
 
 Default: `django.conf.settings.ADMINS`
 
@@ -151,9 +182,11 @@ Default: `'[dbbackup] '`
 
 ## Database configuration
 
-By default, DBBackup uses parameters from `settings.DATABASES` but you can
-make an independent configuration, see [Database settings](databases.md)
+By default DBBackup uses values from `settings.DATABASES`. Use
+`DBBACKUP_CONNECTORS` (documented above) for backup specific overrides. See
+[Database settings](databases.md) for backend specific options.
 
 ## Storage configuration
 
-You have to use a storage for your backups, see [Storage settings](storage.md) for more.
+You must configure a storage backend (`STORAGES['dbbackup']`) to persist
+backups. See [Storage settings](storage.md) for supported options.
