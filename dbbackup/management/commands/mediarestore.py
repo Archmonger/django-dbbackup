@@ -5,6 +5,7 @@ Restore media files.
 import tarfile
 
 from ... import utils
+from ...signals import pre_media_restore, post_media_restore
 from ...storage import get_storage, get_storage_class
 from ._base import BaseDbBackupCommand, make_option
 
@@ -78,6 +79,14 @@ class Command(BaseDbBackupCommand):
         self.logger.info("Restoring backup for media files")
         input_filename, input_file = self._get_backup_file(servername=self.servername)
         self.logger.info("Restoring: %s", input_filename)
+        
+        # Send pre_media_restore signal
+        pre_media_restore.send(
+            sender=self.__class__,
+            filename=input_filename,
+            servername=self.servername,
+            storage=self.storage,
+        )
 
         if self.decrypt:
             unencrypted_file, input_filename = utils.unencrypt_file(input_file, input_filename, self.passphrase)
@@ -103,3 +112,11 @@ class Command(BaseDbBackupCommand):
                 continue  # Skip directories
             name = media_file_info.path
             self._upload_file(name, media_file)
+            
+        # Send post_media_restore signal
+        post_media_restore.send(
+            sender=self.__class__,
+            filename=input_filename,
+            servername=self.servername,
+            storage=self.storage,
+        )

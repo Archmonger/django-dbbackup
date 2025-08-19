@@ -8,6 +8,7 @@ import tarfile
 from django.core.management.base import CommandError
 
 from ... import utils
+from ...signals import pre_media_backup, post_media_backup
 from ...storage import StorageError, get_storage, get_storage_class
 from ._base import BaseDbBackupCommand, make_option
 
@@ -104,6 +105,13 @@ class Command(BaseDbBackupCommand):
         """
         Create backup file and write it to storage.
         """
+        # Send pre_media_backup signal
+        pre_media_backup.send(
+            sender=self.__class__,
+            servername=self.servername,
+            storage=self.storage,
+        )
+        
         # Check for filename option
         if self.filename:
             filename = self.filename
@@ -127,3 +135,11 @@ class Command(BaseDbBackupCommand):
             self.write_to_storage(tarball, self.path)
         else:
             self.write_local_file(tarball, self.path)
+            
+        # Send post_media_backup signal
+        post_media_backup.send(
+            sender=self.__class__,
+            filename=filename,
+            servername=self.servername,
+            storage=self.storage,
+        )

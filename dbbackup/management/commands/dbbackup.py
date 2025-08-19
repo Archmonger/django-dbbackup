@@ -6,6 +6,7 @@ from django.core.management.base import CommandError
 
 from ... import settings, utils
 from ...db.base import get_connector
+from ...signals import pre_backup, post_backup
 from ...storage import StorageError, get_storage
 from ._base import BaseDbBackupCommand, make_option
 
@@ -115,6 +116,15 @@ class Command(BaseDbBackupCommand):
         Save a new backup file.
         """
         self.logger.info("Backing Up Database: %s", database["NAME"])
+        
+        # Send pre_backup signal
+        pre_backup.send(
+            sender=self.__class__,
+            database=database,
+            connector=self.connector,
+            servername=self.servername,
+        )
+        
         # Get backup, schema and name
         filename = self.connector.generate_filename(self.servername)
 
@@ -146,3 +156,13 @@ class Command(BaseDbBackupCommand):
             self.write_to_storage(outputfile, self.path)
         else:
             self.write_local_file(outputfile, self.path)
+            
+        # Send post_backup signal
+        post_backup.send(
+            sender=self.__class__,
+            database=database,
+            connector=self.connector,
+            servername=self.servername,
+            filename=filename,
+            storage=self.storage,
+        )
