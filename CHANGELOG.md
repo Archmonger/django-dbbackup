@@ -22,6 +22,7 @@ Don't forget to remove deprecated code on each major release!
 ### Changed
 
 - This repository has been transferred out of Jazzband due to logistical concerns.
+- Improve error message for missing database tools (`pg_dump`, `mysqldump`, etc.) to provide guidance instead of generic "No such file or directory" errors.
 
 ### Removed
 
@@ -31,7 +32,6 @@ Don't forget to remove deprecated code on each major release!
 
 ### Fixed
 
-- Improve error message for missing database commands (pg_dump, mysqldump, etc.) to provide actionable installation guidance and configuration options instead of generic "No such file or directory" errors.
 - Fix issues with parsing excess whitespace within `dbbackup -d "<COMMA_SEPARATED_ARGS>"`
 - Fix encryption support when using `gnupg==5.x`.
 - Resolve SQLite backup temporary file locking issues on Windows.
