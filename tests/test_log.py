@@ -117,6 +117,28 @@ class DbbackupAdminEmailHandlerTest(TestCase):
         self.logger.error(msg)
         self.assertEqual(len(mail.outbox), 0)
 
+    @patch("django.VERSION", (1, 7, 0, "final", 0))
+    @patch("dbbackup.settings.SEND_EMAIL", True)
+    def test_send_mail_old_django_version(self):
+        """Test mail handling for Django versions < 1.8"""
+        from dbbackup.log import DbbackupAdminEmailHandler
+        handler = DbbackupAdminEmailHandler()
+        
+        # Create a log record
+        record = logging.LogRecord(
+            name="dbbackup",
+            level=logging.ERROR,
+            pathname="",
+            lineno=0,
+            msg="Test error message",
+            args=(),
+            exc_info=None
+        )
+        
+        # This should trigger the Django version check and monkey patch
+        handler.emit(record)
+        self.assertEqual(len(mail.outbox), 1)
+
 
 class MailEnabledFilterTest(TestCase):
     @patch("dbbackup.settings.SEND_EMAIL", True)
