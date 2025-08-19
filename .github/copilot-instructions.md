@@ -146,8 +146,9 @@ hatch build                        # Build distribution packages
 ```bash
 hatch env show                      # Show all environments
 hatch shell                         # Enter default shell
-hatch shell functional             # Enter functional test shell
+hatch shell functional              # Enter functional test shell
 hatch run --env lint ruff --version # Run command in specific environment
+hatch python install 3.12           # Install a specific Python version onto the system
 ```
 
 ## Hatch Environment Structure
