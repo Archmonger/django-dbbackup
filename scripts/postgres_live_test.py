@@ -50,13 +50,31 @@ class PostgreSQLTestRunner:
         if self.verbose:
             print(f"[PostgreSQL Test] {message}")
 
-    def _run_command(self, cmd, check=True, use_sudo=(os.name == "posix"), **kwargs):
+    def _run_command(self, cmd, check=True, use_sudo=None, **kwargs):
         """Run a command and optionally check for errors."""
+        # In GitHub Actions, don't use sudo and connect via TCP
+        if GITHUB_ACTIONS:
+            use_sudo = False
+            # Set PostgreSQL connection environment for action-setup-postgres
+            env = kwargs.get('env', os.environ.copy())
+            env.update({
+                'PGHOST': 'localhost',
+                'PGPORT': '5432',
+                'PGUSER': 'postgres',
+                'PGPASSWORD': 'postgres'
+            })
+            kwargs['env'] = env
+        else:
+            # For local development, use sudo if not explicitly disabled
+            if use_sudo is None:
+                use_sudo = (os.name == "posix")
+        
         if use_sudo:
             if isinstance(cmd, list):
                 cmd = ["sudo", "-u", self.superuser] + cmd
             else:
                 cmd = f"sudo -u {self.superuser} {cmd}"
+        
         self._log(f"Running: {' '.join(cmd) if isinstance(cmd, list) else cmd}")
         result = subprocess.run(cmd, shell=isinstance(cmd, str), **kwargs)
         if check and result.returncode != 0:
@@ -112,22 +130,18 @@ class PostgreSQLTestRunner:
         """Create the test database."""
         self._log(f"Creating test database: {self.test_db_name}")
 
-        # In CI environments or when we detect issues with user creation,
-        # use the superuser (postgres) as the database owner to avoid permission issues
+        # In CI environments, use the action-setup-postgres configured postgres user
         if GITHUB_ACTIONS:
-            # In GitHub Actions, use the default postgres user to avoid permission complexities
             self._log("GitHub Actions detected, using postgres superuser as database owner")
             
-            # Set a password for the postgres user to enable TCP connections
-            set_password_sql = f"ALTER USER postgres PASSWORD '{self.password}';"
-            self._run_command(["psql", "-c", set_password_sql], capture_output=True, use_sudo=True)
-            self._log("Password set for postgres user")
-            
+            # action-setup-postgres already configures postgres user with password 'postgres'
+            # Just create the database directly
             create_db_sql = f"CREATE DATABASE {self.test_db_name};"
-            self._run_command(["psql", "-c", create_db_sql], capture_output=True, use_sudo=True)
-            # Use the superuser credentials for the database connection
+            self._run_command(["psql", "-c", create_db_sql], capture_output=True)
+            
+            # Use the pre-configured postgres user credentials
             self.user = self.superuser
-            # Keep the password we set
+            self.password = "postgres"  # action-setup-postgres default
         else:
             # For local development, create a dedicated test user
             create_user_sql = (
@@ -180,16 +194,16 @@ class PostgreSQLTestRunner:
 
         if self.db_created:
             try:
-                # Drop the test database using psql with sudo
+                # Drop the test database using psql
                 drop_db_sql = f"DROP DATABASE IF EXISTS {self.test_db_name};"
                 self._run_command(
-                    ["psql", "-c", drop_db_sql], capture_output=True, check=False, use_sudo=True
+                    ["psql", "-c", drop_db_sql], capture_output=True, check=False
                 )  # Don't fail if database doesn't exist
 
                 # Only drop the test user if we created one (not in CI where we use postgres superuser)
                 if not GITHUB_ACTIONS and self.user != self.superuser:
                     drop_user_sql = f"DROP USER IF EXISTS {self.user};"
-                    self._run_command(["psql", "-c", drop_user_sql], capture_output=True, check=False, use_sudo=True)
+                    self._run_command(["psql", "-c", drop_user_sql], capture_output=True, check=False)
             except Exception as e:
                 self._log(f"Warning: Failed to drop test database or user: {e}")
 
