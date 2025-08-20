@@ -117,7 +117,9 @@ class PostgreSQLTestRunner:
 
         # Create database owned by the test user
         if GITHUB_ACTIONS:
-            subprocess.run(["createdb", "--owner", self.test_user, self.test_db_name], check=True, capture_output=True)
+            subprocess.run(
+                ["sudo", "createdb", "--owner", self.test_user, self.test_db_name], check=True, capture_output=True
+            )
         else:
             create_db_sql = f"CREATE DATABASE {self.test_db_name} OWNER {self.test_user};"
             self._run_command(["psql", "-c", create_db_sql], capture_output=True, use_sudo=True)
