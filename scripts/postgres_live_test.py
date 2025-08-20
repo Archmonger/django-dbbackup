@@ -30,6 +30,8 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 import django
 from django.core.management import execute_from_command_line
 
+GITHUB_ACTIONS: bool = os.getenv("GITHUB_ACTIONS", "false").lower() in ("true", "1", "yes")
+
 
 class PostgreSQLTestRunner:
     """Manages a test database on the existing PostgreSQL instance."""
@@ -114,8 +116,11 @@ class PostgreSQLTestRunner:
             self._run_command(["psql", "-c", create_user_sql], capture_output=True, use_sudo=True)
 
         # Create database owned by the test user
-        create_db_sql = f"CREATE DATABASE {self.test_db_name} OWNER {self.test_user};"
-        self._run_command(["psql", "-c", create_db_sql], capture_output=True, use_sudo=True)
+        if GITHUB_ACTIONS:
+            subprocess.run(["createdb", "--owner", self.test_user, self.test_db_name], check=True, capture_output=True)
+        else:
+            create_db_sql = f"CREATE DATABASE {self.test_db_name} OWNER {self.test_user};"
+            self._run_command(["psql", "-c", create_db_sql], capture_output=True, use_sudo=True)
 
         # Update database config to use the test user
         self.test_user = f"{self.test_user}"
