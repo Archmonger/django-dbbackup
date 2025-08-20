@@ -99,19 +99,26 @@ class PostgreSQLTestRunner:
         self._log(f"Creating test database: {self.test_db_name}")
 
         # Create a test user with password
-        test_user_password = "test_password_123"
-        create_user_sql = f"CREATE USER {self.test_user}_user WITH PASSWORD '{test_user_password}' CREATEDB;"
+        test_user_password = "postgres"
+        # Only create the user if it does not exist
+        create_user_sql = (
+            f"DO $$ BEGIN "
+            f"IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = '{self.test_user}') THEN "
+            f"CREATE USER {self.test_user} WITH PASSWORD '{test_user_password}' CREATEDB; "
+            f"END IF; "
+            f"END $$;"
+        )
 
         # If user might already exists, continue
         with contextlib.suppress(RuntimeError):
             self._run_command(["psql", "-c", create_user_sql], capture_output=True, use_sudo=True)
 
         # Create database owned by the test user
-        create_db_sql = f"CREATE DATABASE {self.test_db_name} OWNER {self.test_user}_user;"
+        create_db_sql = f"CREATE DATABASE {self.test_db_name} OWNER {self.test_user};"
         self._run_command(["psql", "-c", create_db_sql], capture_output=True, use_sudo=True)
 
         # Update database config to use the test user
-        self.test_user = f"{self.test_user}_user"
+        self.test_user = f"{self.test_user}"
         self.test_password = test_user_password
         self.db_created = True
 
@@ -334,7 +341,7 @@ def main():
 
     results = {}
     for connector in connectors_to_test:
-        print(f"\n📋 Testing {connector}...")
+        print(f"\nTesting {connector}...")
         results[connector] = run_single_connector_test(connector, verbose=args.verbose)
 
     print("\n" + "=" * 60)

@@ -66,7 +66,7 @@ def _run_all(connectors, verbose: bool) -> int:
         cmd = [sys.executable, __file__, "--connector", name]
         if verbose:
             cmd.append("-v")
-        print(f"\n📋 Testing {name}...")
+        print(f"\nTesting {name}...")
         proc = subprocess.run(cmd, check=False)
         passed = proc.returncode == 0
         results[name] = passed
