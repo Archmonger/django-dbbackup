@@ -116,10 +116,10 @@ jobs:
                   PGSERVICE: postgres
             - name: Setup MySQL
               if: matrix.os == 'ubuntu-latest'
-              run: |
-                  sudo systemctl start mysql
-                  sudo mysql -e "ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '';"
-                  mysql -u root -e "SELECT VERSION();"
+              uses: kayqueGovetri/setup-mysql@v3.0.0
+              with:
+                  mysql-version: "8.0"
+                  mysql-root-password: "root"
             - name: Run functional tests
               run: hatch run functional:all -v
 
