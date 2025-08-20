@@ -30,7 +30,7 @@ SYMBOL_SUMMARY = _SYMS["SUMMARY"]
 SYMBOL_PG = _SYMS["PG"]
 SYMBOL_TEST = _SYMS["TEST"]
 
-# Available PostgreSQL connectors (mirrors SQLITE_CONNECTORS pattern)
+# Available PostgreSQL connectors
 POSTGRES_CONNECTORS = [
     "PgDumpConnector",
     "PgDumpBinaryConnector",
@@ -406,12 +406,12 @@ def main():
     results = {}
     for connector in connectors_to_test:
         print(f"\n{SYMBOL_TEST} Testing {connector}...")
-    results[connector] = run_single_connector_test(connector, verbose=args.verbose)
-    passed = results[connector]
-    status = f"{SYMBOL_PASS} PASSED" if passed else f"{SYMBOL_FAIL} FAILED"
-    print(f"  {connector}: {status}")
+        results[connector] = run_single_connector_test(connector, verbose=args.verbose)
+        passed = results[connector]
+        status = f"{SYMBOL_PASS} PASSED" if passed else f"{SYMBOL_FAIL} FAILED"
+        print(f"  {connector}: {status}")
 
-    # Summary (mirrors sqlite_live_test style: symbol first, then connector name)
+    # Summary
     print(f"\n{SYMBOL_SUMMARY} PostgreSQL Connector Test Summary")
     overall_success = True
     for connector, passed in results.items():
