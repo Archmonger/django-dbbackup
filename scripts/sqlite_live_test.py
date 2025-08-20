@@ -2,6 +2,8 @@
 
 Usage:
     python scripts/sqlite_live_test.py [--verbose]
+    python scripts/sqlite_live_test.py --connector SqliteConnector
+    python scripts/sqlite_live_test.py --all [--verbose]
 
 It relies on environment variables already defined by the functional Hatch
 environment (see `[tool.hatch.envs.functional.env-vars]` in `pyproject.toml`).
@@ -19,7 +21,7 @@ import subprocess
 import sys
 import traceback
 
-from ._utils import get_symbols
+from scripts._utils import get_symbols
 
 _SYMS = get_symbols()
 SYMBOL_PASS = _SYMS["PASS"]

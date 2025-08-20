@@ -1,17 +1,15 @@
-"""
-Live PostgreSQL Testing Script for django-dbbackup
-
-This script provides infrastructure for testing PostgreSQL backup/restore functionality
-against a real PostgreSQL database. It complements the existing mocked tests by providing
-end-to-end validation of the PostgreSQL connectors.
+"""PostgreSQL Live Functional Test Script for django-dbbackup
 
 Usage:
-    python scripts/postgres_live_test.py [--connector CONNECTOR] [--verbose]
+    python scripts/postgres_live_test.py [--verbose]
+    python scripts/postgres_live_test.py --connector PgDumpBinaryConnector
+    python scripts/postgres_live_test.py --all
 
-Connectors:
-    - PgDumpConnector (default): Uses pg_dump/psql for text-based SQL dumps
-    - PgDumpBinaryConnector: Uses pg_dump/pg_restore for binary dumps
-    - PgDumpGisConnector: Like PgDumpConnector but with PostGIS support
+It provides end-to-end validation of PostgreSQL backup/restore functionality using the
+available connectors and mirrors the visual layout & summary style of the SQLite live test
+(`sqlite_live_test.py`) for consistency.
+
+Exit code 0 on success (all tested connectors passed), 1 on failure.
 """
 
 import os
@@ -31,6 +29,13 @@ SYMBOL_FAIL = _SYMS["FAIL"]
 SYMBOL_SUMMARY = _SYMS["SUMMARY"]
 SYMBOL_PG = _SYMS["PG"]
 SYMBOL_TEST = _SYMS["TEST"]
+
+# Available PostgreSQL connectors (mirrors SQLITE_CONNECTORS pattern)
+POSTGRES_CONNECTORS = [
+    "PgDumpConnector",
+    "PgDumpBinaryConnector",
+    "PgDumpGisConnector",
+]
 
 # Add parent directory to path to import Django modules
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -386,38 +391,36 @@ def main():
     parser.add_argument(
         "--connector",
         default="PgDumpConnector",
-        choices=["PgDumpConnector", "PgDumpBinaryConnector", "PgDumpGisConnector"],
-        help="PostgreSQL connector to test",
+        choices=POSTGRES_CONNECTORS,
+        help="PostgreSQL connector to test (default: %(default)s)",
     )
     parser.add_argument("--verbose", "-v", action="store_true", help="Enable verbose output")
     parser.add_argument("--all", action="store_true", help="Test all PostgreSQL connectors")
 
     args = parser.parse_args()
 
-    connectors_to_test = (
-        ["PgDumpConnector", "PgDumpBinaryConnector", "PgDumpGisConnector"] if args.all else [args.connector]
-    )
+    connectors_to_test = POSTGRES_CONNECTORS if args.all else [args.connector]
 
     print(f"{SYMBOL_PG} Starting PostgreSQL Live Tests for django-dbbackup (Isolated)")
-    print("=" * 60)
 
     results = {}
     for connector in connectors_to_test:
         print(f"\n{SYMBOL_TEST} Testing {connector}...")
-        results[connector] = run_single_connector_test(connector, verbose=args.verbose)
+    results[connector] = run_single_connector_test(connector, verbose=args.verbose)
+    passed = results[connector]
+    status = f"{SYMBOL_PASS} PASSED" if passed else f"{SYMBOL_FAIL} FAILED"
+    print(f"  {connector}: {status}")
 
-    print("\n" + "=" * 60)
-    print(f"{SYMBOL_SUMMARY} Test Summary:")
+    # Summary (mirrors sqlite_live_test style: symbol first, then connector name)
+    print(f"\n{SYMBOL_SUMMARY} PostgreSQL Connector Test Summary")
+    overall_success = True
     for connector, passed in results.items():
-        status = f"{SYMBOL_PASS} PASSED" if passed else f"{SYMBOL_FAIL} FAILED"
-        print(f"  {connector}: {status}")
-
-    total_tests = len(results)
-    passed_tests = sum(results.values())
-    print(f"\nResults: {passed_tests}/{total_tests} tests passed")
+        overall_success &= passed
+        symbol = SYMBOL_PASS if passed else SYMBOL_FAIL
+        print(f"  {symbol} {connector}")
 
     # Exit with error code if any tests failed
-    sys.exit(0 if passed_tests == total_tests else 1)
+    sys.exit(0 if overall_success else 1)
 
 
 if __name__ == "__main__":
