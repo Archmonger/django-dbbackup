@@ -166,9 +166,6 @@ format = ["ruff format dbbackup"]
 format-check = ["ruff format --check dbbackup"]
 
 # >>> CLI workflow tests <<<
-# TODO: Rewrite this in pytest using the following file as a guide:
-# https://github.com/Archmonger/django-dbbackup/blob/dee332b9c505f59fd43b2733f095e81162767f9d/functional.sh
-# Make sure we cover a variety of database backends.
 
 [tool.hatch.envs.functional]
 extra-dependencies = [
@@ -191,22 +188,7 @@ MEDIA_ROOT = "tmp/media/"
 DB_NAME = "tmp/test_db.sqlite3"
 
 [tool.hatch.envs.functional.scripts]
-test = [
-  "python -c \"import os; os.makedirs('tmp/backups', exist_ok=True); os.makedirs('tmp/media', exist_ok=True)\"",
-  "python -c \"import os; os.path.exists('tmp/test_db.sqlite3') and os.remove('tmp/test_db.sqlite3')\"",
-  "python -m django migrate --noinput",
-  "python -c \"import os, django; os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'tests.settings'); django.setup(); from tests.testapp.models import CharModel; CharModel.objects.create(field='test')\"",
-  "python -m django dbbackup --noinput",
-  "python -c \"import os, django; os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'tests.settings'); django.setup(); from tests.testapp.models import CharModel; CharModel.objects.all().delete()\"",
-  "python -m django dbrestore --noinput",
-  "python -c \"import os, django; os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'tests.settings'); django.setup(); from tests.testapp.models import CharModel; assert CharModel.objects.count() > 0; print('Database test passed!')\"",
-  "python -c \"import os; open('tmp/media/test.txt', 'w').write('test content')\"",
-  "python -m django mediabackup --noinput",
-  "python -c \"import os; os.remove('tmp/media/test.txt')\"",
-  "python -m django mediarestore --noinput",
-  "python -c \"import os; assert os.path.exists('tmp/media/test.txt'); print('Media test passed!')\"",
-  "python -c \"import os; os.path.exists('tmp/test_db.sqlite3') and os.remove('tmp/test_db.sqlite3')\"",
-]
+sqlite = ["python scripts/sqlite_live_test.py {args}"]
 postgres = ["python scripts/postgres_live_test.py {args}"]
 
 # >>> Generic Tools <<<

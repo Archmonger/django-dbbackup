@@ -31,7 +31,7 @@ cd django-dbbackup
 | `hatch test --python 3.9`             | Run tests using a specific Python version                       |
 | `hatch test --include "django=5.1"`   | Run tests using a specific Django version                       |
 | `hatch test -k test_backup_filter`    | Run only a specific test                                        |
-| `hatch run functional:test`           | Run end-to-end backup and restore tests                         |
+| `hatch run functional:sqlite --all`   | Run end-to-end SQLite backup and restore tests                  |
 | `hatch run functional:postgres --all` | Run end-to-end PostgreSQL tests using all compatible connectors |
 
 ??? question "What other arguments are available to me?"
