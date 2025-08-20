@@ -59,6 +59,14 @@ Always test backup and restore functionality after making changes using function
    hatch run functional:all
    ```
 
+2. **Individual Backend Tests:**
+
+   ```bash
+   hatch run functional:sqlite --all     # SQLite connectors
+   hatch run functional:postgres --all   # PostgreSQL connectors  
+   hatch run functional:mysql --all      # MySQL connectors
+   ```
+
 2. **Manual Database Test (if needed):**
 
    ```bash
@@ -85,6 +93,7 @@ Always test backup and restore functionality after making changes using function
    ```bash
    hatch run functional:sqlite --all
    hatch run functional:postgres --all
+   hatch run functional:mysql --all
    ```
 
 ## Troubleshooting Known Issues
@@ -102,7 +111,9 @@ Modern development process using Hatch:
 1. **Bootstrap environment**: `pip install --upgrade pip hatch uv`
 2. **Make your changes** to the codebase
 3. **Run unit tests**: `hatch test` (≈30s) **All must pass - failures are never expected or allowed.**
-4. **Run functional tests**: `hatch run functional:all` (≈10–15s)
+4. **Run functional tests**: `hatch run functional:all` (≈15–25s)
+   - Includes SQLite, PostgreSQL, and MySQL live tests
+   - MySQL tests are automatically skipped if MySQL server is not available
 5. **Run linting**: `hatch run lint:check` (5 seconds)
 6. **Auto-format code**: `hatch run lint:format` (2 seconds)
 7. **Test documentation**: `hatch run docs:build` (2 seconds)
@@ -127,7 +138,7 @@ Key directories and files:
   - `management/commands/` – Django management commands (dbbackup, dbrestore, mediabackup, mediarestore, listbackups)
   - Core modules: `storage.py`, `settings.py`, `log.py`, `signals.py`, `utils.py`
 - `tests/` – comprehensive test suite (unit + helpers)
-- `scripts/` – live functional test scripts (`sqlite_live_test.py`, `postgres_live_test.py`)
+- `scripts/` – live functional test scripts (`sqlite_live_test.py`, `postgres_live_test.py`, `mysql_live_test.py`)
 - `docs/` – MkDocs Material source (built site output under `docs/site/` when building locally)
 - `pyproject.toml` – project + Hatch environment configuration
 - `.github/workflows/ci.yml` – CI matrix & publish pipeline
@@ -152,7 +163,8 @@ hatch test                           # Run all tests across matrix
 hatch test --python 3.12             # Test specific Python version subset
 hatch run functional:all             # Functional tests (SQLite + PostgreSQL)
 hatch run functional:sqlite --all    # Functional tests (SQLite only)
-hatch run functional:postgres --all  # Functional tests (PostgreSQL only)
+hatch run functional:postgres --all  # Functional tests (PostgreSQL only)  
+hatch run functional:mysql --all     # Functional tests (MySQL only)
 hatch run lint:check                 # Lint (ruff + pylint)
 hatch run lint:format                # Auto-format
 hatch run lint:format-check          # Format check only
@@ -181,7 +193,7 @@ Modern isolated environments configured in pyproject.toml:
 ### Testing Environments
 
 - **hatch-test**: Unit testing (Python 3.9–3.13 × Django 4.2/5.0/5.1/5.2 matrix)
-- **functional**: End-to-end backup/restore (filesystem storage; live SQLite & PostgreSQL scripts)
+- **functional**: End-to-end backup/restore (filesystem storage; live SQLite, PostgreSQL & MySQL scripts)
 
 ### Development Environments
 
@@ -225,7 +237,7 @@ Core runtime dependency:
 
 Development dependencies (managed by hatch):
 
-- **Testing**: coverage, django-storages, psycopg2-binary, python-gnupg, testfixtures, python-dotenv
+- **Testing**: coverage, django-storages, psycopg2-binary, mysqlclient, python-gnupg, testfixtures, python-dotenv
 - **Linting**: ruff, pylint
 - **Documentation**: mkdocs, mkdocs-material, mkdocs-git-revision-date-localized-plugin, mkdocs-include-markdown-plugin, mkdocs-spellcheck[all], mkdocs-git-authors-plugin, mkdocs-minify-plugin, mike, linkcheckmd
 - **Pre-commit**: pre-commit
@@ -236,7 +248,7 @@ Modern GitHub Actions workflow (.github/workflows/build.yml):
 
 - **Lint Python**: Code quality checks (temporarily set to pass)
 - **Test Python**: Matrix testing across Python 3.9-3.13 with coverage
-- **Functional Tests**: End-to-end backup/restore verification (SQLite + PostgreSQL live scripts)
+- **Functional Tests**: End-to-end backup/restore verification (SQLite, PostgreSQL & MySQL live scripts)
 - **Coverage**: Artifact-based coverage combining with 80% threshold
 - **Build**: Package building with hatch
 - **Publish GitHub**: Automated GitHub release creation on tags

@@ -11,9 +11,10 @@ Usage:
     print(SYMS['PASS'], 'Test passed')
 
 Provided symbol keys:
-    PASS, FAIL, SUMMARY, TEST, PG
+    PASS, FAIL, SUMMARY, TEST, PG, MYSQL
 
-The ``PG`` key is only used by the PostgreSQL live test; others are shared.
+The ``PG`` key is only used by the PostgreSQL live test; ``MYSQL`` is only 
+used by the MySQL live test; others are shared.
 """
 
 from __future__ import annotations
@@ -27,6 +28,7 @@ _EMOJI_SYMBOLS = {
     "SUMMARY": "📊",
     "TEST": "📋",
     "PG": "🐘",
+    "MYSQL": "🐬",
 }
 
 _ASCII_SYMBOLS = {
@@ -35,6 +37,7 @@ _ASCII_SYMBOLS = {
     "SUMMARY": "",
     "TEST": "",
     "PG": "",
+    "MYSQL": "",
 }
 
 

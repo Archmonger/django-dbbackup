@@ -114,6 +114,12 @@ jobs:
             - run: psql -c "SELECT 1"
               env:
                   PGSERVICE: postgres
+            - name: Setup MySQL
+              if: matrix.os == 'ubuntu-latest'
+              run: |
+                  sudo systemctl start mysql
+                  sudo mysql -e "ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '';"
+                  mysql -u root -e "SELECT VERSION();"
             - name: Run functional tests
               run: hatch run functional:all -v
 

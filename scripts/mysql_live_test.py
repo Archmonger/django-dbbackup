@@ -29,7 +29,7 @@ _SYMS = get_symbols()
 SYMBOL_PASS = _SYMS["PASS"]
 SYMBOL_FAIL = _SYMS["FAIL"]
 SYMBOL_SUMMARY = _SYMS["SUMMARY"]
-SYMBOL_MYSQL = "🐬"  # MySQL dolphin emoji
+SYMBOL_MYSQL = _SYMS["MYSQL"]  # Use the symbol from _utils
 SYMBOL_TEST = _SYMS["TEST"]
 
 # Available MySQL connectors  
@@ -320,6 +320,13 @@ class MySQLLiveTest:
             self._log(f"MySQL live test for {self.connector_name} completed successfully")
             return True
             
+        except RuntimeError as e:
+            if "Could not connect to MySQL" in str(e):
+                self._log(f"MySQL not available, skipping test: {e}")
+                return "skipped"
+            else:
+                self._log(f"MySQL live test for {self.connector_name} failed: {e}")
+                return False
         except Exception as e:
             self._log(f"MySQL live test for {self.connector_name} failed: {e}")
             return False
@@ -332,6 +339,7 @@ def _run_all(connectors, verbose: bool) -> int:
     """Run tests for all connectors."""
     overall_success = True
     results = {}
+    skipped_count = 0
     
     for name in connectors:
         cmd = [sys.executable, __file__, "--connector", name]
@@ -340,16 +348,35 @@ def _run_all(connectors, verbose: bool) -> int:
         
         print(f"\n{SYMBOL_TEST} Testing {name}...")
         proc = subprocess.run(cmd, check=False)
-        passed = proc.returncode == 0
+        
+        if proc.returncode == 0:
+            passed = True
+            status = f"{SYMBOL_PASS} PASSED"
+        elif proc.returncode == 2:  # Special exit code for skipped
+            passed = "skipped"
+            status = f"⏭️  SKIPPED"
+            skipped_count += 1
+        else:
+            passed = False
+            status = f"{SYMBOL_FAIL} FAILED"
+            overall_success = False
+        
         results[name] = passed
-        status = f"{SYMBOL_PASS} PASSED" if passed else f"{SYMBOL_FAIL} FAILED"
         print(f"  {name}: {status}")
-        overall_success &= passed
     
     print(f"\n{SYMBOL_SUMMARY} MySQL Connector Test Summary")
     for name, passed in results.items():
-        status = SYMBOL_PASS if passed else SYMBOL_FAIL
+        if passed == "skipped":
+            status = "⏭️ "
+        elif passed:
+            status = SYMBOL_PASS
+        else:
+            status = SYMBOL_FAIL
         print(f"  {status} {name}")
+    
+    if skipped_count == len(connectors):
+        print("  ℹ️  All tests skipped (MySQL not available)")
+        return 0  # Don't fail if MySQL is not available
     
     return 0 if overall_success else 1
 
@@ -376,8 +403,14 @@ def main() -> int:
     
     # Run single connector test
     test = MySQLLiveTest(args.connector, verbose=verbose)
-    success = test.run_test()
-    return 0 if success else 1
+    result = test.run_test()
+    
+    if result == "skipped":
+        return 2  # Special exit code for skipped
+    elif result:
+        return 0
+    else:
+        return 1
 
 
 if __name__ == "__main__":  # pragma: no cover - executed as script
