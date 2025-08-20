@@ -24,13 +24,15 @@ cd django-dbbackup
 
 ### Tests
 
-| Command                             | Description                                                     |
-| ----------------------------------- | --------------------------------------------------------------- |
-| `hatch test`                        | Run Python tests using the current environment's Python version |
-| `hatch test --all`                  | Run tests using all compatible Python and Django versions       |
-| `hatch test --python 3.9`           | Run tests using a specific Python version                       |
-| `hatch test --include "django=5.1"` | Run tests using a specific Django version                       |
-| `hatch test -k test_backup_filter`  | Run only a specific test                                        |
+| Command                               | Description                                                     |
+| ------------------------------------- | --------------------------------------------------------------- |
+| `hatch test`                          | Run Python tests using the current environment's Python version |
+| `hatch test --all`                    | Run tests using all compatible Python and Django versions       |
+| `hatch test --python 3.9`             | Run tests using a specific Python version                       |
+| `hatch test --include "django=5.1"`   | Run tests using a specific Django version                       |
+| `hatch test -k test_backup_filter`    | Run only a specific test                                        |
+| `hatch run functional:test`           | Run end-to-end backup and restore tests                         |
+| `hatch run functional:postgres --all` | Run end-to-end PostgreSQL tests using all compatible connectors |
 
 ??? question "What other arguments are available to me?"
 
@@ -53,14 +55,6 @@ cd django-dbbackup
     This repository uses `ruff` and `pylint` for linting and formatting.
 
     You can install `ruff` as a plugin to your preferred code editor to create a similar environment.
-
-### Functional Testing
-
-| Command                     | Description                             |
-| --------------------------- | --------------------------------------- |
-| `hatch run functional:test` | Run end-to-end backup and restore tests |
-
-The functional tests perform real database and media backup/restore cycles to ensure the commands work correctly.
 
 ### Documentation
 

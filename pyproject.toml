@@ -207,15 +207,7 @@ test = [
   "python -c \"import os; assert os.path.exists('tmp/media/test.txt'); print('Media test passed!')\"",
   "python -c \"import os; os.path.exists('tmp/test_db.sqlite3') and os.remove('tmp/test_db.sqlite3')\"",
 ]
-postgres-test = [
-  "python scripts/postgres_live_test.py --connector PgDumpConnector --verbose",
-]
-postgres-test-all = [
-  "python scripts/postgres_live_test_simple.py --all --verbose",
-]
-postgres-test-isolated = [
-  "python scripts/postgres_live_test_simple.py --connector PgDumpConnector --verbose",
-]
+postgres = ["python scripts/postgres_live_test.py {args}"]
 
 # >>> Generic Tools <<<
 
