@@ -130,7 +130,7 @@ Key directories and files:
 - `scripts/` – live functional test scripts (`sqlite_live_test.py`, `postgres_live_test.py`)
 - `docs/` – MkDocs Material source (built site output under `docs/site/` when building locally)
 - `pyproject.toml` – project + Hatch environment configuration
-- `.github/workflows/build.yml` – CI matrix & publish pipeline
+- `.github/workflows/ci.yml` – CI matrix & publish pipeline
 - `CHANGELOG.md` – human-maintained change log (search here first for bug history)
 - `README.md`, `LICENSE.md`
 - `.pre-commit-config.yaml` – git hooks setup
@@ -245,7 +245,7 @@ Modern GitHub Actions workflow (.github/workflows/build.yml):
 ## Important Notes
 
 - **This is a Django package**, not a standalone application - it provides management commands for Django projects
-- **Backup/restore functionality** works with SQLite, PostgreSQL, MySQL (where supported), and various storage backends
+- **Backup/restore functionality** works with all Django-compatible databases and various storage backends
 - **All builds and tests run quickly** - if something takes more than 60 seconds, investigate network connectivity
 - **Hatch environments provide full isolation** - no need to manage virtual environments manually
 - **The functional test environment (functional) is the gold standard** - performs real backup/restore cycles (SQLite + PostgreSQL)
