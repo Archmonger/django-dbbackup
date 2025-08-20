@@ -188,6 +188,10 @@ MEDIA_ROOT = "tmp/media/"
 DB_NAME = "tmp/test_db.sqlite3"
 
 [tool.hatch.envs.functional.scripts]
+all = [
+  "hatch run functional:sqlite --all {args}",
+  "hatch run functional:postgres --all {args}",
+]
 sqlite = ["python scripts/sqlite_live_test.py {args}"]
 postgres = ["python scripts/postgres_live_test.py {args}"]
 

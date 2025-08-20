@@ -107,8 +107,15 @@ jobs:
                   cache: pip
             - name: Install dependencies
               run: python -m pip install --upgrade pip hatch uv
+            - name: Setup postgres
+              uses: ikalnytskyi/action-setup-postgres@v7
+            - run: psql postgresql://postgres:postgres@localhost:5432/postgres -c "SELECT 1"
+            - run: psql service=postgres -c "SELECT 1"
+            - run: psql -c "SELECT 1"
+              env:
+                  PGSERVICE: postgres
             - name: Run functional tests
-              run: hatch run functional:test
+              run: hatch run functional:all -v
 
     build-python:
         name: Build Python
