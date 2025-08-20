@@ -163,7 +163,6 @@ extra-dependencies = ["ruff", "pylint"]
 [tool.hatch.envs.lint.scripts]
 check = ["ruff check dbbackup", "pylint dbbackup --rcfile=.pylintrc"]
 format = ["ruff format dbbackup"]
-format-check = ["ruff format --check dbbackup"]
 
 # >>> CLI workflow tests <<<
 
