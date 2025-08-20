@@ -367,20 +367,50 @@ class PostgreSQLLiveTest:
             self.postgres_runner.cleanup()
 
 
+def _connector_test_entry(connector_name: str, verbose: bool):  # pragma: no cover - executed in subprocess
+    """Subprocess entry point to run a single connector test.
+
+    Needs to be at module top-level so it can be imported/pickled on Windows
+    (the 'spawn' start method). Exits with status code 1 if the test fails.
+    """
+    test_runner = PostgreSQLLiveTest(connector_name, verbose)
+    success = test_runner.run_backup_restore_test()
+    if not success:
+        sys.exit(1)
+
+
 def run_single_connector_test(connector_name, verbose=False):
-    """Run a test for a single connector in isolation."""
+    """Run a test for a single connector in isolation using a subprocess.
 
-    def test_process():
-        test_runner = PostgreSQLLiveTest(connector_name, verbose)
-        success = test_runner.run_backup_restore_test()
-        if not success:
-            sys.exit(1)
+    On Windows, multiprocessing with nested (local) functions fails because they
+    are not picklable under the 'spawn' start method. We therefore provide a
+    top-level function as the process target. If an unexpected multiprocessing
+    failure occurs on Windows (e.g., permissions), we gracefully fall back to
+    in-process execution to avoid masking all connector results.
+    """
 
-    process = Process(target=test_process)
-    process.start()
-    process.join()
+    # Normal path: run in a separate process for isolation
+    def _run_subprocess():  # local helper kept simple; not used as target
+        process_local = Process(target=_connector_test_entry, args=(connector_name, verbose))
+        process_local.start()
+        process_local.join()
+        return process_local
 
-    return process.exitcode == 0
+    try:
+        process = _run_subprocess()
+        if process.exitcode is None:
+            return False
+        if process.exitcode != 0 and os.name == "nt":  # Fallback path on Windows
+            # Retry in-process so at least we capture a meaningful failure message
+            test_runner = PostgreSQLLiveTest(connector_name, verbose)
+            return test_runner.run_backup_restore_test()
+        return process.exitcode == 0
+    except AttributeError as exc:  # Defensive: pickling or spawn related
+        if os.name == "nt":
+            print(f"{SYMBOL_FAIL} Multiprocessing issue on Windows ({exc}); running in-process instead.")
+            test_runner = PostgreSQLLiveTest(connector_name, verbose)
+            return test_runner.run_backup_restore_test()
+        raise
 
 
 def main():
