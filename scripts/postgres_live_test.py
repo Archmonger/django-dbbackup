@@ -14,7 +14,6 @@ Connectors:
     - PgDumpGisConnector: Like PgDumpConnector but with PostGIS support
 """
 
-import contextlib
 import os
 import shutil
 import subprocess
@@ -61,7 +60,19 @@ class PostgreSQLTestRunner:
         self._log(f"Running: {' '.join(cmd) if isinstance(cmd, list) else cmd}")
         result = subprocess.run(cmd, shell=isinstance(cmd, str), **kwargs)
         if check and result.returncode != 0:
-            raise RuntimeError(f"Command failed with exit code {result.returncode}: {cmd}")
+            # Collect stdout and stderr for better error reporting
+            stdout = getattr(result, 'stdout', b'')
+            stderr = getattr(result, 'stderr', b'')
+            if isinstance(stdout, bytes):
+                stdout = stdout.decode('utf-8', errors='replace')
+            if isinstance(stderr, bytes):
+                stderr = stderr.decode('utf-8', errors='replace')
+            error_msg = f"Command failed with exit code {result.returncode}: {cmd}"
+            if stdout:
+                error_msg += f"\nSTDOUT: {stdout}"
+            if stderr:
+                error_msg += f"\nSTDERR: {stderr}"
+            raise RuntimeError(error_msg)
         return result
 
     def setup_postgres(self):
@@ -101,25 +112,55 @@ class PostgreSQLTestRunner:
         """Create the test database."""
         self._log(f"Creating test database: {self.test_db_name}")
 
-        # Only create the user if it does not exist
-        create_user_sql = (
-            f"DO $$ BEGIN "
-            f"IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = '{self.user}') THEN "
-            f"CREATE USER {self.user} WITH PASSWORD '{self.password}' CREATEDB; "
-            f"END IF; "
-            f"END $$;"
-        )
+        # In CI environments or when we detect issues with user creation,
+        # use the superuser (postgres) as the database owner to avoid permission issues
+        if GITHUB_ACTIONS:
+            # In GitHub Actions, use the default postgres user to avoid permission complexities
+            self._log("GitHub Actions detected, using postgres superuser as database owner")
+            
+            # Set a password for the postgres user to enable TCP connections
+            set_password_sql = f"ALTER USER postgres PASSWORD '{self.password}';"
+            self._run_command(["psql", "-c", set_password_sql], capture_output=True, use_sudo=True)
+            self._log("Password set for postgres user")
+            
+            create_db_sql = f"CREATE DATABASE {self.test_db_name};"
+            self._run_command(["psql", "-c", create_db_sql], capture_output=True, use_sudo=True)
+            # Use the superuser credentials for the database connection
+            self.user = self.superuser
+            # Keep the password we set
+        else:
+            # For local development, create a dedicated test user
+            create_user_sql = (
+                f"DO $$ BEGIN "
+                f"IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = '{self.user}') THEN "
+                f"CREATE USER {self.user} WITH PASSWORD '{self.password}' CREATEDB; "
+                f"END IF; "
+                f"END $$;"
+            )
 
-        # If user might already exists, continue
-        with contextlib.suppress(RuntimeError):
-            self._run_command(["psql", "-c", create_user_sql], capture_output=True, use_sudo=True)
+            # Create the user - capture output for better error reporting
+            try:
+                self._run_command(["psql", "-c", create_user_sql], capture_output=True, use_sudo=True)
+            except RuntimeError as e:
+                # If user creation fails, provide more context
+                self._log(f"User creation failed, but attempting to continue: {e}")
+                # Check if user already exists
+                check_user_sql = f"SELECT 1 FROM pg_catalog.pg_roles WHERE rolname = '{self.user}';"
+                try:
+                    result = self._run_command(["psql", "-t", "-c", check_user_sql], capture_output=True, check=False, use_sudo=True)
+                    if result.stdout and result.stdout.decode().strip():
+                        self._log(f"User {self.user} already exists, continuing...")
+                    else:
+                        # User doesn't exist and creation failed, this is a real error
+                        raise RuntimeError(f"Failed to create user {self.user} and user does not exist: {e}") from e
+                except Exception as check_error:
+                    self._log(f"Failed to check if user exists: {check_error}")
+                    raise RuntimeError(f"User creation and verification both failed: {e}") from e
 
-        # Create database owned by the test user
-        create_db_sql = f"CREATE DATABASE {self.test_db_name} OWNER {self.user};"
-        self._run_command(["psql", "-c", create_db_sql], capture_output=True, use_sudo=True)
+            # Create database owned by the test user
+            create_db_sql = f"CREATE DATABASE {self.test_db_name} OWNER {self.user};"
+            self._run_command(["psql", "-c", create_db_sql], capture_output=True, use_sudo=True)
 
-        # Update database config to use the test user
-        self.user = f"{self.user}"
         self.db_created = True
 
     def get_database_config(self):
@@ -145,9 +186,10 @@ class PostgreSQLTestRunner:
                     ["psql", "-c", drop_db_sql], capture_output=True, check=False, use_sudo=True
                 )  # Don't fail if database doesn't exist
 
-                # Drop the test user
-                drop_user_sql = f"DROP USER IF EXISTS {self.user};"
-                self._run_command(["psql", "-c", drop_user_sql], capture_output=True, check=False, use_sudo=True)
+                # Only drop the test user if we created one (not in CI where we use postgres superuser)
+                if not GITHUB_ACTIONS and self.user != self.superuser:
+                    drop_user_sql = f"DROP USER IF EXISTS {self.user};"
+                    self._run_command(["psql", "-c", drop_user_sql], capture_output=True, check=False, use_sudo=True)
             except Exception as e:
                 self._log(f"Warning: Failed to drop test database or user: {e}")
 
