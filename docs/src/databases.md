@@ -113,7 +113,7 @@ All PostgreSQL connectors have the following settings:
 | ------------------ | --------------------------------------------------------------------------------------------------------------------------------------- | ------- |
 | SINGLE_TRANSACTION | Wrap restore in a single transaction so errors cause full rollback (`--single-transaction` for `psql` / `pg_restore`).                  | `True`  |
 | DROP               | Include / execute drop statements when restoring (`--clean` with `pg_dump` / `pg_restore`). In binary mode drops happen during restore. | `True`  |
-| IF_EXISTS          | Add `IF EXISTS` to destructive statements in clean mode.                                                                                | `False` |
+| IF_EXISTS          | Add `IF EXISTS` to destructive statements in clean mode. Automatically enabled when `DROP=True` to prevent identity column errors.      | `False` |
 
 #### PgDumpConnector
 
@@ -126,6 +126,8 @@ This is the default connector for PostgreSQL databases, however, it is recommend
 The `dbbackup.db.postgresql.PgDumpBinaryConnector` is similar to PgDumpConnector, but it uses `pg_dump` in binary mode and restores using `pg_restore`.
 
 This allows for faster and parallel-capable restores. It may still invoke `psql` for administrative tasks.
+
+**Note**: When `DROP=True` (default), the `--if-exists` option is automatically enabled during restore to prevent errors with PostgreSQL identity columns and other modern database features. This ensures compatibility with PostgreSQL 10+ identity columns.
 
 ### PostGIS
 

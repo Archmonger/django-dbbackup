@@ -220,14 +220,40 @@ class PgDumpBinaryConnectorTest(TestCase):
 
     def test_create_dump_if_exists(self, mock_run_command):
         dump = self.connector.create_dump()
-        # Without
+        # Test explicit if_exists=True behavior
+        self.connector.if_exists = True
+        self.connector.drop = False  # Disable automatic --if-exists from --clean
+        self.connector.restore_dump(dump)
+        cmd_args = mock_run_command.call_args[0][0]
+        self.assertNotIn(" --clean", cmd_args)
+        self.assertIn(" --if-exists", cmd_args)
+        
+        # Test that if_exists=False with drop=False means no --if-exists
+        self.connector.if_exists = False
+        self.connector.drop = False
+        self.connector.restore_dump(dump)
+        cmd_args = mock_run_command.call_args[0][0]
+        self.assertNotIn(" --clean", cmd_args)
+        self.assertNotIn(" --if-exists", cmd_args)
+    
+    def test_clean_automatically_enables_if_exists(self, mock_run_command):
+        """Test that --if-exists is automatically added when using --clean to prevent identity column errors."""
+        dump = self.connector.create_dump()
+        # When drop=True (which adds --clean), --if-exists should be automatically added
+        self.connector.drop = True
+        self.connector.if_exists = False  # Explicitly set to False
+        self.connector.restore_dump(dump)
+        cmd_args = mock_run_command.call_args[0][0]
+        self.assertIn(" --clean", cmd_args)
+        self.assertIn(" --if-exists", cmd_args)
+        
+        # When drop=False, --if-exists should not be added automatically
+        self.connector.drop = False
         self.connector.if_exists = False
         self.connector.restore_dump(dump)
-        self.assertNotIn(" --if-exists", mock_run_command.call_args[0][0])
-        # With
-        self.connector.if_exists = True
-        self.connector.restore_dump(dump)
-        self.assertIn(" --if-exists", mock_run_command.call_args[0][0])
+        cmd_args = mock_run_command.call_args[0][0]
+        self.assertNotIn(" --clean", cmd_args)
+        self.assertNotIn(" --if-exists", cmd_args)
 
     def test_pg_options(self, mock_run_command):
         dump = self.connector.create_dump()
