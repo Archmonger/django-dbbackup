@@ -23,6 +23,15 @@ import time
 from multiprocessing import Process
 from pathlib import Path
 
+from scripts._utils import get_symbols
+
+_SYMS = get_symbols()
+SYMBOL_PASS = _SYMS["PASS"]
+SYMBOL_FAIL = _SYMS["FAIL"]
+SYMBOL_SUMMARY = _SYMS["SUMMARY"]
+SYMBOL_PG = _SYMS["PG"]
+SYMBOL_TEST = _SYMS["TEST"]
+
 # Add parent directory to path to import Django modules
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
@@ -56,35 +65,30 @@ class PostgreSQLTestRunner:
         if GITHUB_ACTIONS:
             use_sudo = False
             # Set PostgreSQL connection environment for action-setup-postgres
-            env = kwargs.get('env', os.environ.copy())
-            env.update({
-                'PGHOST': 'localhost',
-                'PGPORT': '5432',
-                'PGUSER': 'postgres',
-                'PGPASSWORD': 'postgres'
-            })
-            kwargs['env'] = env
+            env = kwargs.get("env", os.environ.copy())
+            env.update({"PGHOST": "localhost", "PGPORT": "5432", "PGUSER": "postgres", "PGPASSWORD": "postgres"})
+            kwargs["env"] = env
         else:
             # For local development, use sudo if not explicitly disabled
             if use_sudo is None:
-                use_sudo = (os.name == "posix")
-        
+                use_sudo = os.name == "posix"
+
         if use_sudo:
             if isinstance(cmd, list):
                 cmd = ["sudo", "-u", self.superuser] + cmd
             else:
                 cmd = f"sudo -u {self.superuser} {cmd}"
-        
+
         self._log(f"Running: {' '.join(cmd) if isinstance(cmd, list) else cmd}")
         result = subprocess.run(cmd, shell=isinstance(cmd, str), **kwargs)
         if check and result.returncode != 0:
             # Collect stdout and stderr for better error reporting
-            stdout = getattr(result, 'stdout', b'')
-            stderr = getattr(result, 'stderr', b'')
+            stdout = getattr(result, "stdout", b"")
+            stderr = getattr(result, "stderr", b"")
             if isinstance(stdout, bytes):
-                stdout = stdout.decode('utf-8', errors='replace')
+                stdout = stdout.decode("utf-8", errors="replace")
             if isinstance(stderr, bytes):
-                stderr = stderr.decode('utf-8', errors='replace')
+                stderr = stderr.decode("utf-8", errors="replace")
             error_msg = f"Command failed with exit code {result.returncode}: {cmd}"
             if stdout:
                 error_msg += f"\nSTDOUT: {stdout}"
@@ -133,12 +137,12 @@ class PostgreSQLTestRunner:
         # In CI environments, use the action-setup-postgres configured postgres user
         if GITHUB_ACTIONS:
             self._log("GitHub Actions detected, using postgres superuser as database owner")
-            
+
             # action-setup-postgres already configures postgres user with password 'postgres'
             # Just create the database directly
             create_db_sql = f"CREATE DATABASE {self.test_db_name};"
             self._run_command(["psql", "-c", create_db_sql], capture_output=True)
-            
+
             # Use the pre-configured postgres user credentials
             self.user = self.superuser
             self.password = "postgres"  # action-setup-postgres default
@@ -161,7 +165,9 @@ class PostgreSQLTestRunner:
                 # Check if user already exists
                 check_user_sql = f"SELECT 1 FROM pg_catalog.pg_roles WHERE rolname = '{self.user}';"
                 try:
-                    result = self._run_command(["psql", "-t", "-c", check_user_sql], capture_output=True, check=False, use_sudo=True)
+                    result = self._run_command(
+                        ["psql", "-t", "-c", check_user_sql], capture_output=True, check=False, use_sudo=True
+                    )
                     if result.stdout and result.stdout.decode().strip():
                         self._log(f"User {self.user} already exists, continuing...")
                     else:
@@ -345,11 +351,11 @@ class PostgreSQLLiveTest:
             # Verify restored data
             self._verify_test_data(char_obj, text_obj)
 
-            self._log(f"✅ {self.connector_name} backup/restore test PASSED")
+            self._log(f"{SYMBOL_PASS} {self.connector_name} backup/restore test PASSED")
             return True
 
         except Exception as e:
-            self._log(f"❌ {self.connector_name} backup/restore test FAILED: {e}")
+            self._log(f"{SYMBOL_FAIL} {self.connector_name} backup/restore test FAILED: {e}")
             return False
 
         finally:
@@ -392,18 +398,18 @@ def main():
         ["PgDumpConnector", "PgDumpBinaryConnector", "PgDumpGisConnector"] if args.all else [args.connector]
     )
 
-    print("🐘 Starting PostgreSQL Live Tests for django-dbbackup (Isolated)")
+    print(f"{SYMBOL_PG} Starting PostgreSQL Live Tests for django-dbbackup (Isolated)")
     print("=" * 60)
 
     results = {}
     for connector in connectors_to_test:
-        print(f"\nTesting {connector}...")
+        print(f"\n{SYMBOL_TEST} Testing {connector}...")
         results[connector] = run_single_connector_test(connector, verbose=args.verbose)
 
     print("\n" + "=" * 60)
-    print("📊 Test Summary:")
+    print(f"{SYMBOL_SUMMARY} Test Summary:")
     for connector, passed in results.items():
-        status = "✅ PASSED" if passed else "❌ FAILED"
+        status = f"{SYMBOL_PASS} PASSED" if passed else f"{SYMBOL_FAIL} FAILED"
         print(f"  {connector}: {status}")
 
     total_tests = len(results)

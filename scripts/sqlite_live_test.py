@@ -19,6 +19,14 @@ import subprocess
 import sys
 import traceback
 
+from ._utils import get_symbols
+
+_SYMS = get_symbols()
+SYMBOL_PASS = _SYMS["PASS"]
+SYMBOL_FAIL = _SYMS["FAIL"]
+SYMBOL_SUMMARY = _SYMS["SUMMARY"]
+SYMBOL_TEST = _SYMS["TEST"]
+
 
 def log(msg: str, *, verbose: bool) -> None:
     if verbose:
@@ -66,16 +74,16 @@ def _run_all(connectors, verbose: bool) -> int:
         cmd = [sys.executable, __file__, "--connector", name]
         if verbose:
             cmd.append("-v")
-        print(f"\nTesting {name}...")
+        print(f"\n{SYMBOL_TEST} Testing {name}...")
         proc = subprocess.run(cmd, check=False)
         passed = proc.returncode == 0
         results[name] = passed
-        status = "✅ PASSED" if passed else "❌ FAILED"
+        status = f"{SYMBOL_PASS} PASSED" if passed else f"{SYMBOL_FAIL} FAILED"
         print(f"  {name}: {status}")
         overall_success &= passed
-    print("\n📊 SQLite Connector Test Summary")
+    print(f"\n{SYMBOL_SUMMARY} SQLite Connector Test Summary")
     for name, passed in results.items():
-        status = "✅" if passed else "❌"
+        status = SYMBOL_PASS if passed else SYMBOL_FAIL
         print(f"  {status} {name}")
     return 0 if overall_success else 1
 
@@ -220,7 +228,7 @@ def main() -> int:  # noqa: WPS231 (complexity acceptable for test harness)
 
         return 0
     except Exception as exc:  # noqa: WPS433
-        print("❌ SQLite functional test FAILED:", exc, file=sys.stderr)
+        print(f"{SYMBOL_FAIL} SQLite functional test FAILED:", exc, file=sys.stderr)
         traceback.print_exc()
         return 1
     finally:
