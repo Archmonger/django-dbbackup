@@ -41,8 +41,9 @@ class PostgreSQLTestRunner:
         self.port = 5432  # Use default PostgreSQL port
         self.temp_dir = None
         self.test_db_name = f"dbbackup_test_{int(time.time())}"  # Unique DB name
-        self.test_user = "postgres"  # Use postgres superuser
-        self.test_password = None  # No password for local connection
+        self.superuser = "postgres"
+        self.user = f"postgres_{int(time.time())}"
+        self.password = "postgres"  # Password (shared by user and superuser for simplicity)
         self.db_created = False
 
     def _log(self, message):
@@ -50,13 +51,13 @@ class PostgreSQLTestRunner:
         if self.verbose:
             print(f"[PostgreSQL Test] {message}")
 
-    def _run_command(self, cmd, check=True, use_sudo=False, **kwargs):
+    def _run_command(self, cmd, check=True, use_sudo=(os.name == "posix"), **kwargs):
         """Run a command and optionally check for errors."""
         if use_sudo:
             if isinstance(cmd, list):
-                cmd = ["sudo", "-u", "postgres"] + cmd
+                cmd = ["sudo", "-u", self.superuser] + cmd
             else:
-                cmd = f"sudo -u postgres {cmd}"
+                cmd = f"sudo -u {self.superuser} {cmd}"
         self._log(f"Running: {' '.join(cmd) if isinstance(cmd, list) else cmd}")
         result = subprocess.run(cmd, shell=isinstance(cmd, str), **kwargs)
         if check and result.returncode != 0:
@@ -100,13 +101,11 @@ class PostgreSQLTestRunner:
         """Create the test database."""
         self._log(f"Creating test database: {self.test_db_name}")
 
-        # Create a test user with password
-        test_user_password = "postgres"
         # Only create the user if it does not exist
         create_user_sql = (
             f"DO $$ BEGIN "
-            f"IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = '{self.test_user}') THEN "
-            f"CREATE USER {self.test_user} WITH PASSWORD '{test_user_password}' CREATEDB; "
+            f"IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = '{self.user}') THEN "
+            f"CREATE USER {self.user} WITH PASSWORD '{self.password}' CREATEDB; "
             f"END IF; "
             f"END $$;"
         )
@@ -116,17 +115,11 @@ class PostgreSQLTestRunner:
             self._run_command(["psql", "-c", create_user_sql], capture_output=True, use_sudo=True)
 
         # Create database owned by the test user
-        if GITHUB_ACTIONS:
-            subprocess.run(
-                ["sudo", "createdb", "--owner", self.test_user, self.test_db_name], check=True, capture_output=True
-            )
-        else:
-            create_db_sql = f"CREATE DATABASE {self.test_db_name} OWNER {self.test_user};"
-            self._run_command(["psql", "-c", create_db_sql], capture_output=True, use_sudo=True)
+        create_db_sql = f"CREATE DATABASE {self.test_db_name} OWNER {self.user};"
+        self._run_command(["psql", "-c", create_db_sql], capture_output=True, use_sudo=True)
 
         # Update database config to use the test user
-        self.test_user = f"{self.test_user}"
-        self.test_password = test_user_password
+        self.user = f"{self.user}"
         self.db_created = True
 
     def get_database_config(self):
@@ -134,8 +127,8 @@ class PostgreSQLTestRunner:
         return {
             "ENGINE": "django.db.backends.postgresql",
             "NAME": self.test_db_name,
-            "USER": self.test_user,
-            "PASSWORD": self.test_password,
+            "USER": self.user,
+            "PASSWORD": self.password,
             "HOST": "localhost",
             "PORT": self.port,
         }
@@ -153,7 +146,7 @@ class PostgreSQLTestRunner:
                 )  # Don't fail if database doesn't exist
 
                 # Drop the test user
-                drop_user_sql = f"DROP USER IF EXISTS {self.test_user};"
+                drop_user_sql = f"DROP USER IF EXISTS {self.user};"
                 self._run_command(["psql", "-c", drop_user_sql], capture_output=True, check=False, use_sudo=True)
             except Exception as e:
                 self._log(f"Warning: Failed to drop test database or user: {e}")
