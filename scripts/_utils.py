@@ -30,11 +30,11 @@ _EMOJI_SYMBOLS = {
 }
 
 _ASCII_SYMBOLS = {
-    "PASS": "",
-    "FAIL": "",
-    "SUMMARY": "",
-    "TEST": "",
-    "PG": "",
+    "PASS": "PASS:",
+    "FAIL": "FAIL:",
+    "SUMMARY": "SUMMARY:",
+    "TEST": "TEST:",
+    "PG": ">>",
 }
 
 
