@@ -118,7 +118,7 @@ jobs:
               if: matrix.os == 'ubuntu-latest'
               uses: kayqueGovetri/setup-mysql@v0.0.3
               with:
-                  root-password: "mysql"
+                  mysq_root_password: "mysql"
             - name: Run functional tests
               run: hatch run functional:all -v
 

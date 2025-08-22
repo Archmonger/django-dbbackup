@@ -33,4 +33,4 @@ jobs:
             - name: Install MySQL
               uses: kayqueGovetri/setup-mysql@v0.0.3
               with:
-                  root-password: "mysql"
+                  mysq_root_password: "mysql"
