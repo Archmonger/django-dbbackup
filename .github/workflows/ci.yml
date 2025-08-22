@@ -116,16 +116,11 @@ jobs:
                   PGSERVICE: postgres
             - name: Setup MySQL
               if: matrix.os == 'ubuntu-latest'
-              uses: kayqueGovetri/setup-mysql@v3.0.0
-              with:
-                  mysql-version: "8.0"
-                  mysql-root-password: "root"
-            - name: Run functional tests
-              run: hatch run functional:all -v
-            - name: Install MySQL
-              uses: kayqueGovetri/setup-mysql@v0.0.3
+              uses: kayqueGovetri/setup-mysql@@v0.0.3
               with:
                   root-password: "mysql"
+            - name: Run functional tests
+              run: hatch run functional:all -v
 
     build-python:
         name: Build Python
