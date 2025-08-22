@@ -50,6 +50,7 @@ Don't forget to remove deprecated code on each major release!
 - Fix SQLite `index`/`trigger`/`view` `<NAME> already exists` errors.
 - Fixed `pg_dump` error when backing up PostgreSQL databases with row-level security policies enabled.
 - Fix PostgreSQL restore errors with identity columns by automatically enabling `--if-exists` when using `--clean` in `PgDumpBinaryConnector`.
+- Fix PostgreSQL permission errors when restoring with non-superuser accounts by automatically adding `--no-owner` flag to `pg_restore` in `PgDumpBinaryConnector`.
 
 ### Security
 

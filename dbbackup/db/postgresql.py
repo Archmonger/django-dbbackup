@@ -117,6 +117,7 @@ class PgDumpBinaryConnector(PgDumpConnector):
     single_transaction = True
     drop = True
     if_exists = False
+    no_owner = True
     enable_row_security = False
     pg_options = None
 
@@ -176,6 +177,9 @@ class PgDumpBinaryConnector(PgDumpConnector):
 
         if self.if_exists or self.drop:
             cmd.extend(["--if-exists"])
+
+        if self.no_owner:
+            cmd.extend(["--no-owner"])
 
         if self.restore_suffix:
             cmd.extend(self.restore_suffix if isinstance(self.restore_suffix, list) else [self.restore_suffix])

@@ -286,6 +286,19 @@ class PgDumpBinaryConnectorTest(TestCase):
         cmd_args = mock_run_command.call_args[0][0]
         self.assertTrue(cmd_args.endswith(" foo"))
 
+    def test_no_owner_default_behavior(self, mock_run_command):
+        """Test that --no-owner is added by default to prevent permission issues."""
+        dump = self.connector.create_dump()
+        self.connector.restore_dump(dump)
+        cmd_args = mock_run_command.call_args[0][0]
+        self.assertIn(" --no-owner", cmd_args)
+        
+        # Test that no_owner can be disabled
+        self.connector.no_owner = False
+        self.connector.restore_dump(dump)
+        cmd_args = mock_run_command.call_args[0][0]
+        self.assertNotIn(" --no-owner", cmd_args)
+
     @patch(
         "dbbackup.db.postgresql.PgDumpBinaryConnector.run_command",
         return_value=(BytesIO(), BytesIO()),
