@@ -172,6 +172,16 @@ class PgDumpConnectorTest(TestCase):
         self.connector.restore_dump(dump)
         self.assertNotIn("secret", mock_dump_cmd.call_args[0][0])
 
+    def test_create_dump_enable_row_security(self, mock_dump_cmd):
+        # Without enable_row_security
+        self.connector.enable_row_security = False
+        self.connector.create_dump()
+        self.assertNotIn(" --enable-row-security", mock_dump_cmd.call_args[0][0])
+        # With enable_row_security
+        self.connector.enable_row_security = True
+        self.connector.create_dump()
+        self.assertIn(" --enable-row-security", mock_dump_cmd.call_args[0][0])
+
 
 @patch(
     "dbbackup.db.postgresql.PgDumpBinaryConnector.run_command",
@@ -331,6 +341,16 @@ class PgDumpBinaryConnectorTest(TestCase):
         dump = self.connector.create_dump()
         self.connector.restore_dump(dump)
         self.assertNotIn("secret", mock_dump_cmd.call_args[0][0])
+
+    def test_create_dump_enable_row_security(self, mock_dump_cmd):
+        # Without enable_row_security
+        self.connector.enable_row_security = False
+        self.connector.create_dump()
+        self.assertNotIn(" --enable-row-security", mock_dump_cmd.call_args[0][0])
+        # With enable_row_security
+        self.connector.enable_row_security = True
+        self.connector.create_dump()
+        self.assertIn(" --enable-row-security", mock_dump_cmd.call_args[0][0])
 
 
 @patch(

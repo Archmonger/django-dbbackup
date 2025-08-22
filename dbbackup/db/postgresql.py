@@ -32,6 +32,7 @@ class PgDumpConnector(BaseCommandDBConnector):
     restore_cmd = "psql"
     single_transaction = True
     drop = True
+    enable_row_security = False
     schemas: Optional[List[str]] = []
 
     def _create_dump(self):
@@ -44,6 +45,9 @@ class PgDumpConnector(BaseCommandDBConnector):
 
         if self.drop:
             cmd += " --clean"
+
+        if self.enable_row_security:
+            cmd += " --enable-row-security"
 
         if self.schemas:
             # First schema is not prefixed with -n
@@ -113,6 +117,7 @@ class PgDumpBinaryConnector(PgDumpConnector):
     single_transaction = True
     drop = True
     if_exists = False
+    enable_row_security = False
     pg_options = None
 
     def _create_dump(self):
@@ -123,6 +128,9 @@ class PgDumpBinaryConnector(PgDumpConnector):
         cmd += " --format=custom"
         for table in self.exclude:
             cmd += f" --exclude-table-data={table}"
+
+        if self.enable_row_security:
+            cmd += " --enable-row-security"
 
         if self.schemas:
             cmd += " -n " + " -n ".join(self.schemas)
