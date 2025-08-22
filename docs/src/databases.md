@@ -83,20 +83,21 @@ These connectors are provided by default and are designed to work with specific 
 
 #### SqliteBackupConnector
 
-The `dbbackup.db.sqlite.SqliteBackupConnector` makes a copy of the SQLite database file using the `.backup` command, which is safe to execute while the database has ongoing/active connections. Additionally, it supports dumping in-memory databases by construction.
+The `dbbackup.db.sqlite.SqliteBackupConnector` makes a copy of the SQLite database file using the `.backup` command, which is safe to execute while the database has ongoing/active connections.
 
 This is the default connector for SQLite databases.
 
 #### SqliteConnector
 
-It is in pure Python and is similar to the Sqlite `.dump` command for creating a
-SQL dump.
+It is in pure Python and is similar to the Sqlite `.dump` command for creating a SQL dump.
+
+This connector can be used to restore a backup to an existing (dirty) database due to it's generation of raw SQL statements. However, that is generally not recommended and can lead to unexpected results depending on your schema.
 
 #### SqliteCPConnector
 
 The `dbbackup.db.sqlite.SqliteCPConnector` connector can be used to make a simple raw copy of your database file, like a snapshot.
 
-In-memory databases aren't dumpable with it. Since it works by copying the database file directly, it is not suitable for databases that are have active connections.
+In-memory databases are **not** dumpable with it. Since it works by copying the database file directly, it is not suitable for databases that are have active connections.
 
 ### MySQL
 
