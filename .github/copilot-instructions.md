@@ -33,7 +33,7 @@ Build documentation:
 
 ## Testing and Validation
 
-> Prerequisite: Functional ("live") database tests require the actual database server binaries. SQLite needs no setup. For PostgreSQL runs (`hatch run functional:postgres --all` or the PostgreSQL portion of `functional:all`), ensure a local PostgreSQL server is installed, running, and the `psql` client is on your PATH (default local trust/peer authentication is fine). If/when adding or executing MySQL/MariaDB live tests, you must likewise have a local MySQL/MariaDB server running and the `mysql` client on your PATH before invoking those tests.
+> Prerequisite: Functional ("live") database tests require the actual database server binaries. SQLite needs no setup. For PostgreSQL runs (`hatch run functional:postgres --all` or the PostgreSQL portion of `functional:all`), ensure a local PostgreSQL server is installed, running, and the `psql` client is on your PATH. If/when adding or executing MySQL/MariaDB live tests, you must likewise have a local MySQL/MariaDB server running and the `mysql` client on your PATH before invoking those tests.
 
 ### Installing Database Server Commands (if needed)
 
