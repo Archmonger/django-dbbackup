@@ -109,13 +109,13 @@ All PostgreSQL connectors have the following settings:
 
 #### Settings
 
-| Setting            | Description                                                                                                                             | Default |
-| ------------------ | --------------------------------------------------------------------------------------------------------------------------------------- | ------- |
-| SINGLE_TRANSACTION | Wrap restore in a single transaction so errors cause full rollback (`--single-transaction` for `psql` / `pg_restore`).                  | `True`  |
-| DROP               | Include / execute drop statements when restoring (`--clean` with `pg_dump` / `pg_restore`). In binary mode drops happen during restore. | `True`  |
-| IF_EXISTS          | Add `IF EXISTS` to destructive statements in clean mode. Automatically enabled when `DROP=True` to prevent identity column errors.      | `False` |
-| NO_OWNER           | Skip restoration of object ownership (`--no-owner` with `pg_restore`). Prevents permission errors when restoring with non-superuser accounts. Binary mode only. | `True`  |
-| ENABLE_ROW_SECURITY | Enable row-level security for dumping data (`--enable-row-security` with `pg_dump`). Required for databases with row-level security policies. | `False` |
+| Setting             | Description                                                                                                                                                     | Default |
+| ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- |
+| SINGLE_TRANSACTION  | Wrap restore in a single transaction so errors cause full rollback (`--single-transaction` for `psql` / `pg_restore`).                                          | `True`  |
+| DROP                | Include / execute drop statements when restoring (`--clean` with `pg_dump` / `pg_restore`). In binary mode drops happen during restore.                         | `True`  |
+| IF_EXISTS           | Add `IF EXISTS` to destructive statements in clean mode. Automatically enabled when `DROP=True` to prevent identity column errors.                              | `False` |
+| NO_OWNER            | Skip restoration of object ownership (`--no-owner` with `pg_restore`). Prevents permission errors when restoring with non-superuser accounts. Binary mode only. | `True`  |
+| ENABLE_ROW_SECURITY | Enable row-level security for dumping data (`--enable-row-security` with `pg_dump`). Required for databases with row-level security policies.                   | `False` |
 
 Example configuration for databases with row-level security:
 
@@ -127,17 +127,17 @@ DBBACKUP_CONNECTORS = {
 }
 ```
 
-#### PgDumpConnector
-
-The `dbbackup.db.postgresql.PgDumpConnector` uses `pg_dump` to create RAW SQL files and `psql` to restore them.
-
-This is the default connector for PostgreSQL databases, however, it is recommended to use the binary connector for better performance.
-
 #### PgDumpBinaryConnector
 
 The `dbbackup.db.postgresql.PgDumpBinaryConnector` is similar to PgDumpConnector, but it uses `pg_dump` in binary mode and restores using `pg_restore`.
 
-This allows for faster and parallel-capable restores. It may still invoke `psql` for administrative tasks.
+This is the default connector for PostgreSQL databases, and it allows for faster and parallel-capable restores. This connector may invoke `psql` for administrative tasks.
+
+#### PgDumpConnector
+
+The `dbbackup.db.postgresql.PgDumpConnector` uses `pg_dump` to create RAW SQL files and `psql` to restore them.
+
+It is recommended to use the binary connector for better performance.
 
 **Permission Handling**: By default, this connector uses `NO_OWNER=True` to prevent permission errors when restoring with non-superuser database accounts. This adds the `--no-owner` flag to `pg_restore`, allowing any database user to restore backups without needing ownership of system extensions or objects.
 
