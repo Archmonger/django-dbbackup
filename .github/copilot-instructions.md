@@ -33,30 +33,6 @@ Build documentation:
 
 ## Testing and Validation
 
-> Prerequisite: Functional ("live") database tests require the actual database server binaries. SQLite needs no setup. For PostgreSQL runs (`hatch run functional:postgres --all` or the PostgreSQL portion of `functional:all`), ensure a local PostgreSQL server is installed, running, and the `psql` client is on your PATH. If/when adding or executing MySQL/MariaDB live tests, you must likewise have a local MySQL/MariaDB server running and the `mysql` client on your PATH before invoking those tests.
-
-### Installing Database Server Commands (if needed)
-
-#### PostgreSQL
-
-```bash
-sudo apt update
-sudo apt install -y postgresql postgresql-contrib postgresql-client-common postgresql-client
-sudo service postgresql start
-psql --version  # verify
-```
-
-#### MySQL / MariaDB
-
-```bash
-sudo apt update
-sudo apt install -y mariadb-server
-sudo service mariadb start
-mysql --version # verify
-```
-
-### Testing Commands
-
 Run tests in multiple configurations:
 
 - `hatch test` – unit test runner for all matrix environments

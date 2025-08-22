@@ -127,8 +127,6 @@ The `dbbackup.db.postgresql.PgDumpBinaryConnector` is similar to PgDumpConnector
 
 This allows for faster and parallel-capable restores. It may still invoke `psql` for administrative tasks.
 
-**Note**: When `DROP=True` (default), the `--if-exists` option is automatically enabled during restore to prevent errors with PostgreSQL identity columns and other modern database features. This ensures compatibility with PostgreSQL 10+ identity columns.
-
 ### PostGIS
 
 Set in `dbbackup.db.postgresql.PgDumpGisConnector`, it does the same as
