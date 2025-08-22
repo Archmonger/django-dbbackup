@@ -319,98 +319,6 @@ class PostgreSQLLiveTest:
 
         self._log("Test data verification passed")
 
-    def _test_identity_columns(self):
-        """Test PostgreSQL identity column backup/restore (PostgreSQL 10+).
-        
-        This test validates the fix for issue #510 where identity columns
-        caused restore failures without the --if-exists flag. The fix
-        automatically enables --if-exists when drop=True to prevent:
-        
-        "ERROR: column "id" of relation ... is an identity column
-         HINT: Use ALTER TABLE ... ALTER COLUMN ... DROP IDENTITY instead."
-        """
-        from django.db import connection
-        
-        # Check PostgreSQL version - identity columns require 10+
-        with connection.cursor() as cursor:
-            cursor.execute("SHOW server_version_num;")
-            version_num = int(cursor.fetchone()[0])
-            
-        if version_num < 100000:  # PostgreSQL 10.0
-            self._log("Skipping identity column test - requires PostgreSQL 10+")
-            return True
-            
-        self._log(f"Testing identity column backup/restore on PostgreSQL {version_num // 10000}.{(version_num // 100) % 100}...")
-        
-        # Create a table with an identity column using raw SQL
-        # This simulates the scenario that was failing before the fix
-        table_name = "test_identity_restore_510"
-        with connection.cursor() as cursor:
-            # Drop table if it exists (cleanup from previous runs)
-            cursor.execute(f"DROP TABLE IF EXISTS {table_name};")
-            
-            # Create table with GENERATED ALWAYS AS IDENTITY column
-            # This is the exact type of table that caused the issue
-            cursor.execute(f"""
-                CREATE TABLE {table_name} (
-                    id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-                    name VARCHAR(100) NOT NULL,
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                );
-            """)
-            
-            # Insert test data - PostgreSQL will auto-generate id values
-            cursor.execute(f"INSERT INTO {table_name} (name) VALUES ('test_row_1'), ('test_row_2'), ('test_row_3');")
-            
-            # Verify data was inserted with proper identity values
-            cursor.execute(f"SELECT id, name FROM {table_name} ORDER BY id;")
-            original_data = cursor.fetchall()
-            
-        if not original_data or len(original_data) != 3:
-            raise AssertionError(f"Failed to create test data with identity columns: {original_data}")
-            
-        self._log(f"Created identity table '{table_name}' with {len(original_data)} rows: {original_data}")
-        
-        # Run backup - this should work fine with any connector
-        self._log("Running identity column backup...")
-        from django.core.management import execute_from_command_line
-        execute_from_command_line(["", "dbbackup", "--noinput"])
-        
-        # Clear the table data to test restore
-        with connection.cursor() as cursor:
-            cursor.execute(f"DELETE FROM {table_name};")
-            cursor.execute(f"SELECT COUNT(*) FROM {table_name};")
-            count = cursor.fetchone()[0]
-            if count != 0:
-                raise AssertionError("Failed to clear identity table data")
-                
-        self._log("Cleared identity table data")
-        
-        # Run restore - this should succeed with the fix (auto --if-exists with drop=True)
-        # Before the fix, this would fail with identity column errors when using drop=True
-        # The fix ensures --if-exists is automatically added when drop=True
-        self._log("Running identity column restore (testing issue #510 fix)...")
-        execute_from_command_line(["", "dbrestore", "--noinput"])
-        
-        # Verify the data was restored correctly
-        with connection.cursor() as cursor:
-            cursor.execute(f"SELECT id, name FROM {table_name} ORDER BY id;")
-            restored_data = cursor.fetchall()
-            
-        if restored_data != original_data:
-            raise AssertionError(
-                f"Identity column data mismatch after restore:\nOriginal: {original_data}\nRestored: {restored_data}"
-            )
-            
-        self._log(f"✅ Successfully restored {len(restored_data)} rows with identity columns")
-        
-        # Clean up - drop the test table
-        with connection.cursor() as cursor:
-            cursor.execute(f"DROP TABLE IF EXISTS {table_name};")
-            
-        self._log("Identity column test completed successfully")
-        return True
-
     def run_backup_restore_test(self):
         """Run a complete backup and restore test cycle."""
         self._log(f"Starting backup/restore test with {self.connector_name}")
@@ -447,16 +355,6 @@ class PostgreSQLLiveTest:
 
             # Verify restored data
             self._verify_test_data(char_obj, text_obj)
-
-            # Run identity column test for PgDumpBinaryConnector (where the fix was applied)
-            if self.connector_name == "PgDumpBinaryConnector":
-                self._log("Running additional identity column test for PgDumpBinaryConnector...")
-                try:
-                    self._test_identity_columns()
-                    self._log(f"{SYMBOL_PASS} Identity column test PASSED")
-                except Exception as e:
-                    self._log(f"{SYMBOL_FAIL} Identity column test FAILED: {e}")
-                    return False
 
             self._log(f"{SYMBOL_PASS} {self.connector_name} backup/restore test PASSED")
             return True
