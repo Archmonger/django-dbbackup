@@ -62,12 +62,12 @@ Always test backup and restore functionality after making changes using function
 2. **Individual Backend Tests:**
 
    ```bash
-   hatch run functional:sqlite --all     # SQLite connectors
-   hatch run functional:postgres --all   # PostgreSQL connectors  
-   hatch run functional:mysql --all      # MySQL connectors
+   hatch run functional:sqlite --all -v    # SQLite connectors
+   hatch run functional:postgres --all -v  # PostgreSQL connectors
+   hatch run functional:mysql --all -v     # MySQL connectors
    ```
 
-2. **Manual Database Test (if needed):**
+3. **Manual Database Test (if needed):**
 
    ```bash
    hatch shell functional
@@ -77,7 +77,7 @@ Always test backup and restore functionality after making changes using function
    python -m django dbrestore --noinput
    ```
 
-3. **Manual Media Test (if needed):**
+4. **Manual Media Test (if needed):**
 
    ```bash
    hatch shell functional
@@ -89,7 +89,7 @@ Always test backup and restore functionality after making changes using function
    ls tmp/media/  # should show restored test.txt
    ```
 
-4. **Single Backend Functional Runs (if triaging):**
+5. **Single Backend Functional Runs (if triaging):**
    ```bash
    hatch run functional:sqlite --all
    hatch run functional:postgres --all
@@ -163,7 +163,7 @@ hatch test                           # Run all tests across matrix
 hatch test --python 3.12             # Test specific Python version subset
 hatch run functional:all             # Functional tests (SQLite + PostgreSQL)
 hatch run functional:sqlite --all    # Functional tests (SQLite only)
-hatch run functional:postgres --all  # Functional tests (PostgreSQL only)  
+hatch run functional:postgres --all  # Functional tests (PostgreSQL only)
 hatch run functional:mysql --all     # Functional tests (MySQL only)
 hatch run lint:check                 # Lint (ruff + pylint)
 hatch run lint:format                # Auto-format
