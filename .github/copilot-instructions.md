@@ -37,9 +37,9 @@ Run tests in multiple configurations:
 
 - `hatch test` – unit test runner for all matrix environments
 - `hatch test --python 3.12` – isolate matrix to Python 3.12 set
-- `hatch run functional:all` – functional backup/restore (SQLite + PostgreSQL)
-- `hatch run functional:sqlite --all` – functional (SQLite only)
-- `hatch run functional:postgres --all` – functional (PostgreSQL only)
+- `hatch run functional:all -v` – functional backup/restore (SQLite + PostgreSQL)
+- `hatch run functional:sqlite --all -v` – functional (SQLite only)
+- `hatch run functional:postgres --all -v` – functional (PostgreSQL only)
 - `hatch run lint:check` – linting
 - `hatch run lint:format` – auto-format (Ruff)
 

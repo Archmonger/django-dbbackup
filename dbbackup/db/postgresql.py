@@ -166,7 +166,7 @@ class PgDumpBinaryConnector(PgDumpConnector):
             for schema in self.schemas:
                 cmd.extend(["-n", schema])
 
-        if self.if_exists:
+        if self.if_exists or self.drop:
             cmd.extend(["--if-exists"])
 
         if self.restore_suffix:

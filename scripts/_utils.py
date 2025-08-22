@@ -13,7 +13,7 @@ Usage:
 Provided symbol keys:
     PASS, FAIL, SUMMARY, TEST, PG, MYSQL
 
-The ``PG`` key is only used by the PostgreSQL live test; ``MYSQL`` is only 
+The ``PG`` key is only used by the PostgreSQL live test; ``MYSQL`` is only
 used by the MySQL live test; others are shared.
 """
 
@@ -32,12 +32,12 @@ _EMOJI_SYMBOLS = {
 }
 
 _ASCII_SYMBOLS = {
-    "PASS": "",
-    "FAIL": "",
-    "SUMMARY": "",
-    "TEST": "",
-    "PG": "",
-    "MYSQL": "",
+    "PASS": "PASS:",
+    "FAIL": "FAIL:",
+    "SUMMARY": "SUMMARY:",
+    "TEST": "TEST:",
+    "PG": ">>",
+    "MYSQL": ">>",
 }
 
 

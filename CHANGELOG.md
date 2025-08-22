@@ -47,6 +47,7 @@ Don't forget to remove deprecated code on each major release!
 - Fix SQLite `no such table` errors.
 - Fix SQLite `UNIQUE constraint` errors.
 - Fix SQLite `index`/`trigger`/`view` `<NAME> already exists` errors.
+- Fix PostgreSQL restore errors with identity columns by automatically enabling `--if-exists` when using `--clean` in `PgDumpBinaryConnector`.
 
 ### Security
 
