@@ -122,6 +122,10 @@ jobs:
                   mysql-root-password: "root"
             - name: Run functional tests
               run: hatch run functional:all -v
+            - name: Install MySQL
+              uses: kayqueGovetri/setup-mysql@v0.0.3
+              with:
+                  root-password: "mysql"
 
     build-python:
         name: Build Python
