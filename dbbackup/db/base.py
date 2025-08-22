@@ -20,7 +20,7 @@ logger.setLevel(logging.DEBUG)
 
 DEFAULT_CONNECTOR = "dbbackup.db.django.DjangoConnector"
 CONNECTOR_MAPPING = {
-    "django.db.backends.sqlite3": "dbbackup.db.sqlite.SqliteConnector",
+    "django.db.backends.sqlite3": "dbbackup.db.sqlite.SqliteBackupConnector",
     "django.db.backends.mysql": "dbbackup.db.mysql.MysqlDumpConnector",
     "django.db.backends.postgresql": "dbbackup.db.postgresql.PgDumpBinaryConnector",
     "django.db.backends.postgresql_psycopg2": "dbbackup.db.postgresql.PgDumpBinaryConnector",
@@ -28,12 +28,12 @@ CONNECTOR_MAPPING = {
     "djongo": "dbbackup.db.mongodb.MongoDumpConnector",
     "django.contrib.gis.db.backends.postgis": "dbbackup.db.postgresql.PgDumpGisConnector",
     "django.contrib.gis.db.backends.mysql": "dbbackup.db.mysql.MysqlDumpConnector",
-    "django.contrib.gis.db.backends.spatialite": "dbbackup.db.sqlite.SqliteConnector",
+    "django.contrib.gis.db.backends.spatialite": "dbbackup.db.sqlite.SqliteBackupConnector",
     "django_prometheus.db.backends.postgresql": "dbbackup.db.postgresql.PgDumpBinaryConnector",
-    "django_prometheus.db.backends.sqlite3": "dbbackup.db.sqlite.SqliteConnector",
+    "django_prometheus.db.backends.sqlite3": "dbbackup.db.sqlite.SqliteBackupConnector",
     "django_prometheus.db.backends.mysql": "dbbackup.db.mysql.MysqlDumpConnector",
     "django_prometheus.db.backends.postgis": "dbbackup.db.postgresql.PgDumpGisConnector",
-    "django_s3_sqlite": "dbbackup.db.sqlite.SqliteConnector",
+    "django_s3_sqlite": "dbbackup.db.sqlite.SqliteBackupConnector",
 }
 
 if settings.CUSTOM_CONNECTOR_MAPPING:

@@ -24,6 +24,7 @@ Don't forget to remove deprecated code on each major release!
 
 ### Changed
 
+- Changed default SQLite connector from `SqliteConnector` to `SqliteBackupConnector` for improved safety with active database connections.
 - This repository has been transferred out of Jazzband due to logistical concerns.
 - Improve error message for missing database tools (`pg_dump`, `mysqldump`, etc.) to provide guidance instead of generic "No such file or directory" errors.
 

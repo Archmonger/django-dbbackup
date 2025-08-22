@@ -13,6 +13,21 @@ class GetConnectorTest(TestCase):
         connector = get_connector()
         self.assertIsInstance(connector, BaseDBConnector)
     
+    def test_get_connector_sqlite_uses_backup_connector(self):
+        """Test that SQLite database uses SqliteBackupConnector as default."""
+        from unittest.mock import patch
+        from dbbackup.db.sqlite import SqliteBackupConnector
+        
+        # Mock the database connection to simulate SQLite
+        mock_connection = {
+            'ENGINE': 'django.db.backends.sqlite3'
+        }
+        
+        with patch('django.db.connections') as mock_connections:
+            mock_connections.__getitem__.return_value.settings_dict = mock_connection
+            connector = get_connector()
+            self.assertIsInstance(connector, SqliteBackupConnector)
+    
     def test_get_connector_oracle_fallback(self):
         """Test that Oracle database uses Django connector as fallback."""
         from unittest.mock import patch
