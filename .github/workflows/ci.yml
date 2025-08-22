@@ -116,7 +116,7 @@ jobs:
                   PGSERVICE: postgres
             - name: Setup MySQL
               if: matrix.os == 'ubuntu-latest'
-              uses: kayqueGovetri/setup-mysql@@v0.0.3
+              uses: kayqueGovetri/setup-mysql@v0.0.3
               with:
                   root-password: "mysql"
             - name: Run functional tests
