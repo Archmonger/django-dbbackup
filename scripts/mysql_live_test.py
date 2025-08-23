@@ -6,7 +6,7 @@ Usage:
     python scripts/mysql_live_test.py --all
 
 It provides end-to-end validation of MySQL backup/restore functionality using the
-available connectors and mirrors the visual layout & summary style of the SQLite and 
+available connectors and mirrors the visual layout & summary style of the SQLite and
 PostgreSQL live tests for consistency.
 
 Exit code 0 on success (all tested connectors passed), 1 on failure.
@@ -46,28 +46,28 @@ GITHUB_ACTIONS: bool = os.getenv("GITHUB_ACTIONS", "false").lower() in ("true", 
 
 class MySQLTestRunner:
     """Manages a test database on the existing MySQL instance."""
-    
+
     def __init__(self, verbose=False):
         self.verbose = verbose
         self.temp_dir = None
         self.test_db_name = f"dbbackup_test_{int(time.time())}"
         self.user = "dbbackup_test_user"
-        self.password = "test_password_123"
+        self.password = "mysql"
         self.host = "localhost"
         self.port = 3306
         self.superuser = "root"
         self.db_created = False
         self.user_created = False
-    
+
     def _log(self, message):
         """Log a message if verbose mode is enabled."""
         if self.verbose:
             print(f"[MySQL Test] {message}")
-    
+
     def _run_command(self, cmd, check=True, capture_output=False, **kwargs):
         """Run a command and optionally check for errors."""
         self._log(f"Running: {' '.join(cmd)}")
-        
+
         result = subprocess.run(cmd, capture_output=capture_output, text=True, **kwargs)
         if check and result.returncode != 0:
             error_msg = f"Command failed with exit code {result.returncode}: {' '.join(cmd)}"
@@ -78,10 +78,10 @@ class MySQLTestRunner:
                     error_msg += f"\nSTDERR: {result.stderr}"
             raise RuntimeError(error_msg)
         return result
-    
+
     def setup_mysql(self):
         """Set up a test database on the existing MySQL instance."""
-        
+
         if not shutil.which("mysql") or not shutil.which("mysqldump"):
             install_instructions = ""
             if os.name == "posix":
@@ -105,14 +105,14 @@ class MySQLTestRunner:
         except Exception as e:
             self.cleanup()
             raise RuntimeError(f"Failed to set up MySQL: {e}") from e
-    
+
     def _create_test_database(self):
         """Create the test database."""
         self._log(f"Creating test database: {self.test_db_name}")
-        
+
         # Try different MySQL authentication methods
         mysql_commands = []
-        
+
         if GITHUB_ACTIONS:
             self._log("GitHub Actions detected, using setup-mysql action configuration")
             # GitHub Actions with setup-mysql action uses root user with password 'root'
@@ -131,34 +131,35 @@ class MySQLTestRunner:
             ]
             self.user = self.superuser  # Use root for simplicity
             self.password = ""
-        
+
         # Try to connect and create database
         create_db_sql = f"CREATE DATABASE IF NOT EXISTS {self.test_db_name};"
-        
+
         for mysql_cmd in mysql_commands:
             try:
                 cmd = mysql_cmd + ["-e", create_db_sql]
                 self._log(f"Trying MySQL connection with: {' '.join(mysql_cmd[:3])}")  # Don't log password
                 self._run_command(cmd, capture_output=True)
                 self._log("Successfully connected to MySQL and created database")
-                
+
                 # Test the connection works
                 test_cmd = mysql_cmd + ["-e", "SELECT 1;"]
                 self._run_command(test_cmd, capture_output=True)
-                
+
                 # Store the working command for later use
                 self.mysql_base_cmd = mysql_cmd
                 self.db_created = True
                 return
-                
+
             except RuntimeError as e:
                 self._log(f"MySQL connection failed with {' '.join(mysql_cmd[:3])}: {e}")
                 continue
-        
+
         # If all methods fail, raise an error
-        raise RuntimeError("Could not connect to MySQL with any authentication method. "
-                         "Please ensure MySQL is running and accessible.")
-    
+        raise RuntimeError(
+            "Could not connect to MySQL with any authentication method. Please ensure MySQL is running and accessible."
+        )
+
     def get_database_config(self):
         """Get Django database configuration for the test MySQL instance."""
         return {
@@ -172,53 +173,53 @@ class MySQLTestRunner:
                 "init_command": "SET sql_mode='STRICT_TRANS_TABLES'",
             },
         }
-    
+
     def cleanup(self):
         """Clean up the test database."""
         self._log("Cleaning up test database...")
 
-        if self.db_created and hasattr(self, 'mysql_base_cmd'):
+        if self.db_created and hasattr(self, "mysql_base_cmd"):
             try:
                 self._log(f"Dropping test database: {self.test_db_name}")
                 cmd = self.mysql_base_cmd + ["-e", f"DROP DATABASE IF EXISTS {self.test_db_name};"]
                 self._run_command(cmd, check=False)
             except Exception as e:
                 self._log(f"Warning: Failed to drop test database: {e}")
-        
-        if self.user_created and hasattr(self, 'mysql_base_cmd') and not GITHUB_ACTIONS:
+
+        if self.user_created and hasattr(self, "mysql_base_cmd") and not GITHUB_ACTIONS:
             try:
                 self._log(f"Dropping test user: {self.user}")
                 cmd = self.mysql_base_cmd + ["-e", f"DROP USER IF EXISTS '{self.user}'@'localhost';"]
                 self._run_command(cmd, check=False)
             except Exception as e:
                 self._log(f"Warning: Failed to drop test user: {e}")
-        
+
         if self.temp_dir and os.path.exists(self.temp_dir):
             shutil.rmtree(self.temp_dir)
 
 
 class MySQLLiveTest:
     """Runs live tests against MySQL connectors."""
-    
+
     def __init__(self, connector_name="MysqlDumpConnector", verbose=False):
         self.connector_name = connector_name
         self.verbose = verbose
         self.mysql_runner = MySQLTestRunner(verbose=verbose)
-    
+
     def _log(self, message):
         """Log a message if verbose mode is enabled."""
         if self.verbose:
             print(f"[Live Test] {message}")
-    
+
     def _configure_django(self):
         """Configure Django with the test MySQL database."""
         # Configure Django settings
         os.environ.setdefault("DJANGO_SETTINGS_MODULE", "tests.settings")
-        
+
         # Override database settings
         db_config = self.mysql_runner.get_database_config()
         os.environ.update({
-            "DB_ENGINE": db_config["ENGINE"], 
+            "DB_ENGINE": db_config["ENGINE"],
             "DB_NAME": db_config["NAME"],
             "DB_USER": db_config["USER"],
             "DB_HOST": db_config["HOST"],
@@ -228,10 +229,10 @@ class MySQLLiveTest:
             os.environ["DB_PASSWORD"] = db_config["PASSWORD"]
         # Set port as string
         os.environ["DB_PORT"] = str(db_config["PORT"])
-        
+
         # Set connector
         os.environ["CONNECTOR"] = f"dbbackup.db.mysql.{self.connector_name}"
-        
+
         # Configure storage for backups - use unique directory per test
         backup_dir = os.path.join(str(self.mysql_runner.temp_dir), "backups")
         os.makedirs(backup_dir, exist_ok=True)
@@ -241,130 +242,130 @@ class MySQLLiveTest:
             "STORAGE_OPTIONS": f"location={backup_dir}",
             "MEDIA_ROOT": os.path.join(str(self.mysql_runner.temp_dir), "media"),
         })
-        
+
         # Setup Django only if not already configured
         if not django.apps.apps.ready:
             django.setup()
-    
+
     def _create_test_data(self):
         """Create test data in the database."""
         self._log("Creating test data...")
-        
+
         # Run migrations
         execute_from_command_line(["", "migrate", "--noinput"])
-        
+
         # Create test models
         from tests.testapp.models import CharModel, TextModel
-        
+
         # Create some test data (CharModel has max_length=10)
         char_obj = CharModel.objects.create(field="test_char")  # 9 chars, fits in 10
         text_obj = TextModel.objects.create(field="test text content for backup")
-        
+
         self._log(f"Created CharModel: {char_obj}")
         self._log(f"Created TextModel: {text_obj}")
-        
+
         return char_obj, text_obj
-    
+
     def _verify_test_data(self, expected_char_obj, expected_text_obj):
         """Verify that test data exists and matches expectations."""
         from tests.testapp.models import CharModel, TextModel
-        
+
         char_objs = CharModel.objects.all()
         text_objs = TextModel.objects.all()
-        
+
         self._log(f"Found {char_objs.count()} CharModel objects")
         self._log(f"Found {text_objs.count()} TextModel objects")
-        
+
         if char_objs.count() != 1 or text_objs.count() != 1:
             raise AssertionError(
                 f"Expected 1 of each model, found {char_objs.count()} CharModel and {text_objs.count()} TextModel"
             )
-        
+
         char_obj = char_objs.first()
         text_obj = text_objs.first()
-        
+
         if char_obj.field != expected_char_obj.field:
             raise AssertionError(
                 f"CharModel field mismatch: expected '{expected_char_obj.field}', got '{char_obj.field}'"
             )
-        
+
         if text_obj.field != expected_text_obj.field:
             raise AssertionError(
                 f"TextModel field mismatch: expected '{expected_text_obj.field}', got '{text_obj.field}'"
             )
-        
+
         self._log("Test data verification passed")
 
     def run_backup_restore_test(self):
         """Run a complete backup and restore test cycle."""
         self._log(f"Starting backup/restore test with {self.connector_name}")
-        
+
         try:
             # Setup MySQL
             self.mysql_runner.setup_mysql()
-            
+
             # Configure Django
             self._configure_django()
-            
+
             # Create test data
             char_obj, text_obj = self._create_test_data()
-            
+
             # Run backup
             self._log("Running database backup...")
             execute_from_command_line(["", "dbbackup", "--noinput"])
-            
+
             # Create media files and backup
             media_dir = os.environ["MEDIA_ROOT"]
             os.makedirs(media_dir, exist_ok=True)
-            
+
             # Create test media files
             test_file = os.path.join(media_dir, "test.txt")
             with open(test_file, "w") as f:
                 f.write("test content")
-            
+
             self._log("Running media backup...")
             execute_from_command_line(["", "mediabackup", "--noinput"])
-            
+
             # Clear test data
             self._log("Clearing test data...")
             from tests.testapp.models import CharModel, TextModel
-            
+
             CharModel.objects.all().delete()
             TextModel.objects.all().delete()
-            
+
             # Remove media files
             if os.path.exists(test_file):
                 os.remove(test_file)
-            
+
             # Verify data is cleared
             if CharModel.objects.exists() or TextModel.objects.exists():
                 raise AssertionError("Test data was not properly cleared")
             if os.path.exists(test_file):
                 raise AssertionError("Media files were not properly cleared")
             self._log("Test data cleared successfully")
-            
+
             # Run restore
             self._log("Running database restore...")
             execute_from_command_line(["", "dbrestore", "--noinput"])
-            
+
             self._log("Running media restore...")
             execute_from_command_line(["", "mediarestore", "--noinput"])
-            
+
             # Verify restored data
             self._verify_test_data(char_obj, text_obj)
-            
+
             # Verify restored media
             if not os.path.exists(test_file):
                 raise AssertionError(f"Media file not restored: {test_file}")
-            
+
             with open(test_file, "r") as f:
                 content = f.read()
                 if content != "test content":
                     raise AssertionError(f"Media file content mismatch: expected 'test content', got '{content}'")
-            
+
             self._log(f"{SYMBOL_PASS} {self.connector_name} backup/restore test PASSED")
             return True
-            
+
         except RuntimeError as e:
             if "Could not connect to MySQL" in str(e) or "MySQL client tools" in str(e):
                 self._log(f"MySQL not available, skipping test: {e}")
@@ -375,7 +376,7 @@ class MySQLLiveTest:
         except Exception as e:
             self._log(f"{SYMBOL_FAIL} {self.connector_name} backup/restore test FAILED: {e}")
             return False
-        
+
         finally:
             self.mysql_runner.cleanup()
 
@@ -436,11 +437,11 @@ def _run_all(connectors, verbose: bool) -> int:
     overall_success = True
     results = {}
     skipped_count = 0
-    
+
     for connector in connectors:
         print(f"\n{SYMBOL_TEST} Testing {connector}...")
         result = run_single_connector_test(connector, verbose=verbose)
-        
+
         if result == "skipped":
             passed = "skipped"
             status = f"⏭️  SKIPPED"
@@ -452,7 +453,7 @@ def _run_all(connectors, verbose: bool) -> int:
             passed = False
             status = f"{SYMBOL_FAIL} FAILED"
             overall_success = False
-        
+
         results[connector] = passed
         print(f"  {connector}: {status}")
 
@@ -466,18 +467,18 @@ def _run_all(connectors, verbose: bool) -> int:
         else:
             status = SYMBOL_FAIL
         print(f"  {status} {connector}")
-    
+
     if skipped_count == len(connectors):
         print("  ℹ️  All tests skipped (MySQL not available)")
         return 0  # Don't fail if MySQL is not available
-    
+
     return 0 if overall_success else 1
 
 
 def main():
     """Main entry point for the script."""
     import argparse
-    
+
     parser = argparse.ArgumentParser(description="Run live MySQL tests for django-dbbackup")
     parser.add_argument(
         "--connector",
@@ -489,7 +490,7 @@ def main():
     parser.add_argument("--all", action="store_true", help="Test all MySQL connectors")
 
     args = parser.parse_args()
-    
+
     connectors_to_test = MYSQL_CONNECTORS if args.all else [args.connector]
 
     print(f"{SYMBOL_MYSQL} Starting MySQL Live Tests for django-dbbackup (Isolated)")
@@ -499,7 +500,7 @@ def main():
 
     # Run single connector test
     result = run_single_connector_test(args.connector, verbose=args.verbose)
-    
+
     if result == "skipped":
         return 2  # Special exit code for skipped
     elif result:
