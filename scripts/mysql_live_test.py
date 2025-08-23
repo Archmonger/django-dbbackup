@@ -51,11 +51,23 @@ class MySQLTestRunner:
         self.verbose = verbose
         self.temp_dir = None
         self.test_db_name = f"dbbackup_test_{int(time.time())}"
-        self.user = "dbbackup_test_user"
-        self.password = "mysql"
-        self.host = "localhost"
-        self.port = 3306
-        self.superuser = "root"
+        # Allow environment overrides so CI or developers can point at
+        # an existing server without editing the script. These defaults
+        # mirror the prior hard‑coded values but now support more setups
+        # (e.g. root account with socket auth, custom host, empty password).
+        self.user = os.getenv("MYSQL_TEST_USER", "dbbackup_test_user")
+        # Password used for the dedicated test user we create
+        self.password = os.getenv("MYSQL_TEST_PASSWORD", "mysql")
+        # Force TCP by default (127.0.0.1) to avoid relying on a Unix domain
+        # socket path that varies across distros (/var/run vs /run) and to
+        # work with Docker/remote services. A user can still supply the
+        # classic 'localhost' or a remote hostname via env var.
+        self.host = os.getenv("MYSQL_HOST", "127.0.0.1")
+        self.port = int(os.getenv("MYSQL_PORT", "3306"))
+        # Superuser used to bootstrap the test DB & user. Allow empty password
+        # (common with auth_socket); we'll attempt multiple auth modes.
+        self.superuser = os.getenv("MYSQL_SUPERUSER", "root")
+        self.superpassword = os.getenv("MYSQL_SUPERPASSWORD", os.getenv("MYSQL_ROOT_PASSWORD", "mysql"))
         self.db_created = False
         self.user_created = False
 
@@ -110,45 +122,49 @@ class MySQLTestRunner:
         """Create the test database."""
         self._log(f"Creating test database: {self.test_db_name}")
 
-        mysql_admin_cmd = ["mysql", "-u", "root", f"--password={self.password}"]
+        # Build two candidate admin commands: with password (if provided) & without.
+        base_common = ["-h", self.host, "-P", str(self.port), "--protocol=TCP"]
+        candidate_cmds = []
+        if self.superpassword:
+            candidate_cmds.append(["mysql", "-u", self.superuser, f"--password={self.superpassword}"] + base_common)
+        candidate_cmds.append(["mysql", "-u", self.superuser] + base_common)
 
-        try:
-            # Test the connection works
-            test_cmd = mysql_admin_cmd + ["-e", "SELECT 1;"]
-            self._run_command(test_cmd, capture_output=True)
+        last_err = None
+        for cmd_parts in candidate_cmds:
+            try:
+                self._log(
+                    "Trying MySQL connection with: "
+                    + " ".join([c for c in cmd_parts if not c.startswith("--password=")])
+                )
+                # Smoke test
+                self._run_command(cmd_parts + ["-e", "SELECT 1;"], capture_output=True)
+                # Create database
+                self._run_command(
+                    cmd_parts + ["-e", f"CREATE DATABASE IF NOT EXISTS {self.test_db_name};"], capture_output=True
+                )
+                # Create user (both '%' and 'localhost' host patterns)
+                pw_clause = f" IDENTIFIED BY '{self.password}'" if self.password else ""
+                create_user_sql = (
+                    f"CREATE USER IF NOT EXISTS '{self.user}'@'%' {pw_clause};"
+                    f"CREATE USER IF NOT EXISTS '{self.user}'@'localhost' {pw_clause};"
+                    f"GRANT ALL PRIVILEGES ON {self.test_db_name}.* TO '{self.user}'@'%';"
+                    f"GRANT ALL PRIVILEGES ON {self.test_db_name}.* TO '{self.user}'@'localhost';"
+                    "FLUSH PRIVILEGES;"
+                )
+                self._run_command(cmd_parts + ["-e", create_user_sql], capture_output=True, check=False)
+                self.user_created = True
+                self.mysql_base_cmd = cmd_parts  # keep for cleanup
+                self.db_created = True
+                self._log("Successfully connected to MySQL and created database & user over TCP")
+                return
+            except RuntimeError as exc:
+                last_err = exc
+                self._log(f"Attempt failed: {exc}")
 
-            # Create the test database
-            cmd = mysql_admin_cmd + ["-e", f"CREATE DATABASE IF NOT EXISTS {self.test_db_name};"]
-            self._log(f"Trying MySQL connection with: {' '.join(mysql_admin_cmd[:3])}")  # Don't log password
-            self._run_command(cmd, capture_output=True)
-            self._log("Successfully connected to MySQL and created database")
-
-            # Create a dedicated user for the test database
-            self._run_command(
-                mysql_admin_cmd
-                + [
-                    "-e",
-                    (
-                        f"CREATE USER IF NOT EXISTS '{self.user}'@'localhost' IDENTIFIED BY '{self.password}';"
-                        f"GRANT ALL PRIVILEGES ON {self.test_db_name}.* TO '{self.user}'@'localhost';"
-                        "FLUSH PRIVILEGES;"
-                    ),
-                ],
-                capture_output=True,
-            )
-
-            # Store the working command for later use
-            self.mysql_base_cmd = ["mysql", "-u", self.user, f"--password={self.password}"]
-            self.db_created = True
-            return
-
-        except RuntimeError as e:
-            self._log(f"MySQL connection failed with {' '.join(mysql_admin_cmd[:3])}: {e}")
-
-        # If all methods fail, raise an error
         raise RuntimeError(
-            "Could not connect to MySQL with any authentication method. Please ensure MySQL is running and accessible."
-        )
+            "Could not connect to MySQL with any authentication method. Ensure the server is running "
+            "and environment vars MYSQL_HOST / MYSQL_PORT / MYSQL_SUPERUSER / MYSQL_SUPERPASSWORD are correct."
+        ) from last_err
 
     def get_database_config(self):
         """Get Django database configuration for the test MySQL instance."""
@@ -157,6 +173,7 @@ class MySQLTestRunner:
             "NAME": self.test_db_name,
             "USER": self.user,
             "PASSWORD": self.password,
+            # Use provided host explicitly (avoid default socket resolution)
             "HOST": self.host,
             "PORT": self.port,
             "OPTIONS": {
@@ -179,7 +196,13 @@ class MySQLTestRunner:
         if self.user_created and hasattr(self, "mysql_base_cmd") and not GITHUB_ACTIONS:
             try:
                 self._log(f"Dropping test user: {self.user}")
-                cmd = self.mysql_base_cmd + ["-e", f"DROP USER IF EXISTS '{self.user}'@'localhost';"]
+                # Drop both '%' and 'localhost' host specs just in case
+                drop_stmt = (
+                    f"DROP USER IF EXISTS '{self.user}'@'%';"
+                    f"DROP USER IF EXISTS '{self.user}'@'localhost';"
+                    "FLUSH PRIVILEGES;"
+                )
+                cmd = self.mysql_base_cmd + ["-e", drop_stmt]
                 self._run_command(cmd, check=False)
             except Exception as e:
                 self._log(f"Warning: Failed to drop test user: {e}")
