@@ -384,7 +384,7 @@ class MySQLLiveTest:
         except RuntimeError as e:
             if "Could not connect to MySQL" in str(e) or "MySQL client tools" in str(e):
                 self._log(f"MySQL not available, skipping test: {e}")
-                return "skipped"
+                return False if GITHUB_ACTIONS else "skipped"
             else:
                 self._log(f"{SYMBOL_FAIL} {self.connector_name} backup/restore test FAILED: {e}")
                 return False
