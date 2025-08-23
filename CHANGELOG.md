@@ -20,7 +20,6 @@ Don't forget to remove deprecated code on each major release!
 - Verified full Windows compatibility via new CI workflows.
 - Add Django Signals support for backup and restore operations. New signals include `pre_backup`, `post_backup`, `pre_restore`, `post_restore`, `pre_media_backup`, `post_media_backup`, `pre_media_restore`, and `post_media_restore`.
 - New `DjangoConnector` that provides database-agnostic backup and restore functionality using Django's built-in `dumpdata` and `loaddata` management commands.
-- Added `ENABLE_ROW_SECURITY` setting for PostgreSQL connectors to support databases with row-level security policies.
 
 ### Changed
 
@@ -49,7 +48,6 @@ Don't forget to remove deprecated code on each major release!
 - Fix SQLite `no such table` errors.
 - Fix SQLite `UNIQUE constraint` errors.
 - Fix SQLite `index`/`trigger`/`view` `<NAME> already exists` errors.
-- Fixed `pg_dump` error when backing up PostgreSQL databases with row-level security policies enabled.
 - Fix PostgreSQL restore errors with identity columns by automatically enabling `--if-exists` when using `--clean` in `PgDumpBinaryConnector`.
 
 ### Security
