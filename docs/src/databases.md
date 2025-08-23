@@ -114,7 +114,7 @@ All PostgreSQL connectors have the following settings:
 | ------------------ | --------------------------------------------------------------------------------------------------------------------------------------- | ------- |
 | SINGLE_TRANSACTION | Wrap restore in a single transaction so errors cause full rollback (`--single-transaction` for `psql` / `pg_restore`).                  | `True`  |
 | DROP               | Include / execute drop statements when restoring (`--clean` with `pg_dump` / `pg_restore`). In binary mode drops happen during restore. | `True`  |
-| IF_EXISTS          | Add `IF EXISTS` to destructive statements in clean mode. Automatically enabled when `DROP=True` to prevent identity column errors.      | `False` |
+| IF_EXISTS          | Add `IF EXISTS` to destructive statements in clean mode. Enabled by default, and when `DROP=True` to prevent identity column errors.    | `True`  |
 
 #### PgDumpBinaryConnector
 

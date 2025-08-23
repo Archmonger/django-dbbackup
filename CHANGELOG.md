@@ -26,6 +26,7 @@ Don't forget to remove deprecated code on each major release!
 - This repository has been transferred out of Jazzband due to logistical concerns.
 - Improve error message for missing database tools (`pg_dump`, `mysqldump`, etc.) to provide guidance instead of generic "No such file or directory" errors.
 - Changed default SQLite connector from `SqliteConnector` to `SqliteBackupConnector` to adhere to best practices.
+- Set default `IF_EXISTS` to `True` for PostgreSQL connectors (`PgDumpConnector` and `PgDumpBinaryConnector`) to reduce restore errors when objects are absent.
 
 ### Removed
 
