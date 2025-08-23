@@ -107,6 +107,12 @@ jobs:
                   cache: pip
             - name: Install dependencies
               run: python -m pip install --upgrade pip hatch uv
+            - name: Setup MySQL
+              if: matrix.os == 'ubuntu-latest'
+              uses: kayqueGovetri/setup-mysql@v0.0.4
+              with:
+                  mysql_root_password: "mysql"
+                  mysql_port: 3306
             - name: Setup postgres
               uses: ikalnytskyi/action-setup-postgres@v7
             - run: psql postgresql://postgres:postgres@localhost:5432/postgres -c "SELECT 1"
@@ -114,12 +120,6 @@ jobs:
             - run: psql -c "SELECT 1"
               env:
                   PGSERVICE: postgres
-            - name: Setup MySQL
-              if: matrix.os == 'ubuntu-latest'
-              uses: kayqueGovetri/setup-mysql@v0.0.4
-              with:
-                  mysql_root_password: "mysql"
-                  mysql_port: 3306
             - name: Run functional tests
               run: hatch run functional:all -v
 
