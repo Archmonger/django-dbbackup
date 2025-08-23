@@ -110,50 +110,40 @@ class MySQLTestRunner:
         """Create the test database."""
         self._log(f"Creating test database: {self.test_db_name}")
 
-        # Try different MySQL authentication methods
-        mysql_commands = []
+        mysql_admin_cmd = ["mysql", "-u", "root", f"--password={self.password}"]
 
-        if GITHUB_ACTIONS:
-            self._log("GitHub Actions detected, using setup-mysql action configuration")
-            # GitHub Actions with setup-mysql action uses root user with password 'root'
-            mysql_commands = [
-                ["mysql", "-u", "root", "-proot", "-h", "localhost"],
-                ["mysql", "-u", "root", "-proot"],
-            ]
-            self.user = self.superuser
-            self.password = "root"  # setup-mysql action default
-        else:
-            # For local development, try various authentication methods
-            mysql_commands = [
-                ["sudo", "mysql"],  # auth_socket (common on Ubuntu)
-                ["mysql", "-u", "root"],  # no password
-                ["mysql", "-u", "root", "-p"],  # password prompt (will fail in automation)
-            ]
-            self.user = self.superuser  # Use root for simplicity
-            self.password = ""
+        try:
+            # Test the connection works
+            test_cmd = mysql_admin_cmd + ["-e", "SELECT 1;"]
+            self._run_command(test_cmd, capture_output=True)
 
-        # Try to connect and create database
-        create_db_sql = f"CREATE DATABASE IF NOT EXISTS {self.test_db_name};"
+            # Create the test database
+            cmd = mysql_admin_cmd + ["-e", f"CREATE DATABASE IF NOT EXISTS {self.test_db_name};"]
+            self._log(f"Trying MySQL connection with: {' '.join(mysql_admin_cmd[:3])}")  # Don't log password
+            self._run_command(cmd, capture_output=True)
+            self._log("Successfully connected to MySQL and created database")
 
-        for mysql_cmd in mysql_commands:
-            try:
-                cmd = mysql_cmd + ["-e", create_db_sql]
-                self._log(f"Trying MySQL connection with: {' '.join(mysql_cmd[:3])}")  # Don't log password
-                self._run_command(cmd, capture_output=True)
-                self._log("Successfully connected to MySQL and created database")
+            # Create a dedicated user for the test database
+            self._run_command(
+                mysql_admin_cmd
+                + [
+                    "-e",
+                    (
+                        f"CREATE USER IF NOT EXISTS '{self.user}'@'localhost' IDENTIFIED BY '{self.password}';"
+                        f"GRANT ALL PRIVILEGES ON {self.test_db_name}.* TO '{self.user}'@'localhost';"
+                        "FLUSH PRIVILEGES;"
+                    ),
+                ],
+                capture_output=True,
+            )
 
-                # Test the connection works
-                test_cmd = mysql_cmd + ["-e", "SELECT 1;"]
-                self._run_command(test_cmd, capture_output=True)
+            # Store the working command for later use
+            self.mysql_base_cmd = ["mysql", "-u", self.user, f"--password={self.password}"]
+            self.db_created = True
+            return
 
-                # Store the working command for later use
-                self.mysql_base_cmd = mysql_cmd
-                self.db_created = True
-                return
-
-            except RuntimeError as e:
-                self._log(f"MySQL connection failed with {' '.join(mysql_cmd[:3])}: {e}")
-                continue
+        except RuntimeError as e:
+            self._log(f"MySQL connection failed with {' '.join(mysql_admin_cmd[:3])}: {e}")
 
         # If all methods fail, raise an error
         raise RuntimeError(
