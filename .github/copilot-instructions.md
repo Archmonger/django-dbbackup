@@ -90,7 +90,6 @@ Always test backup and restore functionality after making changes using function
 ## Troubleshooting Known Issues
 
 - **Network Timeouts**: Package installations may timeout due to network connectivity. Retry commands if needed.
-- **SQLite Restore Warnings**: Warnings about "UNIQUE constraint failed" during restore operations are normal for test scenarios
 - **Memory Database Issues**: If you see "no such table" errors, ensure you run migrations first in the appropriate environment
 - **Linting Temporarily Disabled**: CI linting checks are temporarily set to pass (marked with `|| true`) pending resolution in future PR
 - **Environment Isolation**: Each hatch environment is isolated - dependencies are automatically managed per environment
@@ -102,7 +101,7 @@ Modern development process using Hatch:
 1. **Bootstrap environment**: `pip install --upgrade pip hatch uv`
 2. **Make your changes** to the codebase
 3. **Run unit tests**: `hatch test` (≈30s) **All must pass - failures are never expected or allowed.**
-4. **Run functional tests**: `hatch run functional:all` (≈10–15s)
+4. **Run functional tests**: `hatch run functional:all -v` (≈10–15s)
 5. **Run linting**: `hatch run lint:check` (5 seconds)
 6. **Auto-format code**: `hatch run lint:format` (2 seconds)
 7. **Test documentation**: `hatch run docs:build` (2 seconds)

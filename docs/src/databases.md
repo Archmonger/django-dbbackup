@@ -34,11 +34,11 @@ below.
 
 All connectors have the following parameters:
 
-| Setting   | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                  | Default                     |
-| --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------- |
+| Setting   | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                        | Default                     |
+| --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------- |
 | CONNECTOR | Absolute path to connector class. Defaults by engine: `dbbackup.db.sqlite.SqliteBackupConnector` (sqlite3), `dbbackup.db.mysql.MysqlDumpConnector` (mysql), `dbbackup.db.postgresql.PgDumpConnector` (postgresql), `dbbackup.db.postgresql.PgDumpGisConnector` (postgis), `dbbackup.db.mongodb.MongoDumpConnector` (django_mongodb_engine), `dbbackup.db.django.DjangoConnector` (fallback / any unmapped). Prometheus wrappers are also supported mapping to the same connectors. | Auto-detected from `ENGINE` |
-| EXCLUDE   | List of table names to exclude from dump (may be unsupported for raw file copy snapshot approaches). Example below.                                                                                                                                                                                                                                                                                                                                                          | None                        |
-| EXTENSION | File extension used for the generated dump archive.                                                                                                                                                                                                                                                                                                                                                                                                                          | `dump`                      |
+| EXCLUDE   | List of table names to exclude from dump (may be unsupported for raw file copy snapshot approaches). Example below.                                                                                                                                                                                                                                                                                                                                                                | None                        |
+| EXTENSION | File extension used for the generated dump archive.                                                                                                                                                                                                                                                                                                                                                                                                                                | `dump`                      |
 
 All supported built-in connectors are described in more detail below. Following database wrappers from `django-prometheus` are supported: `django_prometheus.db.backends.postgresql` (-> `PgDumpBinaryConnector`), `django_prometheus.db.backends.sqlite3` (-> `SqliteBackupConnector`), `django_prometheus.db.backends.mysql` (-> `MysqlDumpConnector`), `django_prometheus.db.backends.postgis` (-> `PgDumpGisConnector`).
 
@@ -116,17 +116,17 @@ All PostgreSQL connectors have the following settings:
 | DROP               | Include / execute drop statements when restoring (`--clean` with `pg_dump` / `pg_restore`). In binary mode drops happen during restore. | `True`  |
 | IF_EXISTS          | Add `IF EXISTS` to destructive statements in clean mode. Automatically enabled when `DROP=True` to prevent identity column errors.      | `False` |
 
-#### PgDumpConnector
-
-The `dbbackup.db.postgresql.PgDumpConnector` uses `pg_dump` to create RAW SQL files and `psql` to restore them.
-
-This is the default connector for PostgreSQL databases, however, it is recommended to use the binary connector for better performance.
-
 #### PgDumpBinaryConnector
 
 The `dbbackup.db.postgresql.PgDumpBinaryConnector` is similar to PgDumpConnector, but it uses `pg_dump` in binary mode and restores using `pg_restore`.
 
-This allows for faster and parallel-capable restores. It may still invoke `psql` for administrative tasks.
+This is the default connector for PostgreSQL databases, and it allows for faster and parallel-capable restores. This connector may invoke `psql` for administrative tasks.
+
+#### PgDumpConnector
+
+The `dbbackup.db.postgresql.PgDumpConnector` uses `pg_dump` to create RAW SQL files and `psql` to restore them.
+
+It is recommended to use the binary connector for better performance.
 
 ### PostGIS
 

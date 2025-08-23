@@ -23,8 +23,8 @@ def create_postgres_dbname_and_env(self):
 
 class PgDumpConnector(BaseCommandDBConnector):
     """
-    PostgreSQL connector, it uses pg_dump`` to create an SQL text file
-    and ``psql`` for restore it.
+    PostgreSQL connector, it uses `pg_dump` to create an SQL text file
+    and `psql` for restore it.
     """
 
     extension = "psql"
