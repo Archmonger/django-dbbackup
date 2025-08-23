@@ -119,6 +119,7 @@ jobs:
               uses: kayqueGovetri/setup-mysql@v0.0.4
               with:
                   mysql_root_password: "mysql"
+                  mysql_port: 3306
             - name: Run functional tests
               run: hatch run functional:all -v
 
