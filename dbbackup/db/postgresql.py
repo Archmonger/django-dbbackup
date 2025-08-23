@@ -2,22 +2,32 @@ import logging
 from typing import List, Optional
 from urllib.parse import quote
 
+from dbbackup import utils
 from .base import BaseCommandDBConnector
 
 logger = logging.getLogger("dbbackup.command")
 
 
-def create_postgres_dbname_and_env(self):
-    host = self.settings.get("HOST", "localhost")
-    dbname = self.settings.get("NAME", "")
-    user = quote(self.settings.get("USER") or "")
+def create_postgres_dbname_and_env(connector):
+    """
+    Create PostgreSQL connection string and environment variables.
+    
+    Args:
+        connector: Database connector instance with settings
+        
+    Returns:
+        tuple: (dbname_url, environment_dict)
+    """
+    host = connector.settings.get("HOST", "localhost")
+    dbname = connector.settings.get("NAME", "")
+    user = quote(connector.settings.get("USER") or "")
     if user:
         host = "@" + host
-    port = ":{}".format(self.settings.get("PORT")) if self.settings.get("PORT") else ""
+    port = ":{}".format(connector.settings.get("PORT")) if connector.settings.get("PORT") else ""
     dbname = f"--dbname=postgresql://{user}{host}{port}/{dbname}"
     env = {}
-    if self.settings.get("PASSWORD"):
-        env["PGPASSWORD"] = self.settings.get("PASSWORD")
+    if connector.settings.get("PASSWORD"):
+        env["PGPASSWORD"] = connector.settings.get("PASSWORD")
     return dbname, env
 
 
@@ -88,14 +98,14 @@ class PgDumpGisConnector(PgDumpConnector):
 
     def _enable_postgis(self):
         cmd = f'{self.psql_cmd} -c "CREATE EXTENSION IF NOT EXISTS postgis;"'
-        cmd += " --username={}".format(self.settings["ADMIN_USER"])
+        cmd += " --username={}".format(utils.get_escaped_command_arg(self.settings["ADMIN_USER"]))
         cmd += " --no-password"
 
         if self.settings.get("HOST"):
-            cmd += " --host={}".format(self.settings["HOST"])
+            cmd += " --host={}".format(utils.get_escaped_command_arg(self.settings["HOST"]))
 
         if self.settings.get("PORT"):
-            cmd += " --port={}".format(self.settings["PORT"])
+            cmd += " --port={}".format(utils.get_escaped_command_arg(str(self.settings["PORT"])))
 
         return self.run_command(cmd)
 
