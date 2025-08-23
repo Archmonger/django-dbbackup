@@ -115,7 +115,7 @@ environment variables adjust its behavior:
 
 Database engine to use. See `django.db.backends` for default backends.
 
-**`DB_NAME`** - Default: `:memory:`
+**`DB_NAME`** - Default: `/tmp/test_db.sqlite3`
 
 Database name. Adjust for non-SQLite backends.
 
