@@ -32,6 +32,7 @@ class PgDumpConnector(BaseCommandDBConnector):
     restore_cmd = "psql"
     single_transaction = True
     drop = True
+    if_exists = True
     schemas: Optional[List[str]] = []
 
     def _create_dump(self):
@@ -44,6 +45,9 @@ class PgDumpConnector(BaseCommandDBConnector):
 
         if self.drop:
             cmd += " --clean"
+
+        if self.if_exists or self.drop:
+            cmd += " --if-exists"
 
         if self.schemas:
             # First schema is not prefixed with -n
@@ -112,7 +116,7 @@ class PgDumpBinaryConnector(PgDumpConnector):
     restore_cmd = "pg_restore"
     single_transaction = True
     drop = True
-    if_exists = False
+    if_exists = True
     pg_options = None
 
     def _create_dump(self):
