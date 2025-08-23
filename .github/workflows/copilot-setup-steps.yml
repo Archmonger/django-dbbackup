@@ -31,6 +31,6 @@ jobs:
             - name: Checkout code
               uses: actions/checkout@v4
             - name: Install MySQL
-              uses: kayqueGovetri/setup-mysql@v0.0.3
+              uses: kayqueGovetri/setup-mysql@v0.0.4
               with:
                   mysql_root_password: "mysql"
