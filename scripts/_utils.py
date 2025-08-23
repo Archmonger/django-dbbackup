@@ -27,6 +27,8 @@ _EMOJI_SYMBOLS = {
     "FAIL": "❌",
     "SUMMARY": "📊",
     "TEST": "📋",
+    "SKIP": "⏭️",
+    "INFO": "ℹ️",
     "PG": "🐘",
     "MYSQL": "🐬",
 }
@@ -36,6 +38,8 @@ _ASCII_SYMBOLS = {
     "FAIL": "FAIL:",
     "SUMMARY": "SUMMARY:",
     "TEST": "TEST:",
+    "SKIP": "SKIP:",
+    "INFO": "INFO:",
     "PG": ">>",
     "MYSQL": ">>",
 }

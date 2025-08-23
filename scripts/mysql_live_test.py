@@ -29,6 +29,8 @@ SYMBOL_FAIL = _SYMS["FAIL"]
 SYMBOL_SUMMARY = _SYMS["SUMMARY"]
 SYMBOL_MYSQL = _SYMS["MYSQL"]
 SYMBOL_TEST = _SYMS["TEST"]
+SYMBOL_SKIP = _SYMS["SKIP"]
+SYMBOL_INFO = _SYMS["INFO"]
 
 # Available MySQL connectors
 MYSQL_CONNECTORS = [
@@ -457,7 +459,7 @@ def _run_all(connectors, verbose: bool) -> int:
 
         if result == "skipped":
             passed = "skipped"
-            status = f"⏭️  SKIPPED"
+            status = f"{SYMBOL_SKIP}  SKIPPED"
             skipped_count += 1
         elif result:
             passed = True
@@ -474,7 +476,7 @@ def _run_all(connectors, verbose: bool) -> int:
     print(f"\n{SYMBOL_SUMMARY} MySQL Connector Test Summary")
     for connector, passed in results.items():
         if passed == "skipped":
-            status = "⏭️ "
+            status = SYMBOL_SKIP
         elif passed:
             status = SYMBOL_PASS
         else:
@@ -482,7 +484,7 @@ def _run_all(connectors, verbose: bool) -> int:
         print(f"  {status} {connector}")
 
     if skipped_count == len(connectors):
-        print("  ℹ️  All tests skipped (MySQL not available)")
+        print(f"  {SYMBOL_INFO}  All tests skipped (MySQL not available)")
         return 0  # Don't fail if MySQL is not available
 
     return 0 if overall_success else 1
@@ -503,8 +505,6 @@ def main():
     parser.add_argument("--all", action="store_true", help="Test all MySQL connectors")
 
     args = parser.parse_args()
-
-    connectors_to_test = MYSQL_CONNECTORS if args.all else [args.connector]
 
     print(f"{SYMBOL_MYSQL} Starting MySQL Live Tests for django-dbbackup (Isolated)")
 
