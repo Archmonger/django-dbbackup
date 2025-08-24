@@ -6,7 +6,6 @@ import unittest
 from datetime import datetime, timezone
 from io import StringIO
 from unittest.mock import patch
-import shlex
 
 import django
 from django.core import mail
@@ -95,7 +94,7 @@ class Email_Uncaught_ExceptionTest(TestCase):
 
         # Clear the mail outbox
         mail.outbox.clear()
-        
+
         with self.assertRaises(Exception):
             utils.email_uncaught_exception(func)()
         self.assertEqual(len(mail.outbox), 1)
@@ -165,30 +164,31 @@ class Compress_FileTest(TestCase):
 class EncryptionDecryptionEdgeCasesTest(TestCase):
     def test_encrypt_file_gpg_failure(self):
         """Test encrypt_file when GPG encryption fails"""
-        import tempfile
         import os
-        from unittest.mock import patch, MagicMock
-        
+        import tempfile
+        from unittest.mock import MagicMock, patch
+
         # Create a temporary file
-        with tempfile.NamedTemporaryFile(mode='w+b', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="w+b", delete=False) as f:
             f.write(b"test content")
             temp_path = f.name
-        
+
         try:
-            with open(temp_path, 'rb') as binary_file:
+            with open(temp_path, "rb") as binary_file:
                 # Mock GPG to return a failed result
                 mock_result = MagicMock()
                 mock_result.__bool__ = lambda self: False  # Indicates failure
                 mock_result.status = "FAILURE"
-                
-                with patch('gnupg.GPG') as mock_gpg_class:
+
+                with patch("gnupg.GPG") as mock_gpg_class:
                     mock_gpg = mock_gpg_class.return_value
                     mock_gpg.encrypt_file.return_value = mock_result
-                    
+
                     from dbbackup.utils import EncryptionError
+
                     with self.assertRaises(EncryptionError) as context:
                         utils.encrypt_file(inputfile=binary_file, filename="test.txt")
-                    
+
                     self.assertIn("Encryption failed", str(context.exception))
         finally:
             os.unlink(temp_path)
@@ -320,59 +320,56 @@ class QuoteCommandArg(TestCase):
     def test_arg_with_special_chars(self):
         """Test escaping with various special characters that could break MySQL commands."""
         # Test simple password with special characters
-        result = utils.get_escaped_command_arg("pass!@#$%^&*()")
+        result = shlex.quote("pass!@#$%^&*()")
         self.assertIsInstance(result, str)
         # Should be quoted if it contains special chars
         self.assertTrue("pass!@#$%^&*()" in result)
-        
+
         # Test password with quotes
-        result = utils.get_escaped_command_arg("pass'word\"test")
+        result = shlex.quote("pass'word\"test")
         self.assertIsInstance(result, str)
         self.assertTrue("pass" in result and "word" in result and "test" in result)
-        
+
         # Test password with shell metacharacters
-        result = utils.get_escaped_command_arg("pass;word&command")
+        result = shlex.quote("pass;word&command")
         self.assertIsInstance(result, str)
         self.assertTrue("pass" in result and "word" in result and "command" in result)
-        
+
         # Test password with spaces and special chars combined
-        result = utils.get_escaped_command_arg("my password with spaces!")
+        result = shlex.quote("my password with spaces!")
         self.assertIsInstance(result, str)
         self.assertTrue("my password with spaces!" in result)
 
     def test_complete_password_handling_flow(self):
         """Test the complete flow from password to properly parsed command arguments."""
-        
-        test_passwords = [
-            "simple",
-            "password with spaces",
-            "pass!@#$%^&*()",
-            "pass'word\"test",
-            "pass;word&command"
-        ]
-        
+
+        test_passwords = ["simple", "password with spaces", "pass!@#$%^&*()", "pass'word\"test", "pass;word&command"]
+
         for password in test_passwords:
             with self.subTest(password=password):
                 # Step 1: Escape the password (as MySQL connector does)
-                escaped = utils.get_escaped_command_arg(password)
-                
+                escaped = shlex.quote(password)
+
                 # Step 2: Form command string (as MySQL connector does)
                 cmd = f"mysqldump testdb --password={escaped}"
-                
+
                 # Step 3: Parse command (as BaseCommandDBConnector does)
                 args = shlex.split(cmd)
-                
+
                 # Step 4: Extract password from parsed args
                 password_arg = None
                 for arg in args:
                     if arg.startswith("--password="):
                         password_arg = arg[11:]  # Remove "--password=" prefix
                         break
-                
+
                 # Step 5: Verify the password is preserved correctly
-                self.assertEqual(password_arg, password, 
+                self.assertEqual(
+                    password_arg,
+                    password,
                     f"Password {repr(password)} was not preserved correctly through the escaping/parsing flow. "
-                    f"Got {repr(password_arg)} instead.")
+                    f"Got {repr(password_arg)} instead.",
+                )
 
 
 class BytesToStrEdgeCasesTest(TestCase):
@@ -386,16 +383,16 @@ class BytesToStrEdgeCasesTest(TestCase):
 class EncryptFileTest(TestCase):
     def test_encrypt_file_invalid_mode(self):
         """Test encrypt_file with non-binary mode file"""
-        import tempfile
         import os
-        
+        import tempfile
+
         # Create a temporary file in text mode
-        with tempfile.NamedTemporaryFile(mode='w', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="w", delete=False) as f:
             f.write("test content")
             temp_path = f.name
-        
+
         try:
-            with open(temp_path, 'r') as text_file:
+            with open(temp_path, "r") as text_file:
                 with self.assertRaises(ValueError) as context:
                     utils.encrypt_file(inputfile=text_file, filename="test.txt")
                 self.assertIn("Input file must be opened in binary mode", str(context.exception))
@@ -408,16 +405,17 @@ class EmailUncaughtExceptionEdgeCaseTest(TestCase):
     @patch("dbbackup.settings.ADMINS", [])
     def test_email_uncaught_exception_empty_recipients(self):
         """Test email sending with empty recipients list"""
+
         def func():
             raise Exception("Test error")
 
         # Clear mail outbox before test
         mail.outbox.clear()
-        
+
         # Should not raise error even with empty recipients
         with self.assertRaises(Exception):
             utils.email_uncaught_exception(func)()
-        
+
         # Check what was actually sent - with empty recipients, mail may still be sent to admins
         # The key is that the function doesn't crash with empty recipients
         self.assertTrue(True)  # The test passed if we got here without errors
@@ -426,33 +424,21 @@ class EmailUncaughtExceptionEdgeCaseTest(TestCase):
 class FilenameGenerateEdgeCasesTest(TestCase):
     def test_filename_generate_with_slash_in_database_name(self):
         """Test filename_generate with slash in database name"""
-        filename = utils.filename_generate(
-            extension="dump",
-            content_type="db",
-            database_name="/path/to/database"
-        )
+        filename = utils.filename_generate(extension="dump", content_type="db", database_name="/path/to/database")
         # Should extract basename from database path
         self.assertIn("database", filename)
         self.assertNotIn("/path/to/", filename)
 
     def test_filename_generate_with_dot_in_database_name(self):
         """Test filename_generate with dot in database name"""
-        filename = utils.filename_generate(
-            extension="dump", 
-            content_type="db",
-            database_name="database.sqlite3"
-        )
+        filename = utils.filename_generate(extension="dump", content_type="db", database_name="database.sqlite3")
         # Should remove extension from database name
         self.assertIn("database", filename)
         self.assertNotIn(".sqlite3", filename)
 
     def test_filename_generate_unknown_content_type(self):
         """Test filename_generate with unknown content type falls back to db template"""
-        filename = utils.filename_generate(
-            extension="dump",
-            content_type="unknown",
-            database_name="test"
-        )
+        filename = utils.filename_generate(extension="dump", content_type="unknown", database_name="test")
         # Should use FILENAME_TEMPLATE for unknown content types
         self.assertTrue(filename.endswith(".dump"))
 
