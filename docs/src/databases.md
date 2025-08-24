@@ -110,11 +110,16 @@ All PostgreSQL connectors have the following settings:
 
 #### Settings
 
-| Setting            | Description                                                                                                                             | Default |
-| ------------------ | --------------------------------------------------------------------------------------------------------------------------------------- | ------- |
-| SINGLE_TRANSACTION | Wrap restore in a single transaction so errors cause full rollback (`--single-transaction` for `psql` / `pg_restore`).                  | `True`  |
-| DROP               | Include / execute drop statements when restoring (`--clean` with `pg_dump` / `pg_restore`). In binary mode drops happen during restore. | `True`  |
-| IF_EXISTS          | Add `IF EXISTS` to destructive statements in clean mode. Enabled by default, and when `DROP=True` to prevent identity column errors.    | `True`  |
+| Setting            | Description                                                                                                                             | Default                |
+| ------------------ | --------------------------------------------------------------------------------------------------------------------------------------- | ---------------------- |
+| SINGLE_TRANSACTION | Wrap restore in a single transaction so errors cause full rollback (`--single-transaction` for `psql` / `pg_restore`).                  | `True`                 |
+| DROP               | Include / execute drop statements when restoring (`--clean` with `pg_dump` / `pg_restore`). In binary mode drops happen during restore. | `True`                 |
+| IF_EXISTS          | Add `IF EXISTS` to destructive statements in clean mode. Enabled by default, and when `DROP=True` to prevent identity column errors.    | `True`                 |
+| PSQL_CMD           | Path to `psql` used for admin tasks (extension creation, etc.).                                                                         | `psql`                 |
+| PASSWORD           | Sets `PGPASSWORD` if provided (prefer `.pgpass`). Set to `None` for `--no-password`                                                     | `""`                   |
+| ADMIN_USER         | Privileged user for administrative actions like enabling PostGIS.                                                                       | None                   |
+| ADMIN_PASSWORD     | Password for `ADMIN_USER` when needed.                                                                                                  | None                   |
+| SCHEMAS            | Limit dump to specific schemas (PostgreSQL connectors only).                                                                            | All non-system schemas |
 
 #### PgDumpBinaryConnector
 
@@ -128,21 +133,11 @@ The `dbbackup.db.postgresql.PgDumpConnector` uses `pg_dump` to create RAW SQL fi
 
 It is recommended to use the binary connector for better performance.
 
-### PostGIS
+#### PgDumpGisConnector
 
 Set in `dbbackup.db.postgresql.PgDumpGisConnector`, it does the same as
 PostgreSQL but launches `CREATE EXTENSION IF NOT EXISTS postgis;` before
 restoring the database.
-
-#### Settings
-
-| Setting        | Description                                                                         | Default                |
-| -------------- | ----------------------------------------------------------------------------------- | ---------------------- |
-| PSQL_CMD       | Path to `psql` used for admin tasks (extension creation, etc.).                     | `psql`                 |
-| PASSWORD       | Sets `PGPASSWORD` if provided (prefer `.pgpass`). Set to `None` for `--no-password` | `""`                   |
-| ADMIN_USER     | Privileged user for administrative actions like enabling PostGIS.                   | None                   |
-| ADMIN_PASSWORD | Password for `ADMIN_USER` when needed.                                              | None                   |
-| SCHEMAS        | Limit dump to specific schemas (PostgreSQL connectors only).                        | All non-system schemas |
 
 ### MongoDB
 
