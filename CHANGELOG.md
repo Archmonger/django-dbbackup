@@ -27,7 +27,7 @@ Don't forget to remove deprecated code on each major release!
 - Improve error message for missing database tools (`pg_dump`, `mysqldump`, etc.) to provide guidance instead of generic "No such file or directory" errors.
 - Changed default SQLite connector from `SqliteConnector` to `SqliteBackupConnector` to adhere to best practices.
 - Set default `IF_EXISTS` to `True` for PostgreSQL connectors (`PgDumpConnector` and `PgDumpBinaryConnector`) to reduce restore errors when objects are absent.
-- If `PASSWORD` is set to `None` for `PgDumpConnector` and `PgDumpBinaryConnector`, the `--no-password` flag is now used.
+- If `PASSWORD` is set to `None` for PostgreSQL connectors, the `--no-password` flag is now automatically used.
 
 ### Removed
 
