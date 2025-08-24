@@ -2,46 +2,46 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
          <loc>https://archmonger.github.io/django-dbbackup/develop/</loc>
-         <lastmod>2025-08-23</lastmod>
+         <lastmod>2025-08-24</lastmod>
     </url>
     <url>
          <loc>https://archmonger.github.io/django-dbbackup/develop/changelog/</loc>
-         <lastmod>2025-08-23</lastmod>
+         <lastmod>2025-08-24</lastmod>
     </url>
     <url>
          <loc>https://archmonger.github.io/django-dbbackup/develop/commands/</loc>
-         <lastmod>2025-08-23</lastmod>
+         <lastmod>2025-08-24</lastmod>
     </url>
     <url>
          <loc>https://archmonger.github.io/django-dbbackup/develop/configuration/</loc>
-         <lastmod>2025-08-23</lastmod>
+         <lastmod>2025-08-24</lastmod>
     </url>
     <url>
          <loc>https://archmonger.github.io/django-dbbackup/develop/contributing/</loc>
-         <lastmod>2025-08-23</lastmod>
+         <lastmod>2025-08-24</lastmod>
     </url>
     <url>
          <loc>https://archmonger.github.io/django-dbbackup/develop/databases/</loc>
-         <lastmod>2025-08-23</lastmod>
+         <lastmod>2025-08-24</lastmod>
     </url>
     <url>
          <loc>https://archmonger.github.io/django-dbbackup/develop/installation/</loc>
-         <lastmod>2025-08-23</lastmod>
+         <lastmod>2025-08-24</lastmod>
     </url>
     <url>
          <loc>https://archmonger.github.io/django-dbbackup/develop/integration/</loc>
-         <lastmod>2025-08-23</lastmod>
+         <lastmod>2025-08-24</lastmod>
     </url>
     <url>
          <loc>https://archmonger.github.io/django-dbbackup/develop/license/</loc>
-         <lastmod>2025-08-23</lastmod>
+         <lastmod>2025-08-24</lastmod>
     </url>
     <url>
          <loc>https://archmonger.github.io/django-dbbackup/develop/signals/</loc>
-         <lastmod>2025-08-23</lastmod>
+         <lastmod>2025-08-24</lastmod>
     </url>
     <url>
          <loc>https://archmonger.github.io/django-dbbackup/develop/storage/</loc>
-         <lastmod>2025-08-23</lastmod>
+         <lastmod>2025-08-24</lastmod>
     </url>
 </urlset>
