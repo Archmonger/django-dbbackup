@@ -11,12 +11,12 @@ logger = logging.getLogger("dbbackup.command")
 def create_postgres_dbname_and_env(connector):
     """
     Create PostgreSQL connection string and environment variables.
-    
+
     Args:
         connector: Database connector instance with settings
-        
+
     Returns:
-        tuple: (dbname_url, environment_dict)
+        tuple: (dbname_command, environment_dict)
     """
     host = connector.settings.get("HOST", "localhost")
     dbname = connector.settings.get("NAME", "")
