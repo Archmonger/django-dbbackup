@@ -136,13 +136,13 @@ restoring the database.
 
 #### Settings
 
-| Setting        | Description                                                                     | Default                |
-| -------------- | ------------------------------------------------------------------------------- | ---------------------- |
-| PSQL_CMD       | Path to `psql` used for admin tasks (extension creation, etc.).                 | `psql`                 |
-| PASSWORD       | If provided sets `PGPASSWORD` for all commands (prefer `.pgpass` for security). | None                   |
-| ADMIN_USER     | Privileged user for administrative actions like enabling PostGIS.               | None                   |
-| ADMIN_PASSWORD | Password for `ADMIN_USER` when needed.                                          | None                   |
-| SCHEMAS        | Limit dump to specific schemas (PostgreSQL connectors only).                    | All non-system schemas |
+| Setting        | Description                                                                         | Default                |
+| -------------- | ----------------------------------------------------------------------------------- | ---------------------- |
+| PSQL_CMD       | Path to `psql` used for admin tasks (extension creation, etc.).                     | `psql`                 |
+| PASSWORD       | Sets `PGPASSWORD` if provided (prefer `.pgpass`). Set to `None` for `--no-password` | `""`                   |
+| ADMIN_USER     | Privileged user for administrative actions like enabling PostGIS.                   | None                   |
+| ADMIN_PASSWORD | Password for `ADMIN_USER` when needed.                                              | None                   |
+| SCHEMAS        | Limit dump to specific schemas (PostgreSQL connectors only).                        | All non-system schemas |
 
 ### MongoDB
 

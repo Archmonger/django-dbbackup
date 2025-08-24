@@ -1,6 +1,8 @@
+from __future__ import annotations
+
 import logging
 import shlex
-from typing import List, Optional
+from typing import Any, List, Optional
 from urllib.parse import quote
 
 from .base import BaseCommandDBConnector
@@ -8,27 +10,31 @@ from .base import BaseCommandDBConnector
 logger = logging.getLogger("dbbackup.command")
 
 
-def create_postgres_dbname_and_env(connector):
+def parse_postgres_settings(connector: PgDumpBinaryConnector | PgDumpConnector) -> tuple[str, dict[Any, Any]]:
     """
-    Create PostgreSQL connection string and environment variables.
+    Parse the common Postgres connectors settings and
+    generate a command string and environment variables.
 
     Args:
         connector: Database connector instance with settings
 
     Returns:
-        tuple: (dbname_command, environment_dict)
+        tuple: (command_string, environment_dict)
     """
     host = connector.settings.get("HOST", "localhost")
-    dbname = connector.settings.get("NAME", "")
+    cmd_part = connector.settings.get("NAME", "")
     user = quote(connector.settings.get("USER") or "")
+    password = connector.settings.get("PASSWORD", -1)
     if user:
-        host = "@" + host
-    port = ":{}".format(connector.settings.get("PORT")) if connector.settings.get("PORT") else ""
-    dbname = f"--dbname=postgresql://{user}{host}{port}/{dbname}"
+        host = f"@{host}"
+    port = f":{connector.settings.get('PORT')}" if connector.settings.get("PORT") else ""
+    cmd_part = f"--dbname=postgresql://{user}{host}{port}/{cmd_part}"
     env = {}
-    if connector.settings.get("PASSWORD"):
-        env["PGPASSWORD"] = connector.settings.get("PASSWORD")
-    return dbname, env
+    if password is None:
+        cmd_part += " --no-password"
+    elif password != -1:
+        env["PGPASSWORD"] = password
+    return cmd_part, env
 
 
 class PgDumpConnector(BaseCommandDBConnector):
@@ -46,9 +52,8 @@ class PgDumpConnector(BaseCommandDBConnector):
     schemas: Optional[List[str]] = []
 
     def _create_dump(self):
-        cmd = f"{self.dump_cmd} "
-        dbname, pg_env = create_postgres_dbname_and_env(self)
-        cmd = cmd + dbname
+        cmd_part, pg_env = parse_postgres_settings(self)
+        cmd = f"{self.dump_cmd} {cmd_part}"
 
         for table in self.exclude:
             cmd += f" --exclude-table-data={table}"
@@ -69,9 +74,8 @@ class PgDumpConnector(BaseCommandDBConnector):
         return stdout
 
     def _restore_dump(self, dump):
-        cmd = f"{self.restore_cmd} "
-        dbname, pg_env = create_postgres_dbname_and_env(self)
-        cmd = cmd + dbname
+        cmd_part, pg_env = parse_postgres_settings(self)
+        cmd = f"{self.restore_cmd} {cmd_part}"
 
         # without this, psql terminates with an exit value of 0 regardless of errors
         cmd += " --set ON_ERROR_STOP=on"
@@ -82,7 +86,7 @@ class PgDumpConnector(BaseCommandDBConnector):
         if self.single_transaction:
             cmd += " --single-transaction"
 
-        cmd += " {}".format(self.settings["NAME"])
+        cmd += f" {self.settings['NAME']}"
         cmd = f"{self.restore_prefix} {cmd} {self.restore_suffix}"
         stdout, stderr = self.run_command(cmd, stdin=dump, env={**self.restore_env, **pg_env})
         return stdout, stderr
@@ -98,14 +102,14 @@ class PgDumpGisConnector(PgDumpConnector):
 
     def _enable_postgis(self):
         cmd = f'{self.psql_cmd} -c "CREATE EXTENSION IF NOT EXISTS postgis;"'
-        cmd += " --username={}".format(shlex.quote(self.settings["ADMIN_USER"]))
+        cmd += f" --username={shlex.quote(self.settings['ADMIN_USER'])}"
         cmd += " --no-password"
 
         if self.settings.get("HOST"):
-            cmd += " --host={}".format(shlex.quote(self.settings["HOST"]))
+            cmd += f" --host={shlex.quote(self.settings['HOST'])}"
 
         if self.settings.get("PORT"):
-            cmd += " --port={}".format(shlex.quote(str(self.settings["PORT"])))
+            cmd += f" --port={shlex.quote(str(self.settings['PORT']))}"
 
         return self.run_command(cmd)
 
@@ -130,9 +134,8 @@ class PgDumpBinaryConnector(PgDumpConnector):
     pg_options = None
 
     def _create_dump(self):
-        cmd = f"{self.dump_cmd} "
-        dbname, pg_env = create_postgres_dbname_and_env(self)
-        cmd = cmd + dbname
+        cmd_part, pg_env = parse_postgres_settings(self)
+        cmd = f"{self.dump_cmd} {cmd_part}"
 
         cmd += " --format=custom"
         for table in self.exclude:
@@ -155,7 +158,7 @@ class PgDumpBinaryConnector(PgDumpConnector):
         Builds the command as a list.
         """
 
-        dbname, pg_env = create_postgres_dbname_and_env(self)
+        cmd_part, pg_env = parse_postgres_settings(self)
         cmd = []
 
         # Flatten optional values
@@ -168,7 +171,7 @@ class PgDumpBinaryConnector(PgDumpConnector):
         if self.pg_options:
             cmd.extend(self.pg_options if isinstance(self.pg_options, list) else [self.pg_options])
 
-        cmd.extend([dbname])
+        cmd.extend([cmd_part])
 
         if self.single_transaction:
             cmd.extend(["--single-transaction"])

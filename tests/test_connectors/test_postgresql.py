@@ -1,5 +1,5 @@
 from io import BytesIO
-from unittest.mock import patch, Mock
+from unittest.mock import Mock, patch
 
 from django.test import TestCase
 
@@ -7,7 +7,7 @@ from dbbackup.db.postgresql import (
     PgDumpBinaryConnector,
     PgDumpConnector,
     PgDumpGisConnector,
-    create_postgres_dbname_and_env,
+    parse_postgres_settings,
 )
 
 
@@ -393,14 +393,14 @@ class PgDumpGisConnectorTest(TestCase):
         self.connector._enable_postgis()
         command = mock_dump_cmd.call_args[0][0]
         self.assertIn("'admin user'", command)  # Should be quoted
-        
+
         # Test host with special characters
         self.connector.settings["ADMIN_USER"] = "admin"
         self.connector.settings["HOST"] = "host@domain.com"  # @ symbol
         self.connector._enable_postgis()
         command = mock_dump_cmd.call_args[0][0]
         self.assertIn("host@domain.com", command)  # @ in hostname is safe, no quotes needed
-        
+
         # Test admin user with quotes
         self.connector.settings["ADMIN_USER"] = "admin'user"  # Single quote
         self.connector.settings["HOST"] = "localhost"
@@ -456,11 +456,11 @@ class CreatePostgresDbNameAndEnvTest(TestCase):
             "PORT": 5432,
             "NAME": "testdb",
             "USER": "testuser",
-            "PASSWORD": "testpass"
+            "PASSWORD": "testpass",
         }
-        
-        dbname_url, env = create_postgres_dbname_and_env(connector)
-        
+
+        dbname_url, env = parse_postgres_settings(connector)
+
         self.assertEqual(dbname_url, "--dbname=postgresql://testuser@localhost:5432/testdb")
         self.assertEqual(env, {"PGPASSWORD": "testpass"})
 
@@ -472,11 +472,11 @@ class CreatePostgresDbNameAndEnvTest(TestCase):
             "PORT": 5432,
             "NAME": "testdb",
             "USER": "user@domain.com",  # Email-style username
-            "PASSWORD": "my'pass\"word"  # Password with quotes
+            "PASSWORD": "my'pass\"word",  # Password with quotes
         }
-        
-        dbname_url, env = create_postgres_dbname_and_env(connector)
-        
+
+        dbname_url, env = parse_postgres_settings(connector)
+
         # User should be URL-encoded in the connection string
         self.assertIn("user%40domain.com", dbname_url)
         # Password should be in environment variable unchanged
@@ -487,14 +487,10 @@ class CreatePostgresDbNameAndEnvTest(TestCase):
     def test_function_without_user_or_password(self):
         """Test function without user or password"""
         connector = Mock()
-        connector.settings = {
-            "HOST": "localhost",
-            "PORT": 5432,
-            "NAME": "testdb"
-        }
-        
-        dbname_url, env = create_postgres_dbname_and_env(connector)
-        
+        connector.settings = {"HOST": "localhost", "PORT": 5432, "NAME": "testdb"}
+
+        dbname_url, env = parse_postgres_settings(connector)
+
         # No user means no @ in the URL
         self.assertEqual(dbname_url, "--dbname=postgresql://localhost:5432/testdb")
         # No password means empty environment
@@ -508,11 +504,11 @@ class CreatePostgresDbNameAndEnvTest(TestCase):
             "PORT": 5432,
             "NAME": "testdb",
             "USER": "testuser",
-            "PASSWORD": ""  # Empty password
+            "PASSWORD": "",  # Empty password
         }
-        
-        dbname_url, env = create_postgres_dbname_and_env(connector)
-        
+
+        dbname_url, env = parse_postgres_settings(connector)
+
         self.assertIn("testuser@localhost", dbname_url)
         # Empty password should not create PGPASSWORD env var
         self.assertEqual(env, {})
