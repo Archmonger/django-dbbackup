@@ -65,6 +65,30 @@ class MysqlDumpConnectorTest(TestCase):
         connector.create_dump()
         self.assertIn(" --password=foo", mock_dump_cmd.call_args[0][0])
 
+    def test_create_dump_password_with_special_chars(self, mock_dump_cmd):
+        connector = MysqlDumpConnector()
+
+        # Test password with spaces
+        connector.settings["PASSWORD"] = "password with spaces"
+        connector.create_dump()
+        cmd = mock_dump_cmd.call_args[0][0]
+        # Should be properly escaped with quotes
+        self.assertIn(" --password='password with spaces'", cmd)
+
+        # Test password with special characters that could break shells
+        connector.settings["PASSWORD"] = "pass!@#$%^&*()"
+        connector.create_dump()
+        cmd = mock_dump_cmd.call_args[0][0]
+        # Should be properly escaped - exact format depends on shlex.quote()
+        self.assertIn(" --password='pass!@#$%^&*()'", cmd)
+
+        # Test password with quotes - this is the trickiest case
+        connector.settings["PASSWORD"] = "pass'word\"test"
+        connector.create_dump()
+        cmd = mock_dump_cmd.call_args[0][0]
+        # Should be properly escaped
+        self.assertIn(""" --password='pass'"'"'word"test'""", cmd)
+
     def test_create_dump_exclude(self, mock_dump_cmd):
         connector = MysqlDumpConnector()
         connector.settings["NAME"] = "db"
@@ -155,3 +179,31 @@ class MysqlDumpConnectorTest(TestCase):
         connector.settings["PASSWORD"] = "foo"
         connector.restore_dump(dump)
         self.assertIn(" --password=foo", mock_restore_cmd.call_args[0][0])
+
+    @patch(
+        "dbbackup.db.mysql.MysqlDumpConnector.run_command",
+        return_value=(BytesIO(), BytesIO()),
+    )
+    def test_restore_dump_password_with_special_chars(self, mock_dump_cmd, mock_restore_cmd):
+        connector = MysqlDumpConnector()
+        dump = connector.create_dump()
+
+        # Test password with spaces
+        connector.settings["PASSWORD"] = "password with spaces"
+        connector.restore_dump(dump)
+        cmd = mock_restore_cmd.call_args[0][0]
+        self.assertIn(" --password='password with spaces'", cmd)
+
+        # Test password with special characters
+        connector.settings["PASSWORD"] = "pass!@#$%^&*()"
+        connector.restore_dump(dump)
+        cmd = mock_restore_cmd.call_args[0][0]
+        # Should be properly escaped
+        self.assertIn(" --password='pass!@#$%^&*()'", cmd)
+
+        # Test password with quotes
+        connector.settings["PASSWORD"] = "pass'word\"test"
+        connector.restore_dump(dump)
+        cmd = mock_restore_cmd.call_args[0][0]
+        # Should be properly escaped
+        self.assertIn(""" --password='pass'"'"'word"test'""", cmd)

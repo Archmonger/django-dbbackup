@@ -6,6 +6,7 @@ import unittest
 from datetime import datetime, timezone
 from io import StringIO
 from unittest.mock import patch
+import shlex
 
 import django
 from django.core import mail
@@ -315,6 +316,63 @@ class Filename_GenerateTest(TestCase):
 class QuoteCommandArg(TestCase):
     def test_arg_with_space(self):
         assert shlex.quote("foo bar") == "'foo bar'"
+
+    def test_arg_with_special_chars(self):
+        """Test escaping with various special characters that could break MySQL commands."""
+        # Test simple password with special characters
+        result = utils.get_escaped_command_arg("pass!@#$%^&*()")
+        self.assertIsInstance(result, str)
+        # Should be quoted if it contains special chars
+        self.assertTrue("pass!@#$%^&*()" in result)
+        
+        # Test password with quotes
+        result = utils.get_escaped_command_arg("pass'word\"test")
+        self.assertIsInstance(result, str)
+        self.assertTrue("pass" in result and "word" in result and "test" in result)
+        
+        # Test password with shell metacharacters
+        result = utils.get_escaped_command_arg("pass;word&command")
+        self.assertIsInstance(result, str)
+        self.assertTrue("pass" in result and "word" in result and "command" in result)
+        
+        # Test password with spaces and special chars combined
+        result = utils.get_escaped_command_arg("my password with spaces!")
+        self.assertIsInstance(result, str)
+        self.assertTrue("my password with spaces!" in result)
+
+    def test_complete_password_handling_flow(self):
+        """Test the complete flow from password to properly parsed command arguments."""
+        
+        test_passwords = [
+            "simple",
+            "password with spaces",
+            "pass!@#$%^&*()",
+            "pass'word\"test",
+            "pass;word&command"
+        ]
+        
+        for password in test_passwords:
+            with self.subTest(password=password):
+                # Step 1: Escape the password (as MySQL connector does)
+                escaped = utils.get_escaped_command_arg(password)
+                
+                # Step 2: Form command string (as MySQL connector does)
+                cmd = f"mysqldump testdb --password={escaped}"
+                
+                # Step 3: Parse command (as BaseCommandDBConnector does)
+                args = shlex.split(cmd)
+                
+                # Step 4: Extract password from parsed args
+                password_arg = None
+                for arg in args:
+                    if arg.startswith("--password="):
+                        password_arg = arg[11:]  # Remove "--password=" prefix
+                        break
+                
+                # Step 5: Verify the password is preserved correctly
+                self.assertEqual(password_arg, password, 
+                    f"Password {repr(password)} was not preserved correctly through the escaping/parsing flow. "
+                    f"Got {repr(password_arg)} instead.")
 
 
 class BytesToStrEdgeCasesTest(TestCase):
