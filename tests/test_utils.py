@@ -5,6 +5,7 @@ import unittest
 from datetime import datetime, timezone
 from io import StringIO
 from unittest.mock import patch
+import shlex
 
 import django
 from django.core import mail
@@ -340,7 +341,6 @@ class QuoteCommandArg(TestCase):
 
     def test_complete_password_handling_flow(self):
         """Test the complete flow from password to properly parsed command arguments."""
-        import shlex
         
         test_passwords = [
             "simple",
