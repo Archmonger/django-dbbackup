@@ -12,7 +12,6 @@ import traceback
 from datetime import datetime
 from functools import wraps
 from getpass import getpass
-from shlex import quote
 from shutil import copyfileobj
 
 from django.core.mail import EmailMultiAlternatives
@@ -432,7 +431,3 @@ def filename_generate(extension, database_name="", servername=None, content_type
         filename = REG_FILENAME_CLEAN.sub("-", filename)
         filename = filename[1:] if filename.startswith("-") else filename
     return filename
-
-
-def get_escaped_command_arg(arg):
-    return quote(arg)

@@ -1,4 +1,5 @@
 import os
+import shlex
 import shutil
 import tempfile
 import unittest
@@ -313,7 +314,7 @@ class Filename_GenerateTest(TestCase):
 
 class QuoteCommandArg(TestCase):
     def test_arg_with_space(self):
-        assert utils.get_escaped_command_arg("foo bar") == "'foo bar'"
+        assert shlex.quote("foo bar") == "'foo bar'"
 
 
 class BytesToStrEdgeCasesTest(TestCase):

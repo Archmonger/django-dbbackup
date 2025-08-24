@@ -1,4 +1,4 @@
-from dbbackup import utils
+import shlex
 
 from .base import BaseCommandDBConnector
 
@@ -22,7 +22,7 @@ class MongoDumpConnector(BaseCommandDBConnector):
         if self.settings.get("USER"):
             cmd += f" --username {self.settings['USER']}"
         if self.settings.get("PASSWORD"):
-            cmd += f" --password {utils.get_escaped_command_arg(self.settings['PASSWORD'])}"
+            cmd += f" --password {shlex.quote(self.settings['PASSWORD'])}"
 
         if self.settings.get("AUTH_SOURCE"):
             cmd += f" --authenticationDatabase {self.settings['AUTH_SOURCE']}"
@@ -41,7 +41,7 @@ class MongoDumpConnector(BaseCommandDBConnector):
         if self.settings.get("USER"):
             cmd += f" --username {self.settings['USER']}"
         if self.settings.get("PASSWORD"):
-            cmd += f" --password {utils.get_escaped_command_arg(self.settings['PASSWORD'])}"
+            cmd += f" --password {shlex.quote(self.settings['PASSWORD'])}"
 
         if self.settings.get("AUTH_SOURCE"):
             cmd += f" --authenticationDatabase {self.settings['AUTH_SOURCE']}"

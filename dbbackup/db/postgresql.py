@@ -1,8 +1,8 @@
 import logging
+import shlex
 from typing import List, Optional
 from urllib.parse import quote
 
-from dbbackup import utils
 from .base import BaseCommandDBConnector
 
 logger = logging.getLogger("dbbackup.command")
@@ -98,14 +98,14 @@ class PgDumpGisConnector(PgDumpConnector):
 
     def _enable_postgis(self):
         cmd = f'{self.psql_cmd} -c "CREATE EXTENSION IF NOT EXISTS postgis;"'
-        cmd += " --username={}".format(utils.get_escaped_command_arg(self.settings["ADMIN_USER"]))
+        cmd += " --username={}".format(shlex.quote(self.settings["ADMIN_USER"]))
         cmd += " --no-password"
 
         if self.settings.get("HOST"):
-            cmd += " --host={}".format(utils.get_escaped_command_arg(self.settings["HOST"]))
+            cmd += " --host={}".format(shlex.quote(self.settings["HOST"]))
 
         if self.settings.get("PORT"):
-            cmd += " --port={}".format(utils.get_escaped_command_arg(str(self.settings["PORT"])))
+            cmd += " --port={}".format(shlex.quote(str(self.settings["PORT"])))
 
         return self.run_command(cmd)
 

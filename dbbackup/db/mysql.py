@@ -1,4 +1,4 @@
-from dbbackup import utils
+import shlex
 
 from .base import BaseCommandDBConnector
 
@@ -21,7 +21,7 @@ class MysqlDumpConnector(BaseCommandDBConnector):
         if self.settings.get("USER"):
             cmd += f" --user={self.settings['USER']}"
         if self.settings.get("PASSWORD"):
-            cmd += f" --password={utils.get_escaped_command_arg(self.settings['PASSWORD'])}"
+            cmd += f" --password={shlex.quote(self.settings['PASSWORD'])}"
 
         for table in self.exclude:
             cmd += f" --ignore-table={self.settings['NAME']}.{table}"
@@ -38,7 +38,7 @@ class MysqlDumpConnector(BaseCommandDBConnector):
         if self.settings.get("USER"):
             cmd += f" --user={self.settings['USER']}"
         if self.settings.get("PASSWORD"):
-            cmd += f" --password={utils.get_escaped_command_arg(self.settings['PASSWORD'])}"
+            cmd += f" --password={shlex.quote(self.settings['PASSWORD'])}"
 
         cmd = f"{self.restore_prefix} {cmd} {self.restore_suffix}"
         stdout, stderr = self.run_command(cmd, stdin=dump, env=self.restore_env)
