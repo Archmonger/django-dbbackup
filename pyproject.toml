@@ -155,15 +155,6 @@ dependencies = ["pre-commit>=3,<4"]
 check = ["pre-commit run --all-files"]
 update = ["pre-commit autoupdate"]
 
-# >>> Lint Environment <<<
-
-[tool.hatch.envs.lint]
-extra-dependencies = ["ruff", "pylint"]
-
-[tool.hatch.envs.lint.scripts]
-check = ["ruff check dbbackup", "pylint dbbackup --rcfile=.pylintrc"]
-format = ["ruff format dbbackup"]
-
 # >>> CLI workflow tests <<<
 
 [tool.hatch.envs.functional]
@@ -201,7 +192,23 @@ line-length = 120
 target-version = "py39"
 extend-exclude = [".eggs/*", ".tox/*", ".venv/*", "build/*", "*/migrations/*"]
 format.preview = true
-lint.extend-ignore = []
+lint.extend-ignore = [
+  "B028",    #  No explicit `stacklevel` keyword argument found in warning function call
+  "DTZ005",  # `datetime.datetime.now()` called without a `tz` argument
+  "DTZ007",  # Naive datetime constructed using `datetime.datetime.strptime()` without %z
+  "ARG001",  # Unused function argument
+  "ARG002",  # Unused method argument
+  "ARG005",  # Unused lambda argument
+  "PLR2004", # Magic value used in comparison
+  "PLW2901", # Variable is being overwritten within a `for` loop
+  "S608",    # Possible SQL injection vector through string-based query construction
+  "FBT001",  # Boolean-typed positional argument in function definitio
+  "FBT002",  # Boolean default positional argument in function definition
+  "SLF001",  # Private member accessed
+  "E402",    # Module import not at top of file
+  "S101",    # Use of assert detected.
+  "S105",    # Use of hardcoded password
+]
 
 [tool.pytest.ini_options]
 addopts = ["--strict-config", "--strict-markers"]

@@ -1,6 +1,6 @@
 import shlex
 
-from .base import BaseCommandDBConnector
+from dbbackup.db.base import BaseCommandDBConnector
 
 
 class MongoDumpConnector(BaseCommandDBConnector):

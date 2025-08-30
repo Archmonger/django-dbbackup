@@ -1,3 +1,4 @@
+# ruff: noqa: TRY300, BLE001
 """SQLite Live Functional Test Script for django-dbbackup
 
 Usage:
@@ -38,8 +39,8 @@ def log(msg: str, *, verbose: bool) -> None:
 def configure_django(verbose: bool) -> None:
     # Ensure DJANGO_SETTINGS_MODULE is set; functional env already does this
     os.environ.setdefault("DJANGO_SETTINGS_MODULE", "tests.settings")
-    import django  # noqa: WPS433 (import after setting env var)
-    from django.apps import apps  # noqa: WPS433
+    import django  # (import after setting env var)
+    from django.apps import apps
 
     if not apps.ready:
         log("Initializing Django...", verbose=verbose)
@@ -90,7 +91,7 @@ def _run_all(connectors, verbose: bool) -> int:
     return 0 if overall_success else 1
 
 
-def main() -> int:  # noqa: WPS231 (complexity acceptable for test harness)
+def main() -> int:  # (complexity acceptable for test harness)
     parser = argparse.ArgumentParser(description="Run live SQLite functional tests for django-dbbackup")
     parser.add_argument("--verbose", "-v", action="store_true", help="Enable verbose output")
     parser.add_argument(
@@ -131,7 +132,7 @@ def main() -> int:  # noqa: WPS231 (complexity acceptable for test harness)
         run_management_command(["", "migrate", "--noinput"], verbose=verbose)
 
         # 4. Create test model instances (expanded vs legacy 'feed')
-        from tests.testapp.models import CharModel, TextModel  # noqa: WPS433
+        from tests.testapp.models import CharModel, TextModel
 
         CharModel.objects.bulk_create([
             CharModel(field="test1"),
@@ -152,16 +153,15 @@ def main() -> int:  # noqa: WPS231 (complexity acceptable for test harness)
         pre_existing = set(os.listdir(backups_dir))
         run_management_command(["", "dbbackup", "--noinput"], verbose=verbose)
         post_existing = set(os.listdir(backups_dir))
-        new_files = sorted(list(post_existing - pre_existing))
+        new_files = sorted(post_existing - pre_existing)
         latest_backup = new_files[-1] if new_files else None
         log(f"Database backup completed (file: {latest_backup})", verbose=verbose)
 
         # 6. Delete data
         CharModel.objects.all().delete()
         TextModel.objects.all().delete()
-        assert CharModel.objects.count() == 0 and TextModel.objects.count() == 0, (
-            "Failed to delete test objects prior to restore"
-        )
+        assert CharModel.objects.count() == 0
+        assert TextModel.objects.count() == 0
         log("Deleted CharModel and TextModel objects", verbose=verbose)
 
         # 7. Database restore (force correct backup when extension differs)
@@ -173,12 +173,12 @@ def main() -> int:  # noqa: WPS231 (complexity acceptable for test harness)
         # 8. Assert data restored
         restored_char_count = CharModel.objects.count()
         restored_text_count = TextModel.objects.count()
-        assert restored_char_count == char_count_before, (
-            f"CharModel count mismatch: expected {char_count_before}, got {restored_char_count}"
-        )
-        assert restored_text_count == text_count_before, (
-            f"TextModel count mismatch: expected {text_count_before}, got {restored_text_count}"
-        )
+        assert (
+            restored_char_count == char_count_before
+        ), f"CharModel count mismatch: expected {char_count_before}, got {restored_char_count}"
+        assert (
+            restored_text_count == text_count_before
+        ), f"TextModel count mismatch: expected {text_count_before}, got {restored_text_count}"
         # Validate complex content integrity
         first_text = TextModel.objects.first()
         restored_text = first_text.field if first_text else None
@@ -197,7 +197,7 @@ def main() -> int:  # noqa: WPS231 (complexity acceptable for test harness)
         for rel_path, content in media_specs.items():
             target = os.path.join(media_root, rel_path)
             os.makedirs(os.path.dirname(target), exist_ok=True)
-            with open(target, "w", encoding="utf-8") as fh:  # noqa: WPS515
+            with open(target, "w", encoding="utf-8") as fh:
                 fh.write(content)
         for rel_path in media_specs:
             assert os.path.exists(os.path.join(media_root, rel_path)), f"Missing media test file {rel_path}"
@@ -223,13 +223,13 @@ def main() -> int:  # noqa: WPS231 (complexity acceptable for test harness)
         for rel_path, content in media_specs.items():
             target = os.path.join(media_root, rel_path)
             assert os.path.exists(target), f"Media restore missing file {rel_path}"
-            with open(target, "r", encoding="utf-8") as fh:  # noqa: WPS515
+            with open(target, encoding="utf-8") as fh:
                 restored_content = fh.read()
             assert restored_content == content, f"Content mismatch for {rel_path}"
         log("Media test passed (multi-file + content integrity)", verbose=verbose)
 
         return 0
-    except Exception as exc:  # noqa: WPS433
+    except Exception as exc:
         print(f"{SYMBOL_FAIL} SQLite functional test FAILED:", exc, file=sys.stderr)
         traceback.print_exc()
         return 1

@@ -7,5 +7,6 @@ class InitModuleTest(TestCase):
     def test_version_defined(self):
         """Test that version is properly defined"""
         import dbbackup
-        self.assertTrue(hasattr(dbbackup, "__version__"))
-        self.assertIsInstance(dbbackup.__version__, str)
+
+        assert hasattr(dbbackup, "__version__")
+        assert isinstance(dbbackup.__version__, str)

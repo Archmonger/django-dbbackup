@@ -6,7 +6,7 @@ import contextlib
 import os
 import shutil
 import tempfile
-from unittest.mock import patch
+from unittest import mock
 
 GPG_AVAILABLE = shutil.which("gpg") is not None
 
@@ -37,13 +37,13 @@ class MediabackupBackupMediafilesTest(TestCase):
 
     def test_func(self):
         self.command.backup_mediafiles()
-        self.assertEqual(1, len(HANDLED_FILES["written_files"]))
+        assert len(HANDLED_FILES["written_files"]) == 1
 
     def test_compress(self):
         self.command.compress = True
         self.command.backup_mediafiles()
-        self.assertEqual(1, len(HANDLED_FILES["written_files"]))
-        self.assertTrue(HANDLED_FILES["written_files"][0][0].endswith(".gz"))
+        assert len(HANDLED_FILES["written_files"]) == 1
+        assert HANDLED_FILES["written_files"][0][0].endswith(".gz")
 
     def test_encrypt(self):
         if not GPG_AVAILABLE:
@@ -51,10 +51,10 @@ class MediabackupBackupMediafilesTest(TestCase):
         self.command.encrypt = True
         add_public_gpg()
         self.command.backup_mediafiles()
-        self.assertEqual(1, len(HANDLED_FILES["written_files"]))
+        assert len(HANDLED_FILES["written_files"]) == 1
         outputfile = HANDLED_FILES["written_files"][0][1]
         outputfile.seek(0)
-        self.assertTrue(outputfile.read().startswith(b"-----BEGIN PGP MESSAGE-----"))
+        assert outputfile.read().startswith(b"-----BEGIN PGP MESSAGE-----")
 
     def test_compress_and_encrypt(self):
         if not GPG_AVAILABLE:
@@ -63,34 +63,35 @@ class MediabackupBackupMediafilesTest(TestCase):
         self.command.encrypt = True
         add_public_gpg()
         self.command.backup_mediafiles()
-        self.assertEqual(1, len(HANDLED_FILES["written_files"]))
+        assert len(HANDLED_FILES["written_files"]) == 1
         outputfile = HANDLED_FILES["written_files"][0][1]
         outputfile.seek(0)
-        self.assertTrue(outputfile.read().startswith(b"-----BEGIN PGP MESSAGE-----"))
+        assert outputfile.read().startswith(b"-----BEGIN PGP MESSAGE-----")
 
     def test_write_local_file(self):
         self.command.path = tempfile.mktemp()
         self.command.backup_mediafiles()
-        self.assertTrue(os.path.exists(self.command.path))
-        self.assertEqual(0, len(HANDLED_FILES["written_files"]))
+        assert os.path.exists(self.command.path)
+        assert len(HANDLED_FILES["written_files"]) == 0
 
     def test_output_filename(self):
         self.command.filename = "my_new_name.tar"
         self.command.backup_mediafiles()
-        self.assertEqual(HANDLED_FILES["written_files"][0][0], self.command.filename)
+        assert HANDLED_FILES["written_files"][0][0] == self.command.filename
 
     def test_s3_uri_output_path(self):
         """Test that S3 URIs in output path are handled correctly for mediabackup."""
-        from unittest.mock import patch
-        
-        with patch("dbbackup.management.commands._base.BaseDbBackupCommand.write_to_storage") as mock_write_to_storage:
+
+        with mock.patch(
+            "dbbackup.management.commands._base.BaseDbBackupCommand.write_to_storage"
+        ) as mock_write_to_storage:
             self.command.path = "s3://mybucket/media/backup.tar"
             self.command.backup_mediafiles()
-            
+
             # Verify write_to_storage was called with the S3 path
-            self.assertTrue(mock_write_to_storage.called)
+            assert mock_write_to_storage.called
             args, kwargs = mock_write_to_storage.call_args
-            self.assertEqual(args[1], "s3://mybucket/media/backup.tar")
-            
+            assert args[1] == "s3://mybucket/media/backup.tar"
+
             # Verify no files were written to local storage
-            self.assertEqual(0, len(HANDLED_FILES["written_files"]))
+            assert len(HANDLED_FILES["written_files"]) == 0

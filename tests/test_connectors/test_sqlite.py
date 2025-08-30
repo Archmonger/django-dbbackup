@@ -15,25 +15,25 @@ class SqliteConnectorTest(TestCase):
         connector._write_dump(dump_file)
         dump_file.seek(0)
         for line in dump_file:
-            self.assertTrue(line.strip().endswith(b";"))
+            assert line.strip().endswith(b";")
 
     def test_create_dump(self):
         connector = SqliteConnector()
         dump = connector.create_dump()
-        self.assertTrue(dump.read())
+        assert dump.read()
 
     def test_create_dump_with_unicode(self):
         CharModel.objects.create(field="\xe9")
         connector = SqliteConnector()
         dump = connector.create_dump()
-        self.assertTrue(dump.read())
+        assert dump.read()
 
     def test_create_dump_with_newline(self):
         TextModel.objects.create(field=f'INSERT ({"foo" * 5000}\nbar\n WHERE \nbaz IS\n "great" );\n')
 
         connector = SqliteConnector()
         dump = connector.create_dump()
-        self.assertTrue(dump.read())
+        assert dump.read()
 
     def test_restore_dump(self):
         TextModel.objects.create(field="T\nf\nw\nnl")
@@ -65,17 +65,17 @@ class SqliteConnectorTest(TestCase):
 
         # Delete the original
         original_obj.delete()
-        self.assertFalse(TextModel.objects.filter(id=original_id).exists())
+        assert not TextModel.objects.filter(id=original_id).exists()
 
         # Restore and verify
         dump.seek(0)
         connector.restore_dump(dump)
 
         restored_objects = TextModel.objects.filter(id=original_id)
-        self.assertTrue(restored_objects.exists(), "Object should be restored")
+        assert restored_objects.exists(), "Object should be restored"
 
         restored_obj = restored_objects.first()
-        self.assertEqual(restored_obj.field, js_content, "Content should match exactly")
+        assert restored_obj.field == js_content, "Content should match exactly"
 
     def test_restore_dump_may_warn_for_already_exists(self):
         """Test that restore may produce warnings for already existing objects"""
@@ -94,13 +94,13 @@ class SqliteConnectorTest(TestCase):
 
         # Restore may produce warnings for already existing schema objects
         dump.seek(0)
-        with warnings.catch_warnings(record=True) as warning_list:
+        with warnings.catch_warnings(record=True):
             warnings.simplefilter("always")  # Capture all warnings
             connector.restore_dump(dump)
 
         # Verify data was restored despite any warnings
-        self.assertTrue(CharModel.objects.filter(field="test1").exists())
-        self.assertTrue(TextModel.objects.filter(field="test content").exists())
+        assert CharModel.objects.filter(field="test1").exists()
+        assert TextModel.objects.filter(field="test content").exists()
 
     def test_restore_dump_warns_only_for_serious_errors(self):
         """Test that restore only warns for serious errors like 'no such table'"""
@@ -120,13 +120,12 @@ class SqliteConnectorTest(TestCase):
 
         # Should warn about the serious error
         dbbackup_warnings = [w for w in warning_list if "dbbackup" in str(w.filename)]
-        self.assertTrue(len(dbbackup_warnings) > 0, "Should warn about 'no such table' error")
+        assert len(dbbackup_warnings) > 0, "Should warn about 'no such table' error"
 
         warning_messages = [str(w.message) for w in dbbackup_warnings]
-        self.assertTrue(
-            any("no such table" in msg.lower() for msg in warning_messages),
-            f"Should warn about 'no such table', got: {warning_messages}",
-        )
+        assert any(
+            "no such table" in msg.lower() for msg in warning_messages
+        ), f"Should warn about 'no such table', got: {warning_messages}"
 
     def test_create_dump_with_virtual_tables(self):
         with connection.cursor() as c:
@@ -134,7 +133,7 @@ class SqliteConnectorTest(TestCase):
 
         connector = SqliteConnector()
         dump = connector.create_dump()
-        self.assertTrue(dump.read())
+        assert dump.read()
 
     def test_restore_dump_unique_conflict_updates_row(self):
         """
@@ -152,7 +151,7 @@ class SqliteConnectorTest(TestCase):
         # Restore should update row back to original content via INSERT OR REPLACE retry
         dump.seek(0)
         connector.restore_dump(dump)
-        self.assertEqual(CharModel.objects.get(id=obj_id).field, "original")
+        assert CharModel.objects.get(id=obj_id).field == "original"
 
     def test_schema_objects_use_if_not_exists(self):
         """Test that indexes, triggers, and views use IF NOT EXISTS syntax"""
@@ -174,9 +173,9 @@ class SqliteConnectorTest(TestCase):
         # Check that the dump contains IF NOT EXISTS for all schema objects
         dump_content = dump_file.getvalue().decode("utf-8")
 
-        self.assertIn("CREATE INDEX IF NOT EXISTS", dump_content, "Indexes should use IF NOT EXISTS")
-        self.assertIn("CREATE TRIGGER IF NOT EXISTS", dump_content, "Triggers should use IF NOT EXISTS")
-        self.assertIn("CREATE VIEW IF NOT EXISTS", dump_content, "Views should use IF NOT EXISTS")
+        assert "CREATE INDEX IF NOT EXISTS" in dump_content, "Indexes should use IF NOT EXISTS"
+        assert "CREATE TRIGGER IF NOT EXISTS" in dump_content, "Triggers should use IF NOT EXISTS"
+        assert "CREATE VIEW IF NOT EXISTS" in dump_content, "Views should use IF NOT EXISTS"
 
     def test_restore_warns_about_already_exists_errors(self):
         """Test that restore warns about 'already exists' errors"""
@@ -211,11 +210,11 @@ CREATE VIEW test_exists_view AS SELECT * FROM test_exists;
         dbbackup_warnings = [w for w in warning_list if "dbbackup" in str(w.filename)]
 
         # Should warn about "already exists" errors now that filtering is removed
-        self.assertGreater(len(dbbackup_warnings), 0, "Should have warnings for 'already exists' errors")
+        assert len(dbbackup_warnings) > 0, "Should have warnings for 'already exists' errors"
 
         # Verify we get warnings about "already exists"
         already_exists_warnings = [w for w in dbbackup_warnings if "already exists" in str(w.message).lower()]
-        self.assertGreater(len(already_exists_warnings), 0, "Should warn about 'already exists' errors")
+        assert len(already_exists_warnings) > 0, "Should warn about 'already exists' errors"
 
 
 @patch("dbbackup.db.sqlite.open", mock_open(read_data=b"foo"), create=True)
@@ -224,8 +223,8 @@ class SqliteCPConnectorTest(TestCase):
         connector = SqliteCPConnector()
         dump = connector.create_dump()
         dump_content = dump.read()
-        self.assertTrue(dump_content)
-        self.assertEqual(dump_content, b"foo")
+        assert dump_content
+        assert dump_content == b"foo"
 
     def test_restore_dump(self):
         connector = SqliteCPConnector()
@@ -238,8 +237,8 @@ class SqliteBackupConnectorTest(TestCase):
         connector = SqliteBackupConnector()
         dump = connector.create_dump()
         dump_content = dump.read()
-        self.assertTrue(dump_content)
-        self.assertTrue(dump_content.startswith(b"SQLite format 3"))
+        assert dump_content
+        assert dump_content.startswith(b"SQLite format 3")
 
     def test_restore_dump(self):
         connector = SqliteBackupConnector()
@@ -249,46 +248,48 @@ class SqliteBackupConnectorTest(TestCase):
 
 class SqliteConnectionHandlingTest(TestCase):
     """Test connection handling edge cases"""
-    
+
     def test_sqlite_connector_restore_dump_with_unusable_connection(self):
         """Test restore_dump when connection is not usable"""
-        from unittest.mock import Mock, patch
-        from dbbackup.db.sqlite import SqliteConnector
         from io import BytesIO
-        
+        from unittest.mock import Mock
+
+        from dbbackup.db.sqlite import SqliteConnector
+
         connector = SqliteConnector()
-        
+
         # Mock the connection to be unusable
         mock_connection = Mock()
         mock_connection.is_usable.return_value = False
         mock_cursor = Mock()
         mock_connection.cursor.return_value = mock_cursor
         connector.connection = mock_connection
-        
+
         # Create a simple dump
         dump = BytesIO(b"SELECT 1;\n")
-        
+
         # Call restore_dump which should reconnect
         connector.restore_dump(dump)
-        
+
         # Verify connection.connect() was called
         mock_connection.connect.assert_called_once()
 
     def test_sqlite_backup_connector_create_dump_with_unusable_connection(self):
         """Test SqliteBackupConnector create_dump when connection is not usable"""
         from unittest.mock import Mock
+
         from dbbackup.db.sqlite import SqliteBackupConnector
-        
+
         connector = SqliteBackupConnector()
-        
+
         # Mock the connection to be unusable
         mock_connection = Mock()
         mock_connection.is_usable.return_value = False
         connector.connection = mock_connection
-        
+
         # Call create_dump which should reconnect
         # This will call the _write_dump method which is a pass
         connector.create_dump()
-        
+
         # Verify connection.connect() was called
         mock_connection.connect.assert_called_once()

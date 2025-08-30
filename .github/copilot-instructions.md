@@ -17,7 +17,7 @@ Bootstrap, build, and test the repository:
 - `hatch run functional:all` – end-to-end functional (SQLite + PostgreSQL live scripts) (≈10–15s) **NEVER CANCEL.**
   - `hatch run functional:sqlite --all` – only SQLite functional cycle
   - `hatch run functional:postgres --all` – only PostgreSQL functional cycle
-- `hatch run lint:check` – lint (ruff + pylint) (≈5s)
+- `hatch run lint:check` – lint (ruff) (≈5s)
 - `hatch run docs:build` – build documentation (≈2s, strict)
 - `hatch run docs:serve` – local docs server (http://localhost:8000)
 - `hatch run docs:linkcheck` – validate internal/external links & spelling
@@ -40,8 +40,7 @@ Run tests in multiple configurations:
 - `hatch run functional:all -v` – functional backup/restore (SQLite + PostgreSQL)
 - `hatch run functional:sqlite --all -v` – functional (SQLite only)
 - `hatch run functional:postgres --all -v` – functional (PostgreSQL only)
-- `hatch run lint:check` – linting
-- `hatch run lint:format` – auto-format (Ruff)
+- `hatch fmt --check` – Python formatting and linting using ruff
 
 Expected test results:
 
@@ -103,7 +102,7 @@ Modern development process using Hatch:
 3. **Run unit tests**: `hatch test` (≈30s) **All must pass - failures are never expected or allowed.**
 4. **Run functional tests**: `hatch run functional:all -v` (≈10–15s)
 5. **Run linting**: `hatch run lint:check` (5 seconds)
-6. **Auto-format code**: `hatch run lint:format` (2 seconds)
+6. **Auto-format code**: `hatch fmt` (2 seconds)
 7. **Test documentation**: `hatch run docs:build` (2 seconds)
 8. **Update documentation** when making changes to Python source code (required)
 9. **Add changelog entry** for all significant changes (bug fixes, new features, breaking changes) to `CHANGELOG.md` under the "Unreleased" section.
@@ -136,7 +135,7 @@ Key directories and files:
 
 Key configuration files:
 
-- `pyproject.toml` – all tool configuration (Hatch, Ruff, PyLint, PyTest, Coverage)
+- `pyproject.toml` – all tool configuration (Hatch, Ruff, PyTest, Coverage)
 - `.pre-commit-config.yaml` – git pre-commit hooks
 - `tests/settings.py` – Django test settings (locmem email backend)
 
@@ -152,9 +151,8 @@ hatch test --python 3.12             # Test specific Python version subset
 hatch run functional:all             # Functional tests (SQLite + PostgreSQL)
 hatch run functional:sqlite --all    # Functional tests (SQLite only)
 hatch run functional:postgres --all  # Functional tests (PostgreSQL only)
-hatch run lint:check                 # Lint (ruff + pylint)
-hatch run lint:format                # Auto-format
-hatch run lint:format-check          # Format check only
+hatch fmt --check                    # Check formatting and linting
+hatch fmt                            # Auto-format and lint
 hatch run docs:build                 # Build documentation (strict)
 hatch run docs:serve                 # Serve docs locally
 hatch run precommit:check            # Run all pre-commit hooks
@@ -168,8 +166,6 @@ hatch build                          # Build distribution packages
 hatch env show                       # Show all environments
 hatch shell                          # Default dev shell
 hatch shell functional               # Functional env shell
-hatch shell lint                     # Lint env shell
-hatch run --env lint ruff --version  # Run command in lint env
 hatch python install 3.13            # (Optional) Install Python 3.13 via Hatch
 ```
 
@@ -184,7 +180,6 @@ Modern isolated environments configured in pyproject.toml:
 
 ### Development Environments
 
-- **lint**: Code quality (ruff, pylint)
 - **docs**: Documentation building (mkdocs-material)
 - **precommit**: Git hooks management
 
@@ -225,7 +220,7 @@ Core runtime dependency:
 Development dependencies (managed by hatch):
 
 - **Testing**: coverage, django-storages, psycopg2-binary, python-gnupg, testfixtures, python-dotenv
-- **Linting**: ruff, pylint
+- **Linting**: ruff
 - **Documentation**: mkdocs, mkdocs-material, mkdocs-git-revision-date-localized-plugin, mkdocs-include-markdown-plugin, mkdocs-spellcheck[all], mkdocs-git-authors-plugin, mkdocs-minify-plugin, mike, linkcheckmd
 - **Pre-commit**: pre-commit
 

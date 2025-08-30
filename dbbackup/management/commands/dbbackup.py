@@ -4,50 +4,28 @@ Command for backup database.
 
 from django.core.management.base import CommandError
 
-from ... import settings, utils
-from ...db.base import get_connector
-from ...signals import pre_backup, post_backup
-from ...storage import StorageError, get_storage
-from ._base import BaseDbBackupCommand, make_option
+from dbbackup import settings, utils
+from dbbackup.db.base import get_connector
+from dbbackup.management.commands._base import BaseDbBackupCommand, make_option
+from dbbackup.signals import post_backup, pre_backup
+from dbbackup.storage import StorageError, get_storage
 
 
 class Command(BaseDbBackupCommand):
     help = "Backup a database, encrypt and/or compress."
     content_type = "db"
 
-    option_list = BaseDbBackupCommand.option_list + (
+    option_list = (
+        *BaseDbBackupCommand.option_list,
         make_option(
-            "-c",
-            "--clean",
-            dest="clean",
-            action="store_true",
-            default=False,
-            help="Clean up old backup files",
+            "-c", "--clean", dest="clean", action="store_true", default=False, help="Clean up old backup files"
         ),
         make_option(
-            "-d",
-            "--database",
-            help="Database(s) to backup specified by key separated by commas(default: all)",
+            "-d", "--database", help="Database(s) to backup specified by key separated by commas(default: all)"
         ),
-        make_option(
-            "-s",
-            "--servername",
-            help="Specify server name to include in backup filename",
-        ),
-        make_option(
-            "-z",
-            "--compress",
-            action="store_true",
-            default=False,
-            help="Compress the backup files",
-        ),
-        make_option(
-            "-e",
-            "--encrypt",
-            action="store_true",
-            default=False,
-            help="Encrypt the backup files",
-        ),
+        make_option("-s", "--servername", help="Specify server name to include in backup filename"),
+        make_option("-z", "--compress", action="store_true", default=False, help="Compress the backup files"),
+        make_option("-e", "--encrypt", action="store_true", default=False, help="Encrypt the backup files"),
         make_option("-o", "--output-filename", default=None, help="Specify filename on storage"),
         make_option(
             "-O",

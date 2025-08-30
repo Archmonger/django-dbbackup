@@ -2,10 +2,10 @@ from __future__ import annotations
 
 import logging
 import shlex
-from typing import Any, List, Optional
+from typing import Any, ClassVar
 from urllib.parse import quote
 
-from .base import BaseCommandDBConnector
+from dbbackup.db.base import BaseCommandDBConnector
 
 logger = logging.getLogger("dbbackup.command")
 
@@ -50,7 +50,7 @@ class PgDumpConnector(BaseCommandDBConnector):
     single_transaction = True
     drop = True
     if_exists = True
-    schemas: Optional[List[str]] = []
+    schemas: ClassVar[list[str] | None] = []
 
     def _create_dump(self):
         cmd_part, pg_env = parse_postgres_settings(self)

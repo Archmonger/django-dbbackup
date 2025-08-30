@@ -58,12 +58,12 @@ class SignalsTestCase(TestCase):
         command._save_new_backup(database)
 
         # Verify pre_backup signal was sent
-        self.assertEqual(len(self.received_signals), 1)
+        assert len(self.received_signals) == 1
         pre_signal = self.received_signals[0]
-        self.assertEqual(pre_signal["sender"], DbBackupCommand)
-        self.assertEqual(pre_signal["kwargs"]["database"], database)
-        self.assertEqual(pre_signal["kwargs"]["connector"], mock_connector)
-        self.assertEqual(pre_signal["kwargs"]["servername"], "test-server")
+        assert pre_signal["sender"] == DbBackupCommand
+        assert pre_signal["kwargs"]["database"] == database
+        assert pre_signal["kwargs"]["connector"] == mock_connector
+        assert pre_signal["kwargs"]["servername"] == "test-server"
 
         signals.pre_backup.disconnect(self.signal_receiver)
 
@@ -102,14 +102,14 @@ class SignalsTestCase(TestCase):
         command._save_new_backup(database)
 
         # Verify post_backup signal was sent - it should be the last signal
-        self.assertTrue(len(self.received_signals) >= 1)
+        assert len(self.received_signals) >= 1
         post_signal = self.received_signals[-1]  # Get the last signal
-        self.assertEqual(post_signal["sender"], DbBackupCommand)
-        self.assertEqual(post_signal["kwargs"]["database"], database)
-        self.assertEqual(post_signal["kwargs"]["connector"], mock_connector)
-        self.assertEqual(post_signal["kwargs"]["servername"], "test-server")
-        self.assertEqual(post_signal["kwargs"]["filename"], "test_backup.sql")
-        self.assertIn("storage", post_signal["kwargs"])
+        assert post_signal["sender"] == DbBackupCommand
+        assert post_signal["kwargs"]["database"] == database
+        assert post_signal["kwargs"]["connector"] == mock_connector
+        assert post_signal["kwargs"]["servername"] == "test-server"
+        assert post_signal["kwargs"]["filename"] == "test_backup.sql"
+        assert "storage" in post_signal["kwargs"]
 
         signals.post_backup.disconnect(self.signal_receiver)
 
@@ -146,13 +146,13 @@ class SignalsTestCase(TestCase):
             command._restore_backup()
 
         # Verify pre_restore signal was sent
-        self.assertTrue(len(self.received_signals) >= 1)
+        assert len(self.received_signals) >= 1
         pre_signal = self.received_signals[0]
-        self.assertEqual(pre_signal["sender"], DbRestoreCommand)
-        self.assertEqual(pre_signal["kwargs"]["database"], command.database)
-        self.assertEqual(pre_signal["kwargs"]["database_name"], "test_db")
-        self.assertEqual(pre_signal["kwargs"]["filename"], "test_backup.sql")
-        self.assertEqual(pre_signal["kwargs"]["servername"], "test-server")
+        assert pre_signal["sender"] == DbRestoreCommand
+        assert pre_signal["kwargs"]["database"] == command.database
+        assert pre_signal["kwargs"]["database_name"] == "test_db"
+        assert pre_signal["kwargs"]["filename"] == "test_backup.sql"
+        assert pre_signal["kwargs"]["servername"] == "test-server"
 
         signals.pre_restore.disconnect(self.signal_receiver)
 
@@ -189,14 +189,14 @@ class SignalsTestCase(TestCase):
             command._restore_backup()
 
         # Verify post_restore signal was sent
-        self.assertTrue(len(self.received_signals) >= 1)
+        assert len(self.received_signals) >= 1
         post_signal = self.received_signals[-1]
-        self.assertEqual(post_signal["sender"], DbRestoreCommand)
-        self.assertEqual(post_signal["kwargs"]["database"], command.database)
-        self.assertEqual(post_signal["kwargs"]["database_name"], "test_db")
-        self.assertEqual(post_signal["kwargs"]["filename"], "test_backup.sql")
-        self.assertEqual(post_signal["kwargs"]["servername"], "test-server")
-        self.assertEqual(post_signal["kwargs"]["connector"], command.connector)
+        assert post_signal["sender"] == DbRestoreCommand
+        assert post_signal["kwargs"]["database"] == command.database
+        assert post_signal["kwargs"]["database_name"] == "test_db"
+        assert post_signal["kwargs"]["filename"] == "test_backup.sql"
+        assert post_signal["kwargs"]["servername"] == "test-server"
+        assert post_signal["kwargs"]["connector"] == command.connector
 
         signals.post_restore.disconnect(self.signal_receiver)
 
@@ -226,11 +226,11 @@ class SignalsTestCase(TestCase):
         command.backup_mediafiles()
 
         # Verify pre_media_backup signal was sent
-        self.assertTrue(len(self.received_signals) >= 1)
+        assert len(self.received_signals) >= 1
         pre_signal = self.received_signals[0]
-        self.assertEqual(pre_signal["sender"], MediaBackupCommand)
-        self.assertEqual(pre_signal["kwargs"]["servername"], "test-server")
-        self.assertIn("storage", pre_signal["kwargs"])
+        assert pre_signal["sender"] == MediaBackupCommand
+        assert pre_signal["kwargs"]["servername"] == "test-server"
+        assert "storage" in pre_signal["kwargs"]
 
         signals.pre_media_backup.disconnect(self.signal_receiver)
 
@@ -260,12 +260,12 @@ class SignalsTestCase(TestCase):
         command.backup_mediafiles()
 
         # Verify post_media_backup signal was sent
-        self.assertTrue(len(self.received_signals) >= 1)
+        assert len(self.received_signals) >= 1
         post_signal = self.received_signals[-1]
-        self.assertEqual(post_signal["sender"], MediaBackupCommand)
-        self.assertEqual(post_signal["kwargs"]["servername"], "test-server")
-        self.assertIn("filename", post_signal["kwargs"])
-        self.assertIn("storage", post_signal["kwargs"])
+        assert post_signal["sender"] == MediaBackupCommand
+        assert post_signal["kwargs"]["servername"] == "test-server"
+        assert "filename" in post_signal["kwargs"]
+        assert "storage" in post_signal["kwargs"]
 
         signals.post_media_backup.disconnect(self.signal_receiver)
 
@@ -297,12 +297,12 @@ class SignalsTestCase(TestCase):
             command._restore_backup()
 
         # Verify pre_media_restore signal was sent
-        self.assertTrue(len(self.received_signals) >= 1)
+        assert len(self.received_signals) >= 1
         pre_signal = self.received_signals[0]
-        self.assertEqual(pre_signal["sender"], MediaRestoreCommand)
-        self.assertEqual(pre_signal["kwargs"]["filename"], "test_media.tar")
-        self.assertEqual(pre_signal["kwargs"]["servername"], "test-server")
-        self.assertIn("storage", pre_signal["kwargs"])
+        assert pre_signal["sender"] == MediaRestoreCommand
+        assert pre_signal["kwargs"]["filename"] == "test_media.tar"
+        assert pre_signal["kwargs"]["servername"] == "test-server"
+        assert "storage" in pre_signal["kwargs"]
 
         signals.pre_media_restore.disconnect(self.signal_receiver)
 
@@ -334,12 +334,12 @@ class SignalsTestCase(TestCase):
             command._restore_backup()
 
         # Verify post_media_restore signal was sent
-        self.assertTrue(len(self.received_signals) >= 1)
+        assert len(self.received_signals) >= 1
         post_signal = self.received_signals[-1]
-        self.assertEqual(post_signal["sender"], MediaRestoreCommand)
-        self.assertEqual(post_signal["kwargs"]["filename"], "test_media.tar")
-        self.assertEqual(post_signal["kwargs"]["servername"], "test-server")
-        self.assertIn("storage", post_signal["kwargs"])
+        assert post_signal["sender"] == MediaRestoreCommand
+        assert post_signal["kwargs"]["filename"] == "test_media.tar"
+        assert post_signal["kwargs"]["servername"] == "test-server"
+        assert "storage" in post_signal["kwargs"]
 
         signals.post_media_restore.disconnect(self.signal_receiver)
 
@@ -357,6 +357,6 @@ class SignalsTestCase(TestCase):
         ]
 
         for signal_name in expected_signals:
-            self.assertTrue(hasattr(signals, signal_name), f"Signal '{signal_name}' is not defined in signals module")
+            assert hasattr(signals, signal_name), f"Signal '{signal_name}' is not defined in signals module"
             signal = getattr(signals, signal_name)
-            self.assertTrue(hasattr(signal, "send"), f"Signal '{signal_name}' does not have a send method")
+            assert hasattr(signal, "send"), f"Signal '{signal_name}' does not have a send method"

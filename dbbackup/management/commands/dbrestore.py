@@ -8,11 +8,11 @@ from django.conf import settings
 from django.core.management.base import CommandError
 from django.db import connection
 
-from ... import utils
-from ...db.base import get_connector
-from ...signals import post_restore, pre_restore
-from ...storage import StorageError, get_storage
-from ._base import BaseDbBackupCommand, make_option
+from dbbackup import utils
+from dbbackup.db.base import get_connector
+from dbbackup.management.commands._base import BaseDbBackupCommand, make_option
+from dbbackup.signals import post_restore, pre_restore
+from dbbackup.storage import StorageError, get_storage
 
 
 class Command(BaseDbBackupCommand):
@@ -24,7 +24,8 @@ class Command(BaseDbBackupCommand):
     database_name = None
     database = None
 
-    option_list = BaseDbBackupCommand.option_list + (
+    option_list = (
+        *BaseDbBackupCommand.option_list,
         make_option("-d", "--database", help="Database to restore"),
         make_option("-i", "--input-filename", help="Specify filename to backup from"),
         make_option("-I", "--input-path", help="Specify path on local filesystem to backup from"),
@@ -33,20 +34,10 @@ class Command(BaseDbBackupCommand):
             "--servername",
             help="If backup file is not specified, filter the existing ones with the given servername",
         ),
-        make_option(
-            "-c",
-            "--decrypt",
-            default=False,
-            action="store_true",
-            help="Decrypt data before restoring",
-        ),
+        make_option("-c", "--decrypt", default=False, action="store_true", help="Decrypt data before restoring"),
         make_option("-p", "--passphrase", help="Passphrase for decrypt file", default=None),
         make_option(
-            "-z",
-            "--uncompress",
-            action="store_true",
-            default=False,
-            help="Uncompress gzip data before restoring",
+            "-z", "--uncompress", action="store_true", default=False, help="Uncompress gzip data before restoring"
         ),
         make_option(
             "-n",
@@ -101,9 +92,10 @@ class Command(BaseDbBackupCommand):
             if len(settings.DATABASES) > 1:
                 errmsg = "Because this project contains more than one database, you must specify the --database option."
                 raise CommandError(errmsg)
-            database_name = list(settings.DATABASES.keys())[0]
+            database_name = next(iter(settings.DATABASES.keys()))
         if database_name not in settings.DATABASES:
-            raise CommandError(f"Database {database_name} does not exist.")
+            msg = f"Database {database_name} does not exist."
+            raise CommandError(msg)
         return database_name, settings.DATABASES[database_name]
 
     def _restore_backup(self):
@@ -119,9 +111,9 @@ class Command(BaseDbBackupCommand):
         )
 
         if self.schemas:
-            self.logger.info(f"Restoring schemas: {self.schemas}")
+            self.logger.info(f"Restoring schemas: {self.schemas}")  # noqa: G004
 
-        self.logger.info(f"Restoring: {input_filename}")
+        self.logger.info(f"Restoring: {input_filename}")  # noqa: G004
 
         # Send pre_restore signal
         pre_restore.send(

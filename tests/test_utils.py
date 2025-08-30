@@ -8,6 +8,7 @@ from io import StringIO
 from unittest.mock import patch
 
 import django
+import pytest
 from django.core import mail
 from django.test import TestCase
 
@@ -22,25 +23,25 @@ from tests.utils import (
 )
 
 
-class Bytes_To_StrTest(TestCase):
+class BytesToStrTest(TestCase):
     def test_get_gb(self):
-        value = utils.bytes_to_str(byteVal=2**31)
-        self.assertEqual(value, "2.0 GiB")
+        value = utils.bytes_to_str(byte_val=2**31)
+        assert value == "2.0 GiB"
 
     def test_0_decimal(self):
-        value = utils.bytes_to_str(byteVal=1.01, decimals=0)
-        self.assertEqual(value, "1 B")
+        value = utils.bytes_to_str(byte_val=1.01, decimals=0)
+        assert value == "1 B"
 
     def test_2_decimal(self):
-        value = utils.bytes_to_str(byteVal=1.01, decimals=2)
-        self.assertEqual(value, "1.01 B")
+        value = utils.bytes_to_str(byte_val=1.01, decimals=2)
+        assert value == "1.01 B"
 
 
-class Handle_SizeTest(TestCase):
+class HandleSizeTest(TestCase):
     def test_func(self):
         filehandle = StringIO("Test string")
         value = utils.handle_size(filehandle=filehandle)
-        self.assertEqual(value, "11.0 B")
+        assert value == "11.0 B"
 
 
 class MailAdminsTest(TestCase):
@@ -49,68 +50,69 @@ class MailAdminsTest(TestCase):
         msg = "bar message"
 
         utils.mail_admins(subject, msg)
-        self.assertEqual(len(mail.outbox), 1)
+        assert len(mail.outbox) == 1
 
         sent_mail = mail.outbox[0]
         expected_subject = f"{settings.EMAIL_SUBJECT_PREFIX}{subject}"
         expected_to = settings.ADMINS[0][1]
         expected_from = settings.SERVER_EMAIL
 
-        self.assertEqual(sent_mail.subject, expected_subject)
-        self.assertEqual(sent_mail.body, msg)
-        self.assertEqual(sent_mail.to[0], expected_to)
-        self.assertEqual(sent_mail.from_email, expected_from)
+        assert sent_mail.subject == expected_subject
+        assert sent_mail.body == msg
+        assert sent_mail.to[0] == expected_to
+        assert sent_mail.from_email == expected_from
 
     @patch("dbbackup.settings.ADMINS", None)
     def test_no_admin(self):
         subject = "foo subject"
         msg = "bar message"
-        self.assertIsNone(utils.mail_admins(subject, msg))
-        self.assertEqual(len(mail.outbox), 0)
+        assert utils.mail_admins(subject, msg) is None
+        assert len(mail.outbox) == 0
 
 
-class Email_Uncaught_ExceptionTest(TestCase):
+class EmailUncaughtExceptionTest(TestCase):
     def test_success(self):
         def func():
             pass
 
         utils.email_uncaught_exception(func)
-        self.assertEqual(len(mail.outbox), 0)
+        assert len(mail.outbox) == 0
 
     @patch("dbbackup.settings.SEND_EMAIL", False)
     def test_raise_error_without_mail(self):
         def func():
-            raise Exception("Foo")
+            msg = "Foo"
+            raise Exception(msg)  # noqa: TRY002
 
-        with self.assertRaises(Exception):
+        with pytest.raises(Exception):  # noqa
             utils.email_uncaught_exception(func)()
-        self.assertEqual(len(mail.outbox), 0)
+        assert len(mail.outbox) == 0
 
     @patch("dbbackup.settings.SEND_EMAIL", True)
     @patch("dbbackup.settings.ADMINS", ["foo@bar"])
     def test_raise_with_mail(self):
         def func():
-            raise Exception("Foo")
+            raise Exception("Foo")  # noqa
 
         # Clear the mail outbox
         mail.outbox.clear()
 
-        with self.assertRaises(Exception):
+        with pytest.raises(Exception):  # noqa
             utils.email_uncaught_exception(func)()
-        self.assertEqual(len(mail.outbox), 1)
+        assert len(mail.outbox) == 1
         error_mail = mail.outbox[0]
         # The recipients might be processed differently, so let's be more flexible
-        self.assertTrue(len(error_mail.to) > 0)  # Just ensure someone gets the email
-        self.assertIn('Exception("Foo")', error_mail.subject)
+        assert len(error_mail.to) > 0  # Just ensure someone gets the email
+        assert 'Exception("Foo")' in error_mail.subject
         if django.VERSION >= (1, 7):
-            self.assertIn('Exception("Foo")', error_mail.body)
+            assert 'Exception("Foo")' in error_mail.body
 
 
 GPG_AVAILABLE = shutil.which("gpg") is not None
 
 
 @unittest.skipIf(not GPG_AVAILABLE, "gpg executable not available")
-class Encrypt_FileTest(TestCase):
+class EncryptFileTest(TestCase):
     def setUp(self):
         self.path = tempfile.mktemp()
         with open(self.path, "a") as fd:
@@ -125,11 +127,30 @@ class Encrypt_FileTest(TestCase):
         with open(self.path, mode="rb") as fd:
             encrypted_file, filename = utils.encrypt_file(inputfile=fd, filename="foo.txt")
         encrypted_file.seek(0)
-        self.assertTrue(encrypted_file.read())
+        assert encrypted_file.read()
+
+    def test_encrypt_file_invalid_mode(self):
+        """Test encrypt_file with non-binary mode file"""
+        import os
+        import tempfile
+
+        # Create a temporary file in text mode
+        with tempfile.NamedTemporaryFile(mode="w", delete=False) as f:
+            f.write("test content")
+            temp_path = f.name
+
+        try:
+            with (
+                open(temp_path) as text_file,
+                pytest.raises(ValueError, match="Input file must be opened in binary mode"),
+            ):
+                utils.encrypt_file(inputfile=text_file, filename="test.txt")
+        finally:
+            os.unlink(temp_path)
 
 
 @unittest.skipIf(not GPG_AVAILABLE, "gpg executable not available")
-class Unencrypt_FileTest(TestCase):
+class UnencryptFileTest(TestCase):
     def setUp(self):
         add_private_gpg()
 
@@ -139,14 +160,14 @@ class Unencrypt_FileTest(TestCase):
     @patch("dbbackup.utils.input", return_value=None)
     @patch("dbbackup.utils.getpass", return_value=None)
     def test_unencrypt(self, *args):
-        inputfile = open(ENCRYPTED_FILE, "r+b")
-        uncryptfile, filename = utils.unencrypt_file(inputfile, "foofile.gpg")
-        uncryptfile.seek(0)
-        self.assertEqual(b"foo\n", uncryptfile.read())
+        with open(ENCRYPTED_FILE, "r+b") as inputfile:
+            uncryptfile, filename = utils.unencrypt_file(inputfile, "foofile.gpg")
+            uncryptfile.seek(0)
+            assert uncryptfile.read() == b"foo\n"
 
 
 @unittest.skipIf(not GPG_AVAILABLE, "gpg executable not available")
-class Compress_FileTest(TestCase):
+class CompressFileTest(TestCase):
     def setUp(self):
         self.path = tempfile.mktemp()
         with open(self.path, "a+b") as fd:
@@ -186,23 +207,23 @@ class EncryptionDecryptionEdgeCasesTest(TestCase):
 
                     from dbbackup.utils import EncryptionError
 
-                    with self.assertRaises(EncryptionError) as context:
+                    with pytest.raises(EncryptionError) as context:
                         utils.encrypt_file(inputfile=binary_file, filename="test.txt")
 
-                    self.assertIn("Encryption failed", str(context.exception))
+                    assert "Encryption failed" in str(context)
         finally:
             os.unlink(temp_path)
 
 
-class Uncompress_FileTest(TestCase):
+class UncompressFileTest(TestCase):
     def test_func(self):
-        inputfile = open(COMPRESSED_FILE, "rb")
-        fd, filename = utils.uncompress_file(inputfile, "foo.gz")
-        fd.seek(0)
-        self.assertEqual(fd.read(), b"foo\n")
+        with open(COMPRESSED_FILE, "rb") as inputfile:
+            fd, filename = utils.uncompress_file(inputfile, "foo.gz")
+            fd.seek(0)
+            assert fd.read() == b"foo\n"
 
 
-class Create_Spooled_Temporary_FileTest(TestCase):
+class CreateSpooledTemporaryFileTest(TestCase):
     def setUp(self):
         self.path = tempfile.mktemp()
         with open(self.path, "a") as fd:
@@ -218,58 +239,58 @@ class Create_Spooled_Temporary_FileTest(TestCase):
 class TimestampTest(TestCase):
     def test_naive_value(self):
         with self.settings(USE_TZ=False):
-            timestamp = utils.timestamp(datetime(2015, 8, 15, 8, 15, 12, 0))
-            self.assertEqual(timestamp, "2015-08-15-081512")
+            timestamp = utils.timestamp(datetime(2015, 8, 15, 8, 15, 12, 0))  # noqa
+            assert timestamp == "2015-08-15-081512"
 
     def test_aware_value(self):
         with self.settings(USE_TZ=True) and self.settings(TIME_ZONE="Europe/Rome"):
             timestamp = utils.timestamp(datetime(2015, 8, 15, 8, 15, 12, 0, tzinfo=timezone.utc))
-            self.assertEqual(timestamp, "2015-08-15-101512")
+            assert timestamp == "2015-08-15-101512"
 
 
-class Datefmt_To_Regex(TestCase):
+class DatefmtToRegex(TestCase):
     def test_patterns(self):
         now = datetime.now()
         for datefmt, regex in utils.PATTERN_MATCHNG:
             date_string = datetime.strftime(now, datefmt)
             regex = utils.datefmt_to_regex(datefmt)
             match = regex.match(date_string)
-            self.assertTrue(match)
-            self.assertEqual(match.groups()[0], date_string)
+            assert match
+            assert match.groups()[0] == date_string
 
     def test_complex_pattern(self):
         now = datetime.now()
         datefmt = "Foo%a_%A-%w-%d-%b-%B_%m_%y_%Y-%H-%I-%M_%S_%f_%j-%U-%W-Bar"
         date_string = datetime.strftime(now, datefmt)
         regex = utils.datefmt_to_regex(datefmt)
-        self.assertTrue(regex.pattern.startswith("(Foo"))
-        self.assertTrue(regex.pattern.endswith("Bar)"))
+        assert regex.pattern.startswith("(Foo")
+        assert regex.pattern.endswith("Bar)")
         match = regex.match(date_string)
-        self.assertTrue(match)
-        self.assertEqual(match.groups()[0], date_string)
+        assert match
+        assert match.groups()[0] == date_string
 
 
-class Filename_To_DatestringTest(TestCase):
+class FilenameToDatestringTest(TestCase):
     def test_func(self):
         now = datetime.now()
         datefmt = settings.DATE_FORMAT
         filename = f"{datetime.strftime(now, datefmt)}-foo.gz.gpg"
         datestring = utils.filename_to_datestring(filename, datefmt)
-        self.assertIn(datestring, filename)
+        assert datestring in filename
 
     def test_generated_filename(self):
         filename = utils.filename_generate("bak", "default")
         datestring = utils.filename_to_datestring(filename)
-        self.assertIn(datestring, filename)
+        assert datestring in filename
 
 
-class Filename_To_DateTest(TestCase):
+class FilenameToDateTest(TestCase):
     def test_func(self):
         now = datetime.now()
         datefmt = settings.DATE_FORMAT
         filename = f"{datetime.strftime(now, datefmt)}-foo.gz.gpg"
         date = utils.filename_to_date(filename, datefmt)
-        self.assertEqual(date.timetuple()[:5], now.timetuple()[:5])
+        assert date.timetuple()[:5] == now.timetuple()[:5]
 
     def test_generated_filename(self):
         filename = utils.filename_generate("bak", "default")
@@ -277,7 +298,7 @@ class Filename_To_DateTest(TestCase):
 
 
 @patch("dbbackup.settings.HOSTNAME", "test")
-class Filename_GenerateTest(TestCase):
+class FilenameGenerateTest(TestCase):
     @patch(
         "dbbackup.settings.FILENAME_TEMPLATE",
         "---{databasename}--{servername}-{datetime}.{extension}",
@@ -285,32 +306,32 @@ class Filename_GenerateTest(TestCase):
     def test_func(self, *args):
         extension = "foo"
         generated_name = utils.filename_generate(extension)
-        self.assertTrue("--" not in generated_name)
-        self.assertFalse(generated_name.startswith("-"))
+        assert "--" not in generated_name
+        assert not generated_name.startswith("-")
 
     def test_db(self, *args):
         extension = "foo"
         generated_name = utils.filename_generate(extension)
-        self.assertTrue(generated_name.startswith(settings.HOSTNAME))
-        self.assertTrue(generated_name.endswith(extension))
+        assert generated_name.startswith(settings.HOSTNAME)
+        assert generated_name.endswith(extension)
 
     def test_media(self, *args):
         extension = "foo"
         generated_name = utils.filename_generate(extension, content_type="media")
-        self.assertTrue(generated_name.startswith(settings.HOSTNAME))
-        self.assertTrue(generated_name.endswith(extension))
+        assert generated_name.startswith(settings.HOSTNAME)
+        assert generated_name.endswith(extension)
 
     @patch("django.utils.timezone.settings.USE_TZ", True)
     def test_tz_true(self):
         filename = utils.filename_generate("bak", "default")
         datestring = utils.filename_to_datestring(filename)
-        self.assertIn(datestring, filename)
+        assert datestring in filename
 
     @patch("dbbackup.settings.FILENAME_TEMPLATE", callable_for_filename_template)
     def test_template_is_callable(self, *args):
         extension = "foo"
         generated_name = utils.filename_generate(extension)
-        self.assertTrue(generated_name.endswith("foo"))
+        assert generated_name.endswith("foo")
 
 
 class QuoteCommandArg(TestCase):
@@ -321,24 +342,28 @@ class QuoteCommandArg(TestCase):
         """Test escaping with various special characters that could break MySQL commands."""
         # Test simple password with special characters
         result = shlex.quote("pass!@#$%^&*()")
-        self.assertIsInstance(result, str)
+        assert isinstance(result, str)
         # Should be quoted if it contains special chars
-        self.assertTrue("pass!@#$%^&*()" in result)
+        assert "pass!@#$%^&*()" in result
 
         # Test password with quotes
         result = shlex.quote("pass'word\"test")
-        self.assertIsInstance(result, str)
-        self.assertTrue("pass" in result and "word" in result and "test" in result)
+        assert isinstance(result, str)
+        assert "pass" in result
+        assert "word" in result
+        assert "test" in result
 
         # Test password with shell metacharacters
         result = shlex.quote("pass;word&command")
-        self.assertIsInstance(result, str)
-        self.assertTrue("pass" in result and "word" in result and "command" in result)
+        assert isinstance(result, str)
+        assert "pass" in result
+        assert "word" in result
+        assert "command" in result
 
         # Test password with spaces and special chars combined
         result = shlex.quote("my password with spaces!")
-        self.assertIsInstance(result, str)
-        self.assertTrue("my password with spaces!" in result)
+        assert isinstance(result, str)
+        assert "my password with spaces!" in result
 
     def test_complete_password_handling_flow(self):
         """Test the complete flow from password to properly parsed command arguments."""
@@ -364,11 +389,9 @@ class QuoteCommandArg(TestCase):
                         break
 
                 # Step 5: Verify the password is preserved correctly
-                self.assertEqual(
-                    password_arg,
-                    password,
-                    f"Password {repr(password)} was not preserved correctly through the escaping/parsing flow. "
-                    f"Got {repr(password_arg)} instead.",
+                assert password_arg == password, (
+                    f"Password {password!r} was not preserved correctly through the escaping/parsing flow. "
+                    f"Got {password_arg!r} instead."
                 )
 
 
@@ -376,28 +399,8 @@ class BytesToStrEdgeCasesTest(TestCase):
     def test_bytes_to_str_fallback_to_bytes(self):
         """Test bytes_to_str when value is smaller than all units"""
         # Test the fallback line that returns plain bytes
-        value = utils.bytes_to_str(byteVal=0.5)
-        self.assertEqual(value, "0.5 B")
-
-
-class EncryptFileTest(TestCase):
-    def test_encrypt_file_invalid_mode(self):
-        """Test encrypt_file with non-binary mode file"""
-        import os
-        import tempfile
-
-        # Create a temporary file in text mode
-        with tempfile.NamedTemporaryFile(mode="w", delete=False) as f:
-            f.write("test content")
-            temp_path = f.name
-
-        try:
-            with open(temp_path, "r") as text_file:
-                with self.assertRaises(ValueError) as context:
-                    utils.encrypt_file(inputfile=text_file, filename="test.txt")
-                self.assertIn("Input file must be opened in binary mode", str(context.exception))
-        finally:
-            os.unlink(temp_path)
+        value = utils.bytes_to_str(byte_val=0.5)
+        assert value == "0.5 B"
 
 
 class EmailUncaughtExceptionEdgeCaseTest(TestCase):
@@ -407,18 +410,19 @@ class EmailUncaughtExceptionEdgeCaseTest(TestCase):
         """Test email sending with empty recipients list"""
 
         def func():
-            raise Exception("Test error")
+            msg = "Test error"
+            raise Exception(msg)  # noqa
 
         # Clear mail outbox before test
         mail.outbox.clear()
 
         # Should not raise error even with empty recipients
-        with self.assertRaises(Exception):
+        with pytest.raises(Exception):  # noqa
             utils.email_uncaught_exception(func)()
 
         # Check what was actually sent - with empty recipients, mail may still be sent to admins
         # The key is that the function doesn't crash with empty recipients
-        self.assertTrue(True)  # The test passed if we got here without errors
+        assert True  # The test passed if we got here without errors
 
 
 class FilenameGenerateEdgeCasesTest(TestCase):
@@ -426,24 +430,24 @@ class FilenameGenerateEdgeCasesTest(TestCase):
         """Test filename_generate with slash in database name"""
         filename = utils.filename_generate(extension="dump", content_type="db", database_name="/path/to/database")
         # Should extract basename from database path
-        self.assertIn("database", filename)
-        self.assertNotIn("/path/to/", filename)
+        assert "database" in filename
+        assert "/path/to/" not in filename
 
     def test_filename_generate_with_dot_in_database_name(self):
         """Test filename_generate with dot in database name"""
         filename = utils.filename_generate(extension="dump", content_type="db", database_name="database.sqlite3")
         # Should remove extension from database name
-        self.assertIn("database", filename)
-        self.assertNotIn(".sqlite3", filename)
+        assert "database" in filename
+        assert ".sqlite3" not in filename
 
     def test_filename_generate_unknown_content_type(self):
         """Test filename_generate with unknown content type falls back to db template"""
         filename = utils.filename_generate(extension="dump", content_type="unknown", database_name="test")
         # Should use FILENAME_TEMPLATE for unknown content types
-        self.assertTrue(filename.endswith(".dump"))
+        assert filename.endswith(".dump")
 
     def test_filename_details(self):
         """Test filename_details function"""
         # This function always returns empty string according to the TODO comment
         result = utils.filename_details("any_file.txt")
-        self.assertEqual(result, "")
+        assert result == ""

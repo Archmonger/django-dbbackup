@@ -1,3 +1,4 @@
+# ruff: noqa: TRY301, BLE001, TRY300
 """PostgreSQL Live Functional Test Script for django-dbbackup
 
 Usage:
@@ -73,19 +74,14 @@ class PostgreSQLTestRunner:
             env = kwargs.get("env", os.environ.copy())
             env.update({"PGHOST": "localhost", "PGPORT": "5432", "PGUSER": "postgres", "PGPASSWORD": "postgres"})
             kwargs["env"] = env
-        else:
-            # For local development, use sudo if not explicitly disabled
-            if use_sudo is None:
-                use_sudo = os.name == "posix"
+        elif use_sudo is None:
+            use_sudo = os.name == "posix"
 
         if use_sudo:
-            if isinstance(cmd, list):
-                cmd = ["sudo", "-u", self.superuser] + cmd
-            else:
-                cmd = f"sudo -u {self.superuser} {cmd}"
+            cmd = ["sudo", "-u", self.superuser, *cmd] if isinstance(cmd, list) else f"sudo -u {self.superuser} {cmd}"
 
         self._log(f"Running: {' '.join(cmd) if isinstance(cmd, list) else cmd}")
-        result = subprocess.run(cmd, shell=isinstance(cmd, str), **kwargs)
+        result = subprocess.run(cmd, shell=isinstance(cmd, str), **kwargs, check=False)
         if check and result.returncode != 0:
             # Collect stdout and stderr for better error reporting
             stdout = getattr(result, "stdout", b"")
@@ -118,7 +114,8 @@ class PostgreSQLTestRunner:
                     "\nInstall PostgreSQL from https://www.postgresql.org/download/windows/ "
                     "and ensure pg_dump and psql are in your PATH."
                 )
-            raise RuntimeError(f"PostgreSQL client tools (pg_dump, psql, etc) are not installed!{install_instructions}")
+            msg = f"PostgreSQL client tools (pg_dump, psql, etc) are not installed!{install_instructions}"
+            raise RuntimeError(msg)
 
         self._log("Setting up test database...")
         self.temp_dir = tempfile.mkdtemp(prefix="dbbackup_postgres_")
@@ -133,7 +130,8 @@ class PostgreSQLTestRunner:
 
         except Exception as e:
             self.cleanup()
-            raise RuntimeError(f"Failed to set up PostgreSQL: {e}") from e
+            msg = f"Failed to set up PostgreSQL: {e}"
+            raise RuntimeError(msg) from e
 
     def _create_test_database(self):
         """Create the test database."""
@@ -177,10 +175,12 @@ class PostgreSQLTestRunner:
                         self._log(f"User {self.user} already exists, continuing...")
                     else:
                         # User doesn't exist and creation failed, this is a real error
-                        raise RuntimeError(f"Failed to create user {self.user} and user does not exist: {e}") from e
+                        msg = f"Failed to create user {self.user} and user does not exist: {e}"
+                        raise RuntimeError(msg) from e
                 except Exception as check_error:
                     self._log(f"Failed to check if user exists: {check_error}")
-                    raise RuntimeError(f"User creation and verification both failed: {e}") from e
+                    msg = f"User creation and verification both failed: {e}"
+                    raise RuntimeError(msg) from e
 
             # Create database owned by the test user
             create_db_sql = f"CREATE DATABASE {self.test_db_name} OWNER {self.user};"
@@ -300,22 +300,19 @@ class PostgreSQLLiveTest:
         self._log(f"Found {text_objs.count()} TextModel objects")
 
         if char_objs.count() != 1 or text_objs.count() != 1:
-            raise AssertionError(
-                f"Expected 1 of each model, found {char_objs.count()} CharModel and {text_objs.count()} TextModel"
-            )
+            msg = f"Expected 1 of each model, found {char_objs.count()} CharModel and {text_objs.count()} TextModel"
+            raise AssertionError(msg)
 
         char_obj = char_objs.first()
         text_obj = text_objs.first()
 
         if char_obj.field != expected_char_obj.field:
-            raise AssertionError(
-                f"CharModel field mismatch: expected '{expected_char_obj.field}', got '{char_obj.field}'"
-            )
+            msg = f"CharModel field mismatch: expected '{expected_char_obj.field}', got '{char_obj.field}'"
+            raise AssertionError(msg)
 
         if text_obj.field != expected_text_obj.field:
-            raise AssertionError(
-                f"TextModel field mismatch: expected '{expected_text_obj.field}', got '{text_obj.field}'"
-            )
+            msg = f"TextModel field mismatch: expected '{expected_text_obj.field}', got '{text_obj.field}'"
+            raise AssertionError(msg)
 
         self._log("Test data verification passed")
 
@@ -346,7 +343,8 @@ class PostgreSQLLiveTest:
 
             # Verify data is cleared
             if CharModel.objects.exists() or TextModel.objects.exists():
-                raise AssertionError("Test data was not properly cleared")
+                msg = "Test data was not properly cleared"
+                raise AssertionError(msg)
             self._log("Test data cleared successfully")
 
             # Run restore

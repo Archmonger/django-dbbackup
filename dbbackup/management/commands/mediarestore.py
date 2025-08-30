@@ -4,10 +4,10 @@ Restore media files.
 
 import tarfile
 
-from ... import utils
-from ...signals import pre_media_restore, post_media_restore
-from ...storage import get_storage, get_storage_class
-from ._base import BaseDbBackupCommand, make_option
+from dbbackup import utils
+from dbbackup.management.commands._base import BaseDbBackupCommand, make_option
+from dbbackup.signals import post_media_restore, pre_media_restore
+from dbbackup.storage import get_storage, get_storage_class
 
 
 class Command(BaseDbBackupCommand):

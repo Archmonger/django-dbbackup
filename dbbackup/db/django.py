@@ -13,7 +13,7 @@ from tempfile import SpooledTemporaryFile
 
 from django.core.management import call_command
 
-from .base import BaseDBConnector
+from dbbackup.db.base import BaseDBConnector
 
 
 class DjangoConnector(BaseDBConnector):

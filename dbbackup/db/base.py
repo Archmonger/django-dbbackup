@@ -8,12 +8,12 @@ import shlex
 from importlib import import_module
 from subprocess import Popen
 from tempfile import SpooledTemporaryFile
+from typing import Any, ClassVar
 
 from django.core.files.base import File
 
 from dbbackup import settings, utils
-
-from . import exceptions
+from dbbackup.db import exceptions
 
 logger = logging.getLogger("dbbackup.command")
 logger.setLevel(logging.DEBUG)
@@ -69,7 +69,7 @@ class BaseDBConnector:
     """
 
     extension = "dump"
-    exclude = []
+    exclude: ClassVar[list[Any]] = []
 
     def __init__(self, database_name=None, **kwargs):
         from django.db import DEFAULT_DB_ALIAS, connections
@@ -98,7 +98,8 @@ class BaseDBConnector:
         """
         Override this method to define dump creation.
         """
-        raise NotImplementedError("_create_dump not implemented")
+        msg = "_create_dump not implemented"
+        raise NotImplementedError(msg)
 
     def restore_dump(self, dump):
         """
@@ -113,7 +114,8 @@ class BaseDBConnector:
         :param dump: Dump file
         :type dump: file
         """
-        raise NotImplementedError("_restore_dump not implemented")
+        msg = "_restore_dump not implemented"
+        raise NotImplementedError(msg)
 
 
 class BaseCommandDBConnector(BaseDBConnector):
@@ -127,9 +129,9 @@ class BaseCommandDBConnector(BaseDBConnector):
     restore_suffix = ""
 
     use_parent_env = True
-    env = {}
-    dump_env = {}
-    restore_env = {}
+    env: ClassVar[dict[str, Any]] = {}
+    dump_env: ClassVar[dict[str, Any]] = {}
+    restore_env: ClassVar[dict[str, Any]] = {}
 
     def run_command(self, command, stdin=None, env=None):
         """
@@ -180,7 +182,8 @@ class BaseCommandDBConnector(BaseDBConnector):
             process.wait()
             if process.poll():
                 stderr.seek(0)
-                raise exceptions.CommandConnectorError(f"Error running: {command}\n{stderr.read().decode('utf-8')}")
+                msg = f"Error running: {command}\n{stderr.read().decode('utf-8')}"
+                raise exceptions.CommandConnectorError(msg)
             return self._reset_streams(stdout, stderr)
 
         except OSError as err:
@@ -196,10 +199,11 @@ class BaseCommandDBConnector(BaseDBConnector):
                     f"Alternatively, you can specify custom command paths using these settings:\n"
                     f"- DUMP_CMD: Path to the dump command\n"
                     f"- RESTORE_CMD: Path to the restore command\n\n"
-                    f"Original error: {str(err)}"
+                    f"Original error: {err!s}"
                 )
                 raise exceptions.CommandConnectorError(error_msg) from err
-            raise exceptions.CommandConnectorError(f"Error running: {command}\n{str(err)}") from err
+            msg = f"Error running: {command}\n{err!s}"
+            raise exceptions.CommandConnectorError(msg) from err
 
     def _env_shim(self, stdout, stderr, env):
         result_env = {}

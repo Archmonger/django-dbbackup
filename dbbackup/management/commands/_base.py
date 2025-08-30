@@ -8,7 +8,7 @@ from shutil import copyfileobj
 
 from django.core.management.base import BaseCommand, CommandError
 
-from ...storage import StorageError
+from dbbackup.storage import StorageError
 
 USELESS_ARGS = ("callback", "callback_args", "callback_kwargs", "metavar")
 TYPES = {
@@ -20,7 +20,7 @@ TYPES = {
     "choice": list,
 }
 LOGGING_VERBOSITY = {
-    0: logging.WARN,
+    0: logging.WARNING,
     1: logging.INFO,
     2: logging.DEBUG,
     3: logging.DEBUG,
@@ -86,7 +86,7 @@ class BaseDbBackupCommand(BaseCommand):
 
     def read_local_file(self, path):
         """Open file in read mode on local filesystem."""
-        return open(path, "rb")
+        return open(path, "rb")  # noqa: SIM115
 
     def write_local_file(self, outputfile, path):
         """Write file to the desired path."""

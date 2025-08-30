@@ -25,7 +25,7 @@ class ListbackupsCommandTest(TestCase):
     def test_get_backup_attrs(self):
         options = {}
         attrs = self.command.get_backup_attrs(options)
-        self.assertEqual(len(HANDLED_FILES["written_files"]), len(attrs))
+        assert len(HANDLED_FILES["written_files"]) == len(attrs)
 
 
 class ListbackupsCommandArgComputingTest(TestCase):
@@ -62,7 +62,7 @@ class ListbackupsCommandArgComputingTest(TestCase):
         stdout.seek(0)
         stdout.readline()
         for line in stdout.readlines():
-            self.assertIn(".gpg", line)
+            assert ".gpg" in line
 
     def test_filter_not_encrypted(self):
         stdout = StringIO()
@@ -71,7 +71,7 @@ class ListbackupsCommandArgComputingTest(TestCase):
         stdout.seek(0)
         stdout.readline()
         for line in stdout.readlines():
-            self.assertNotIn(".gpg", line)
+            assert ".gpg" not in line
 
     def test_filter_compressed(self):
         stdout = StringIO()
@@ -80,7 +80,7 @@ class ListbackupsCommandArgComputingTest(TestCase):
         stdout.seek(0)
         stdout.readline()
         for line in stdout.readlines():
-            self.assertIn(".gz", line)
+            assert ".gz" in line
 
     def test_filter_not_compressed(self):
         stdout = StringIO()
@@ -89,7 +89,7 @@ class ListbackupsCommandArgComputingTest(TestCase):
         stdout.seek(0)
         stdout.readline()
         for line in stdout.readlines():
-            self.assertNotIn(".gz", line)
+            assert ".gz" not in line
 
     def test_filter_db(self):
         stdout = StringIO()
@@ -98,15 +98,13 @@ class ListbackupsCommandArgComputingTest(TestCase):
         stdout.seek(0)
         stdout.readline()
         for line in stdout.readlines():
-            self.assertIn(".db", line)
+            assert ".db" in line
 
     def test_filter_media(self):
         stdout = StringIO()
         with patch("sys.stdout", stdout):
-            execute_from_command_line(
-                ["", "listbackups", "--content-type", "media", "-q"]
-            )
+            execute_from_command_line(["", "listbackups", "--content-type", "media", "-q"])
         stdout.seek(0)
         stdout.readline()
         for line in stdout.readlines():
-            self.assertIn(".tar", line)
+            assert ".tar" in line

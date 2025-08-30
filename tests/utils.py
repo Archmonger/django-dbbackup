@@ -38,10 +38,10 @@ TEST_DATABASE = settings.DATABASES["default"]
 GPG_PRIVATE_PATH = os.path.join(settings.BLOB_DIR, "gpg/secring.gpg")
 GPG_PUBLIC_PATH = os.path.join(settings.BLOB_DIR, "gpg/pubring.gpg")
 GPG_FINGERPRINT = "7438 8D4E 02AF C011 4E2F  1E79 F7D1 BBF0 1F63 FDE9"
-DEV_NULL = open(os.devnull, "w")
+DEV_NULL = open(os.devnull, "w")  # noqa
 
 
-class handled_files(dict):
+class HandledFiles(dict):
     """
     Dict for gather information about fake storage and clean between tests.
     You should use the constant instance ``HANDLED_FILES`` and clean it
@@ -57,7 +57,7 @@ class handled_files(dict):
         self["deleted_files"] = []
 
 
-HANDLED_FILES = handled_files()
+HANDLED_FILES = HandledFiles()
 
 
 class FakeStorage(Storage):
@@ -81,7 +81,7 @@ class FakeStorage(Storage):
     created_time = modified_time = accessed_time
 
     def _open(self, name, mode="rb"):
-        file_ = [f[1] for f in HANDLED_FILES["written_files"] if f[0] == name][0]
+        file_ = next(f[1] for f in HANDLED_FILES["written_files"] if f[0] == name)
         file_.seek(0)
         return file_
 
@@ -95,10 +95,10 @@ class FakeStorage(Storage):
 
 def clean_gpg_keys():
     with contextlib.suppress(Exception):
-        cmd = "gpg --batch --yes --delete-key '%s'" % GPG_FINGERPRINT
+        cmd = f"gpg --batch --yes --delete-key '{GPG_FINGERPRINT}'"
         subprocess.call(cmd, stdout=DEV_NULL, stderr=DEV_NULL)
     with contextlib.suppress(Exception):
-        cmd = "gpg --batch --yes --delete-secrect-key '%s'" % GPG_FINGERPRINT
+        cmd = f"gpg --batch --yes --delete-secrect-key '{GPG_FINGERPRINT}'"
         subprocess.call(cmd, stdout=DEV_NULL, stderr=DEV_NULL)
 
 
