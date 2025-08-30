@@ -14,6 +14,10 @@ Don't forget to remove deprecated code on each major release!
 
 ## [Unreleased]
 
+- Nothing (yet)!
+
+## [5.0.0] - 2025-08-30
+
 ### Added
 
 - Implement new `SqliteBackupConnector` to backup SQLite3 databases using the `.backup` command (safe to execute on databases with active connections).
@@ -320,7 +324,8 @@ Don't forget to remove deprecated code on each major release!
 
 - Miscellaneous maintenance and minor bug fixes.
 
-[Unreleased]: https://github.com/Archmonger/django-dbbackup/compare/4.3.0...HEAD
+[Unreleased]: https://github.com/Archmonger/django-dbbackup/compare/5.0.0...HEAD
+[5.0.0]: https://github.com/Archmonger/django-dbbackup/compare/4.3.0...5.0.0
 [4.3.0]: https://github.com/Archmonger/django-dbbackup/compare/4.2.1...4.3.0
 [4.2.1]: https://github.com/Archmonger/django-dbbackup/compare/4.2.0...4.2.1
 [4.2.0]: https://github.com/Archmonger/django-dbbackup/compare/4.1.0...4.2.0
