@@ -240,7 +240,6 @@ jobs:
               run: |
                   echo "Version: ${{ steps.query-release-info.outputs.version }}"
                   echo "Date: ${{ steps.query-release-info.outputs.release-date }}"
-                  echo "${{ steps.query-release-info.outputs.release-notes }}"
             - uses: ncipollo/release-action@v1
               with:
                   artifacts: "dist/*.tar.gz,dist/*.whl"
