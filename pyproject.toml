@@ -50,13 +50,13 @@ urls.Documentation = "https://archmonger.github.io/django-dbbackup"
 urls.Source = "https://github.com/Archmonger/django-dbbackup"
 
 [tool.hatch.version]
-path = "dbbackup/__init__.py"
+path = "src/dbbackup/__init__.py"
 
 [tool.hatch.build.targets.sdist]
-include = ["/dbbackup"]
+include = ["/src/"]
 
 [tool.hatch.build.targets.wheel]
-packages = ["dbbackup"]
+packages = ["src/dbbackup"]
 
 [tool.hatch.metadata]
 license-files = { paths = ["LICENSE.md"] }
@@ -193,7 +193,7 @@ target-version = "py39"
 extend-exclude = [".eggs/*", ".tox/*", ".venv/*", "build/*", "*/migrations/*"]
 format.preview = true
 lint.extend-ignore = [
-  "B028",    #  No explicit `stacklevel` keyword argument found in warning function call
+  "B028",    # No explicit `stacklevel` keyword argument found in warning function call
   "DTZ005",  # `datetime.datetime.now()` called without a `tz` argument
   "DTZ007",  # Naive datetime constructed using `datetime.datetime.strptime()` without %z
   "ARG001",  # Unused function argument
@@ -217,6 +217,6 @@ addopts = ["--strict-config", "--strict-markers"]
 run.relative_files = true
 run.branch = true
 run.parallel = true
-run.source = ["dbbackup/"]
-paths.source = ["dbbackup/"]
+run.source = ["src/"]
+paths.source = ["src/"]
 report.show_missing = true
