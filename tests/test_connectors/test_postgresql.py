@@ -459,9 +459,9 @@ class CreatePostgresDbNameAndEnvTest(TestCase):
             "PASSWORD": "testpass",
         }
 
-        dbname_url, env = parse_postgres_settings(connector)
+        cmd_part, env = parse_postgres_settings(connector)
 
-        self.assertEqual(dbname_url, "--dbname=postgresql://testuser@localhost:5432/testdb")
+        self.assertEqual(cmd_part, "--dbname=postgresql://testuser@localhost:5432/testdb")
         self.assertEqual(env, {"PGPASSWORD": "testpass"})
 
     def test_function_with_special_characters(self):
@@ -475,24 +475,24 @@ class CreatePostgresDbNameAndEnvTest(TestCase):
             "PASSWORD": "my'pass\"word",  # Password with quotes
         }
 
-        dbname_url, env = parse_postgres_settings(connector)
+        cmd_part, env = parse_postgres_settings(connector)
 
         # User should be URL-encoded in the connection string
-        self.assertIn("user%40domain.com", dbname_url)
+        self.assertIn("user%40domain.com", cmd_part)
         # Password should be in environment variable unchanged
         self.assertEqual(env["PGPASSWORD"], "my'pass\"word")
         # Password should not appear in URL
-        self.assertNotIn("my'pass", dbname_url)
+        self.assertNotIn("my'pass", cmd_part)
 
     def test_function_without_user_or_password(self):
         """Test function without user or password"""
         connector = Mock()
         connector.settings = {"HOST": "localhost", "PORT": 5432, "NAME": "testdb"}
 
-        dbname_url, env = parse_postgres_settings(connector)
+        cmd, env = parse_postgres_settings(connector)
 
         # No user means no @ in the URL
-        self.assertEqual(dbname_url, "--dbname=postgresql://localhost:5432/testdb")
+        self.assertEqual(cmd, "--dbname=postgresql://localhost:5432/testdb")
         # No password means empty environment
         self.assertEqual(env, {})
 
@@ -507,8 +507,23 @@ class CreatePostgresDbNameAndEnvTest(TestCase):
             "PASSWORD": "",  # Empty password
         }
 
-        dbname_url, env = parse_postgres_settings(connector)
+        cmd_part, env = parse_postgres_settings(connector)
 
-        self.assertIn("testuser@localhost", dbname_url)
+        self.assertIn("testuser@localhost", cmd_part)
         # Empty password should not create PGPASSWORD env var
         self.assertEqual(env, {})
+
+        connector.settings = {
+            "HOST": "localhost",
+            "PORT": 5432,
+            "NAME": "testdb",
+            "USER": "testuser",
+            "PASSWORD": None,  # "no password" case
+        }
+
+        cmd_part, env = parse_postgres_settings(connector)
+
+        self.assertIn("testuser@localhost", cmd_part)
+        # "None" password should not create PGPASSWORD env var, but should add --no-password flag
+        self.assertEqual(env, {})
+        self.assertIn("--no-password", cmd_part)

@@ -13,13 +13,14 @@ logger = logging.getLogger("dbbackup.command")
 def parse_postgres_settings(connector: PgDumpBinaryConnector | PgDumpConnector) -> tuple[str, dict[Any, Any]]:
     """
     Parse the common Postgres connectors settings and
-    generate a command string and environment variables.
+    generate a portion of the command string and any
+    relevant environment variables.
 
     Args:
         connector: Database connector instance with settings
 
     Returns:
-        tuple: (command_string, environment_dict)
+        tuple: (cmd_part, environment_dict)
     """
     host = connector.settings.get("HOST", "localhost")
     cmd_part = connector.settings.get("NAME", "")
@@ -32,7 +33,7 @@ def parse_postgres_settings(connector: PgDumpBinaryConnector | PgDumpConnector) 
     env = {}
     if password is None:
         cmd_part += " --no-password"
-    elif password != -1:
+    elif password not in ("", -1):
         env["PGPASSWORD"] = password
     return cmd_part, env
 
