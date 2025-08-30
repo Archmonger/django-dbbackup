@@ -138,26 +138,10 @@ Don't forget to remove deprecated code on each major release!
 
 ### Added
 
-- Enable functional tests in CI.
-
-### Changed
-
-- As of this version, dbbackup is now within Jazzband! This version tests our Jazzband release CI, and adds miscellaneous refactoring/cleanup.
-- Update `settings.py` comment.
-- Jazzband transfer tasks.
-- Refactoring and tooling.
-
-### Fixed
-
-- Fix GitHub Actions configuration.
-
-## [4.0.0] - 2021-12-19
-
-### Added
-
 - Add authentication database support for MongoDB.
 - Explicitly support Python 3.6+.
 - Add support for exclude tables data in the command interface.
+- Enable functional tests in CI.
 
 ### Changed
 
@@ -165,6 +149,10 @@ Don't forget to remove deprecated code on each major release!
 - Changed logging settings from `settings.py` to late init.
 - Use `exclude-table-data` instead of `exclude-table`.
 - Move author and version information into `setup.py` to allow building package in isolated environment (e.g. with the `build` package).
+- As of this version, dbbackup is now within Jazzband! This version tests our Jazzband release CI, and adds miscellaneous refactoring/cleanup.
+- Update `settings.py` comment.
+- Jazzband transfer tasks.
+- Refactoring and tooling.
 
 ### Removed
 
@@ -176,6 +164,7 @@ Don't forget to remove deprecated code on each major release!
 - Fix `RemovedInDjango41Warning` related to `default_app_config`.
 - Fix authentication error when postgres is password protected.
 - Documentation fixes.
+- Fix GitHub Actions configuration.
 
 ## [3.3.0] - 2020-04-14
 
@@ -331,8 +320,7 @@ Don't forget to remove deprecated code on each major release!
 [4.2.0]: https://github.com/Archmonger/django-dbbackup/compare/4.1.0...4.2.0
 [4.1.0]: https://github.com/Archmonger/django-dbbackup/compare/4.0.2...4.1.0
 [4.0.2]: https://github.com/Archmonger/django-dbbackup/compare/4.0.1...4.0.2
-[4.0.1]: https://github.com/Archmonger/django-dbbackup/compare/4.0.0b0...4.0.1
-[4.0.0]: https://github.com/Archmonger/django-dbbackup/compare/3.3.0...4.0.0b0
+[4.0.1]: https://github.com/Archmonger/django-dbbackup/compare/3.3.0...4.0.1
 [3.3.0]: https://github.com/Archmonger/django-dbbackup/compare/3.2.0...3.3.0
 [3.2.0]: https://github.com/Archmonger/django-dbbackup/compare/3.1.3...3.2.0
 [3.1.3]: https://github.com/Archmonger/django-dbbackup/compare/3.1.2...3.1.3
