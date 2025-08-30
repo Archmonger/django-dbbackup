@@ -98,7 +98,7 @@ def clean_gpg_keys():
         cmd = f"gpg --batch --yes --delete-key '{GPG_FINGERPRINT}'"
         subprocess.call(cmd, stdout=DEV_NULL, stderr=DEV_NULL)
     with contextlib.suppress(Exception):
-        cmd = f"gpg --batch --yes --delete-secrect-key '{GPG_FINGERPRINT}'"
+        cmd = f"gpg --batch --yes --delete-secret-key '{GPG_FINGERPRINT}'"
         subprocess.call(cmd, stdout=DEV_NULL, stderr=DEV_NULL)
 
 
