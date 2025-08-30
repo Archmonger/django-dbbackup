@@ -145,19 +145,7 @@ class BaseCommandDBConnector(BaseDBConnector):
         :rtype: file
         """
         logger.debug(command)
-        # On Windows many POSIX utilities (env, cat, echo) used in tests may not
-        # exist. Provide minimal shims so the generic tests still exercise the
-        # logic. We only do this translation for the simple commands used in
-        # the test-suite so that real database tooling invocations are not
-        # altered.
         original_command = command
-        # We implement simple builtins internally for portability.
-        is_echo = original_command.startswith("echo")
-        is_env = original_command == "env"
-        is_cat = original_command == "cat"
-        if os.name == "nt":  # pragma: win32
-            # No external translation needed now; we'll handle in-process.
-            pass
         cmd = shlex.split(command)
         stdout = SpooledTemporaryFile(max_size=settings.TMP_FILE_MAX_SIZE, dir=settings.TMP_DIR)
         stderr = SpooledTemporaryFile(max_size=settings.TMP_FILE_MAX_SIZE, dir=settings.TMP_DIR)
@@ -165,71 +153,36 @@ class BaseCommandDBConnector(BaseDBConnector):
         full_env.update(self.env)
         full_env.update(env or {})
         try:
-            if isinstance(stdin, File):
-                process = Popen(
-                    cmd,
-                    stdin=stdin.open("rb"),
-                    stdout=stdout,
-                    stderr=stderr,
-                    env=full_env,
-                    shell=False,
-                )
-            else:
+            # On Windows many POSIX utilities (env, cat, echo) used in tests may not
+            # exist. Provide minimal shims so the generic tests still exercise the
+            # logic. We only do this translation for the simple commands used in
+            # the test-suite so that real database tooling invocations are not
+            # altered.
+            if not isinstance(stdin, File):
                 # Builtin env
-                if is_env:
-                    result_env = {}
-                    if self.use_parent_env:
-                        result_env.update(os.environ)
-                    result_env.update(self.env)
-                    if env:
-                        result_env.update(env)
-                    # When parent env disabled we only output vars coming from
-                    # self.env or method override env param.
-                    if not self.use_parent_env:
-                        filtered = {}
-                        filtered.update(self.env)
-                        if env:
-                            filtered.update(env)
-                        for k, v in filtered.items():
-                            stdout.write(f"{k}={v}\n".encode())
-                    else:
-                        for k, v in result_env.items():
-                            stdout.write(f"{k.lower()}={v}\n".encode())
-                    stdout.seek(0)
-                    stderr.seek(0)
-                    return stdout, stderr
+                if original_command == "env":
+                    return self._env_shim(stdout, stderr, env)
                 # Builtin echo
-                if is_echo:
-                    parts = original_command.split(" ", 1)
-                    text = parts[1] if len(parts) > 1 else ""
-                    stdout.write(f"{text}\n".encode())
-                    stdout.seek(0)
-                    stderr.seek(0)
-                    return stdout, stderr
+                if original_command.startswith("echo"):
+                    return self._echo_shim(stdout, stderr, original_command)
                 # Builtin cat (only used with stdin)
-                if is_cat:
-                    data = stdin.read() if stdin else b""
-                    if isinstance(data, str):
-                        data = data.encode()
-                    stdout.write(data)
-                    stdout.seek(0)
-                    stderr.seek(0)
-                    return stdout, stderr
-                process = Popen(
-                    cmd,
-                    stdin=stdin,
-                    stdout=stdout,
-                    stderr=stderr,
-                    env=full_env,
-                    shell=False,
-                )
+                if original_command == "cat":
+                    return self._cat_shim(stdout, stderr, stdin)
+
+            process = Popen(
+                cmd,
+                stdin=stdin.open("rb") if isinstance(stdin, File) else stdin,
+                stdout=stdout,
+                stderr=stderr,
+                env=full_env,
+                shell=False,
+            )
             process.wait()
             if process.poll():
                 stderr.seek(0)
                 raise exceptions.CommandConnectorError(f"Error running: {command}\n{stderr.read().decode('utf-8')}")
-            stdout.seek(0)
-            stderr.seek(0)
-            return stdout, stderr
+            return self._reset_streams(stdout, stderr)
+
         except OSError as err:
             # Check if this is a "command not found" error (errno 2)
             if err.errno == 2:  # No such file or directory
@@ -245,5 +198,45 @@ class BaseCommandDBConnector(BaseDBConnector):
                     f"- RESTORE_CMD: Path to the restore command\n\n"
                     f"Original error: {str(err)}"
                 )
-                raise exceptions.CommandConnectorError(error_msg)
-            raise exceptions.CommandConnectorError(f"Error running: {command}\n{str(err)}")
+                raise exceptions.CommandConnectorError(error_msg) from err
+            raise exceptions.CommandConnectorError(f"Error running: {command}\n{str(err)}") from err
+
+    def _env_shim(self, stdout, stderr, env):
+        result_env = {}
+        if self.use_parent_env:
+            result_env.update(os.environ)
+        result_env.update(self.env)
+        if env:
+            result_env.update(env)
+        # When parent env disabled we only output vars coming from
+        # self.env or method override env param.
+        if not self.use_parent_env:
+            filtered = {}
+            filtered.update(self.env)
+            if env:
+                filtered.update(env)
+            for k, v in filtered.items():
+                stdout.write(f"{k}={v}\n".encode())
+        else:
+            for k, v in result_env.items():
+                stdout.write(f"{k.lower()}={v}\n".encode())
+        return self._reset_streams(stdout, stderr)
+
+    def _echo_shim(self, stdout, stderr, original_command):
+        parts = original_command.split(" ", 1)
+        text = parts[1] if len(parts) > 1 else ""
+        stdout.write(f"{text}\n".encode())
+        return self._reset_streams(stdout, stderr)
+
+    def _cat_shim(self, stdout, stderr, stdin):
+        data = stdin.read() if stdin else b""
+        if isinstance(data, str):
+            data = data.encode()
+        stdout.write(data)
+        return self._reset_streams(stdout, stderr)
+
+    @staticmethod
+    def _reset_streams(*streams: SpooledTemporaryFile):
+        for stream in streams:
+            stream.seek(0)
+        return streams
