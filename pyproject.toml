@@ -50,13 +50,13 @@ urls.Documentation = "https://archmonger.github.io/django-dbbackup"
 urls.Source = "https://github.com/Archmonger/django-dbbackup"
 
 [tool.hatch.version]
-path = "src/dbbackup/__init__.py"
+path = "dbbackup/__init__.py"
 
 [tool.hatch.build.targets.sdist]
-include = ["/src/"]
+include = ["/dbbackup"]
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/dbbackup"]
+packages = ["dbbackup"]
 
 [tool.hatch.metadata]
 license-files = { paths = ["LICENSE.md"] }
@@ -217,6 +217,6 @@ addopts = ["--strict-config", "--strict-markers"]
 run.relative_files = true
 run.branch = true
 run.parallel = true
-run.source = ["src/"]
-paths.source = ["src/"]
+run.source = ["dbbackup/"]
+paths.source = ["dbbackup/"]
 report.show_missing = true
