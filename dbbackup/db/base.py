@@ -16,7 +16,6 @@ from dbbackup import settings, utils
 from dbbackup.db import exceptions
 
 logger = logging.getLogger("dbbackup.command")
-logger.setLevel(logging.DEBUG)
 
 DEFAULT_CONNECTOR = "dbbackup.db.django.DjangoConnector"
 CONNECTOR_MAPPING = {
