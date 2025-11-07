@@ -79,6 +79,16 @@ Use a custom function if you need hierarchical prefixes (e.g. `year/month/`),
 or naming compatible with automatic life cycle / expiration rules of your
 object storage provider. `{datetime}` is rendered using `DBBACKUP_DATE_FORMAT`.
 
+Note on cleanup (--clean): the cleanup logic matches backup files to a
+database using the `{databasename}` value (the database alias/key from
+`settings.DATABASES` or `DBBACKUP_CONNECTORS`). If you rely on the
+`--clean` option to remove older database backups, ensure your
+`DBBACKUP_FILENAME_TEMPLATE` includes `{databasename}` so files can be
+correctly identified and filtered for deletion. When backing up a single
+database using the default `databasename` (often `default`) this may not be
+necessary, but it is required when you manage more than one database or use
+custom connector keys.
+
 ### DBBACKUP_MEDIA_FILENAME_TEMPLATE
 
 Same as `DBBACKUP_FILENAME_TEMPLATE`, but used for media backups.
