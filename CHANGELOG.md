@@ -24,6 +24,14 @@ Don't forget to remove deprecated code on each major release!
 
 ## [5.0.0] - 2025-08-30
 
+!!! warning "Breaking Changes"
+
+    This release contains several breaking changes. Prior to upgrading, follow this upgrade guide:
+
+    1. **Migrate Storage Settings**: Remove `DBBACKUP_STORAGE` and `DBBACKUP_STORAGE_OPTIONS` from your settings. Instead, configure your storage backend using Django's `STORAGES` setting with the alias `'dbbackup'`. Refer to the [Django documentation](https://docs.djangoproject.com/en/stable/ref/settings/#storages) for guidance.
+    2. **Update Admin Settings**: Replace any usage of the deprecated `DBBACKUP_FAILURE_RECIPIENTS` setting with `DBBACKUP_ADMINS` to specify email recipients for failure notifications.
+    3. **Review Connector Changes**: The default SQLite connector has changed to `SqliteBackupConnector` to adhere to best practices. If you were previously using the default connector (`SqliteConnector`), either take this into account within your backup workflow or manually set the connector back to `SqliteConnector` in your settings.
+
 ### Added
 
 -   Implement new `SqliteBackupConnector` to backup SQLite3 databases using the `.backup` command (safe to execute on databases with active connections).
