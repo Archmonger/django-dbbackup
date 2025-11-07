@@ -20,7 +20,7 @@ Don't forget to remove deprecated code on each major release!
 
 ### Security
 
--   This package will now generate an exception if utilizing the deprecated `DBBACKUP_STORAGE` or `DBBACKUP_STORAGE_OPTIONS` settings. These settings have been removed in favor of using Django's built-in `STORAGES` setting. Please refer to the documentation for more information on how to migrate your configuration.
+-   To prevent accidental media exports, this package will now generate an exception if utilizing the legacy `DBBACKUP_STORAGE` or `DBBACKUP_STORAGE_OPTIONS` settings. These settings have been removed in favor of using Django's built-in `STORAGES` setting. Please refer to the documentation for more information on how to migrate your configuration.
 
 ## [5.0.0] - 2025-08-30
 

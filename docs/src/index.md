@@ -3,7 +3,8 @@ hide:
     - navigation
 ---
 
-{% include-markdown "../../README.md" %}
+{% include-markdown "../../README.md"  start="<!--docs-top-start-->" end="<!--docs-top-end-->" %}
+{% include-markdown "../../README.md"  start="<!--docs-bottom-start-->" end="<!--docs-bottom-end-->" %}
 
 ## Other Resources
 
