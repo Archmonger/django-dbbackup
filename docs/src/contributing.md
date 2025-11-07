@@ -7,9 +7,9 @@ welcome. This guide explains how to develop, test, and propose changes.
 
 If you plan to make code changes to this repository, you will need to install the following dependencies first:
 
-- [Git](https://git-scm.com/downloads)
-- [Python 3.9+](https://www.python.org/downloads/)
-- [Hatch](https://hatch.pypa.io/latest/)
+-   [Git](https://git-scm.com/downloads)
+-   [Python 3.9+](https://www.python.org/downloads/)
+-   [Hatch](https://hatch.pypa.io/latest/)
 
 Once you finish installing these dependencies, you can clone this repository:
 
@@ -83,10 +83,10 @@ Track bugs, feature proposals, and questions via
 [GitHub Issues](https://github.com/Archmonger/django-dbbackup/issues). Open an
 issue if:
 
-- You have an improvement idea
-- You found a bug
-- You've got a question
-- More generally something seems wrong for you
+-   You have an improvement idea
+-   You found a bug
+-   You've got a question
+-   More generally something seems wrong for you
 
 ## Make a patch
 

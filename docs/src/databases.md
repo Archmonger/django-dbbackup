@@ -2,11 +2,11 @@
 
 The following databases are supported by this application:
 
-- SQLite
-- MySQL
-- PostgreSQL
-- MongoDB
-- ... and any other Django-supported database (via `DjangoConnector`)
+-   SQLite
+-   MySQL
+-   PostgreSQL
+-   MongoDB
+-   ... and any other Django-supported database (via `DjangoConnector`)
 
 By default DBBackup reuses connection details from `settings.DATABASES`.
 Sometimes you want different credentials or a different host (e.g. read-only
@@ -39,8 +39,6 @@ All connectors have the following parameters:
 | CONNECTOR | Absolute path to connector class. Defaults by engine: `dbbackup.db.sqlite.SqliteBackupConnector` (sqlite3), `dbbackup.db.mysql.MysqlDumpConnector` (mysql), `dbbackup.db.postgresql.PgDumpConnector` (postgresql), `dbbackup.db.postgresql.PgDumpGisConnector` (postgis), `dbbackup.db.mongodb.MongoDumpConnector` (django_mongodb_engine), `dbbackup.db.django.DjangoConnector` (fallback / any unmapped). Prometheus wrappers are also supported mapping to the same connectors. | Auto-detected from `ENGINE` |
 | EXCLUDE   | List of table names to exclude from dump (may be unsupported for raw file copy snapshot approaches). Example below.                                                                                                                                                                                                                                                                                                                                                                | None                        |
 | EXTENSION | File extension used for the generated dump archive.                                                                                                                                                                                                                                                                                                                                                                                                                                | `dump`                      |
-
-All supported built-in connectors are described in more detail below. Following database wrappers from `django-prometheus` are supported: `django_prometheus.db.backends.postgresql` (-> `PgDumpBinaryConnector`), `django_prometheus.db.backends.sqlite3` (-> `SqliteBackupConnector`), `django_prometheus.db.backends.mysql` (-> `MysqlDumpConnector`), `django_prometheus.db.backends.postgis` (-> `PgDumpGisConnector`).
 
 Example for `EXCLUDE` usage:
 
@@ -174,6 +172,15 @@ DATABASES = {
 | OBJECT_CHECK | Validate documents before inserting (`--objcheck`). | `True`  |
 | DROP         | Replace existing objects during restore (`--drop`). | `True`  |
 
+### Django-Prometheus
+
+All supported built-in connectors are described in more detail below. Following database wrappers from `django-prometheus` are supported:
+
+-   `django_prometheus.db.backends.postgresql`
+-   `django_prometheus.db.backends.sqlite3`
+-   `django_prometheus.db.backends.mysql`
+-   `django_prometheus.db.backends.postgis`
+
 ## Django Connector
 
 The Django connector (`dbbackup.db.django.DjangoConnector`) provides database-agnostic backup and restore functionality using Django's built-in `dumpdata` and `loaddata` management commands. This connector works with any Django-supported database backend.
@@ -190,24 +197,24 @@ DBBACKUP_CONNECTORS = {
 
 ### Key Features
 
-- **Universal compatibility**: Works with any database backend supported by Django
-- **No external dependencies**: Uses Django's serialization system
-- **Model-level backups**: Preserves foreign key relationships and data integrity
-- **JSON format**: Creates human-readable backups in JSON format
+-   **Universal compatibility**: Works with any database backend supported by Django
+-   **No external dependencies**: Uses Django's serialization system
+-   **Model-level backups**: Preserves foreign key relationships and data integrity
+-   **JSON format**: Creates human-readable backups in JSON format
 
 ### When to Use
 
 The Django connector is ideal for:
 
-- Oracle databases (used by default)
-- Custom or third-party database backends not explicitly supported
-- Development environments where simplicity is preferred
-- Cases where external database tools are not available
+-   Oracle databases (used by default)
+-   Custom or third-party database backends not explicitly supported
+-   Development environments where simplicity is preferred
+-   Cases where external database tools are not available
 
 ### Limitations
 
-- **Performance**: Slower than native database tools for large datasets
-- **Database structure**: Only backs up data, not database schema, indices, or procedures
+-   **Performance**: Slower than native database tools for large datasets
+-   **Database structure**: Only backs up data, not database schema, indices, or procedures
 
 ### File Extension
 

@@ -1,8 +1,9 @@
 # Integration tutorials
 
 !!! note
-If you have a custom and/or interesting way of using DBBackup, do not
-hesitate to make a pull request.
+
+    If you have a custom and/or interesting way of using DBBackup, do not
+    hesitate to make a pull request.
 
 ## Django-Cron
 

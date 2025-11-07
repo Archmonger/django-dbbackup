@@ -17,7 +17,7 @@
 
 This Django application provides management commands to help backup and restore your project database and media files with various storages such as Amazon S3, Dropbox, local file storage, or any Django-supported storage.
 
-## Features
+The main features include:
 
 -   Secure your backup with GPG signature and encryption.
 -   Archive with compression.
@@ -25,8 +25,6 @@ This Django application provides management commands to help backup and restore 
 -   Keep your development database up to date.
 -   Set up automated backups with Crontab or Celery.
 -   Manually backup and restore via Django management commands.
-
-## Documentation
 
 For more details, see the [official documentation](https://archmonger.github.io/django-dbbackup/).
 
