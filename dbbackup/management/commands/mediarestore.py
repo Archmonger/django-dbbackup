@@ -92,17 +92,17 @@ class Command(BaseDbBackupCommand):
             unencrypted_file, input_filename = utils.unencrypt_file(input_file, input_filename, self.passphrase)
             input_file.close()
             input_file = unencrypted_file
+        if self.uncompress:
+            uncompressed_file, input_filename = utils.uncompress_file(input_file, input_filename)
+            input_file.close()
+            input_file = uncompressed_file
 
         self.logger.debug("Backup size: %s", utils.handle_size(input_file))
         if self.interactive:
             self._ask_confirmation()
 
         input_file.seek(0)
-        tar_file = (
-            tarfile.open(fileobj=input_file, mode="r:gz")
-            if self.uncompress
-            else tarfile.open(fileobj=input_file, mode="r:")
-        )
+        tar_file = tarfile.open(fileobj=input_file, mode="r:")
         # Restore file 1 by 1
         for media_file_info in tar_file:
             if media_file_info.path == "media":

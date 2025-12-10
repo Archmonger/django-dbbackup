@@ -2,8 +2,11 @@
 Tests for mediarestore command.
 """
 
+import gzip
+import tarfile
+import tempfile
 from io import BytesIO
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 from django.test import TestCase
 
@@ -65,3 +68,89 @@ class MediarestoreCommandTest(TestCase):
         # Should call delete then save
         mock_storage.delete.assert_called_once_with("test.txt")
         mock_storage.save.assert_called_once_with("test.txt", mock_file)
+
+    def test_restore_compressed_backup(self):
+        """Test restore of a compressed (gzipped) tar backup"""
+        # Create a mock logger
+        self.command.logger = Mock()
+        self.command.uncompress = True
+        self.command.decrypt = False
+        self.command.interactive = False
+        self.command.replace = False
+
+        # Create a compressed tar file with test content
+        tar_buffer = BytesIO()
+        with tarfile.open(fileobj=tar_buffer, mode="w") as tar:
+            # Add a test file to the tar
+            test_content = b"test file content"
+            test_file_info = tarfile.TarInfo(name="test.txt")
+            test_file_info.size = len(test_content)
+            tar.addfile(test_file_info, BytesIO(test_content))
+
+        # Compress the tar file
+        tar_buffer.seek(0)
+        compressed_buffer = BytesIO()
+        with gzip.GzipFile(fileobj=compressed_buffer, mode="wb") as gz:
+            gz.write(tar_buffer.read())
+
+        compressed_buffer.seek(0)
+
+        # Mock the storage and media storage
+        mock_storage = Mock()
+        mock_media_storage = Mock()
+        mock_media_storage.exists.return_value = False
+
+        self.command.storage = mock_storage
+        self.command.media_storage = mock_media_storage
+        self.command.servername = "test-server"
+        self.command.passphrase = None
+
+        # Mock _get_backup_file to return our compressed file
+        with patch.object(self.command, "_get_backup_file") as mock_get_backup:
+            mock_get_backup.return_value = ("test-backup.tar.gz", compressed_buffer)
+
+            # This should not raise an exception
+            self.command._restore_backup()
+
+            # Verify that the file was uploaded
+            mock_media_storage.save.assert_called_once()
+
+    def test_restore_uncompressed_backup(self):
+        """Test restore of an uncompressed tar backup"""
+        # Create a mock logger
+        self.command.logger = Mock()
+        self.command.uncompress = False
+        self.command.decrypt = False
+        self.command.interactive = False
+        self.command.replace = False
+
+        # Create an uncompressed tar file with test content
+        tar_buffer = BytesIO()
+        with tarfile.open(fileobj=tar_buffer, mode="w") as tar:
+            # Add a test file to the tar
+            test_content = b"test file content"
+            test_file_info = tarfile.TarInfo(name="test.txt")
+            test_file_info.size = len(test_content)
+            tar.addfile(test_file_info, BytesIO(test_content))
+
+        tar_buffer.seek(0)
+
+        # Mock the storage and media storage
+        mock_storage = Mock()
+        mock_media_storage = Mock()
+        mock_media_storage.exists.return_value = False
+
+        self.command.storage = mock_storage
+        self.command.media_storage = mock_media_storage
+        self.command.servername = "test-server"
+        self.command.passphrase = None
+
+        # Mock _get_backup_file to return our uncompressed file
+        with patch.object(self.command, "_get_backup_file") as mock_get_backup:
+            mock_get_backup.return_value = ("test-backup.tar", tar_buffer)
+
+            # This should not raise an exception
+            self.command._restore_backup()
+
+            # Verify that the file was uploaded
+            mock_media_storage.save.assert_called_once()
