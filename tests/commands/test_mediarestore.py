@@ -4,7 +4,6 @@ Tests for mediarestore command.
 
 import gzip
 import tarfile
-import tempfile
 from io import BytesIO
 from unittest.mock import Mock, patch
 
@@ -55,8 +54,6 @@ class MediarestoreCommandTest(TestCase):
         self.command.replace = True
 
         # Create a mock logger
-        from unittest.mock import Mock
-
         self.command.logger = Mock()
 
         # Create a mock file
