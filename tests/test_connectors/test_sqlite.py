@@ -123,9 +123,9 @@ class SqliteConnectorTest(TestCase):
         assert len(dbbackup_warnings) > 0, "Should warn about 'no such table' error"
 
         warning_messages = [str(w.message) for w in dbbackup_warnings]
-        assert any(
-            "no such table" in msg.lower() for msg in warning_messages
-        ), f"Should warn about 'no such table', got: {warning_messages}"
+        assert any("no such table" in msg.lower() for msg in warning_messages), (
+            f"Should warn about 'no such table', got: {warning_messages}"
+        )
 
     def test_create_dump_with_virtual_tables(self):
         with connection.cursor() as c:

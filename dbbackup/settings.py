@@ -5,11 +5,12 @@ from django.conf import settings
 
 # Raise an exception if DBBACKUP_STORAGE or DBBACKUP_STORAGE_OPTIONS is used
 if hasattr(settings, "DBBACKUP_STORAGE") or hasattr(settings, "DBBACKUP_STORAGE_OPTIONS"):
-    raise RuntimeError(
+    msg = (
         "The settings DBBACKUP_STORAGE and DBBACKUP_STORAGE_OPTIONS have been "
         "deprecated in favor of using Django Storages configuration. "
         "Please refer to the documentation for more details."
     )
+    raise RuntimeError(msg)
 
 DATABASES = getattr(settings, "DBBACKUP_DATABASES", list(settings.DATABASES.keys()))
 HOSTNAME = getattr(settings, "DBBACKUP_HOSTNAME", socket.gethostname())

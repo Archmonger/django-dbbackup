@@ -36,7 +36,6 @@ SYMBOL_SKIP = _SYMS["SKIP"]
 class SkipTest(Exception):
     """Exception raised when a test should be skipped."""
 
-    pass
 
 
 # Available PostgreSQL connectors

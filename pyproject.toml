@@ -208,6 +208,7 @@ lint.extend-ignore = [
   "E402",    # Module import not at top of file
   "S101",    # Use of assert detected.
   "S105",    # Use of hardcoded password
+  "PLC0415", # Import should be at top-level of a file
 ]
 
 [tool.pytest.ini_options]

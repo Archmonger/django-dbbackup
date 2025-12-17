@@ -365,9 +365,7 @@ def filename_to_datestring(filename, datefmt=None):
     datefmt = datefmt or settings.DATE_FORMAT
     regex = datefmt_to_regex(datefmt)
     search = regex.search(filename)
-    if search:
-        return search.groups()[0]
-    return None
+    return search.groups()[0] if search else None
 
 
 def filename_to_date(filename, datefmt=None):
@@ -383,9 +381,7 @@ def filename_to_date(filename, datefmt=None):
     """
     datefmt = datefmt or settings.DATE_FORMAT
     datestring = filename_to_datestring(filename, datefmt)
-    if datestring is not None:
-        return datetime.strptime(datestring, datefmt)
-    return None
+    return None if datestring is None else datetime.strptime(datestring, datefmt)
 
 
 def filename_generate(extension, database_name="", servername=None, content_type="db", wildcard=None):
@@ -433,5 +429,5 @@ def filename_generate(extension, database_name="", servername=None, content_type
     else:
         filename = template.format(**params)
         filename = REG_FILENAME_CLEAN.sub("-", filename)
-        filename = filename[1:] if filename.startswith("-") else filename
+        filename = filename.removeprefix("-")
     return filename

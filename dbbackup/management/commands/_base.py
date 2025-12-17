@@ -86,7 +86,7 @@ class BaseDbBackupCommand(BaseCommand):
 
     def read_local_file(self, path):
         """Open file in read mode on local filesystem."""
-        return open(path, "rb")  # noqa: SIM115
+        return open(path, "rb")
 
     def write_local_file(self, outputfile, path):
         """Write file to the desired path."""

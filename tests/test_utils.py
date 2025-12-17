@@ -218,7 +218,7 @@ class EncryptionDecryptionEdgeCasesTest(TestCase):
 class UncompressFileTest(TestCase):
     def test_func(self):
         with open(COMPRESSED_FILE, "rb") as inputfile:
-            fd, filename = utils.uncompress_file(inputfile, "foo.gz")
+            fd, _filename = utils.uncompress_file(inputfile, "foo.gz")
             fd.seek(0)
             assert fd.read() == b"foo\n"
 

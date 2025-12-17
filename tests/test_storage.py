@@ -218,7 +218,7 @@ class StorageCleanOldBackupsTest(TestCase):
     @patch("dbbackup.settings.CLEANUP_KEEP_FILTER", keep_only_even_files)
     def test_keep_filter(self):
         self.storage.clean_old_backups(keep_number=1)
-        assert ["2015-02-07-042810.bak"] == HANDLED_FILES["deleted_files"]
+        assert HANDLED_FILES["deleted_files"] == ["2015-02-07-042810.bak"]
 
 
 class StorageEdgeCasesTest(TestCase):

@@ -71,7 +71,7 @@ class PgDumpConnector(BaseCommandDBConnector):
             cmd += " -n " + " -n ".join(self.schemas)
 
         cmd = f"{self.dump_prefix} {cmd} {self.dump_suffix}"
-        stdout, stderr = self.run_command(cmd, env={**self.dump_env, **pg_env})
+        stdout, _stderr = self.run_command(cmd, env={**self.dump_env, **pg_env})
         return stdout
 
     def _restore_dump(self, dump):

@@ -26,7 +26,7 @@ class MysqlDumpConnector(BaseCommandDBConnector):
         for table in self.exclude:
             cmd += f" --ignore-table={self.settings['NAME']}.{table}"
         cmd = f"{self.dump_prefix} {cmd} {self.dump_suffix}"
-        stdout, stderr = self.run_command(cmd, env=self.dump_env)
+        stdout, _stderr = self.run_command(cmd, env=self.dump_env)
         return stdout
 
     def _restore_dump(self, dump):
