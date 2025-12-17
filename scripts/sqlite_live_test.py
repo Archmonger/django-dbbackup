@@ -134,10 +134,8 @@ def main() -> int:  # (complexity acceptable for test harness)
         # 4. Create test model instances (expanded vs legacy 'feed')
         from tests.testapp.models import CharModel, TextModel
 
-        CharModel.objects.bulk_create([
-            CharModel(field="test1"),
-            CharModel(field="test2"),
-        ])
+        CharModel.objects.create(field="test1")
+        CharModel.objects.create(field="test2")
         complex_text = "Line1;\nLine2; with semicolons ; end"
         TextModel.objects.create(field=complex_text)
         char_count_before = CharModel.objects.count()
@@ -173,12 +171,12 @@ def main() -> int:  # (complexity acceptable for test harness)
         # 8. Assert data restored
         restored_char_count = CharModel.objects.count()
         restored_text_count = TextModel.objects.count()
-        assert (
-            restored_char_count == char_count_before
-        ), f"CharModel count mismatch: expected {char_count_before}, got {restored_char_count}"
-        assert (
-            restored_text_count == text_count_before
-        ), f"TextModel count mismatch: expected {text_count_before}, got {restored_text_count}"
+        assert restored_char_count == char_count_before, (
+            f"CharModel count mismatch: expected {char_count_before}, got {restored_char_count}"
+        )
+        assert restored_text_count == text_count_before, (
+            f"TextModel count mismatch: expected {text_count_before}, got {restored_text_count}"
+        )
         # Validate complex content integrity
         first_text = TextModel.objects.first()
         restored_text = first_text.field if first_text else None
