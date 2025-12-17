@@ -1,4 +1,4 @@
-# ruff: noqa: TRY301, BLE001, TRY300
+# ruff: noqa: TRY301, TRY300
 """PostgreSQL Live Functional Test Script for django-dbbackup
 
 Usage:
@@ -33,9 +33,8 @@ SYMBOL_TEST = _SYMS["TEST"]
 SYMBOL_SKIP = _SYMS["SKIP"]
 
 
-class SkipTest(Exception):
+class SkippedTestError(Exception):
     """Exception raised when a test should be skipped."""
-
 
 
 # Available PostgreSQL connectors
@@ -122,7 +121,7 @@ class PostgreSQLTestRunner:
                     "and ensure pg_dump and psql are in your PATH."
                 )
             msg = f"PostgreSQL client tools (pg_dump, psql, etc) are not installed!{install_instructions}"
-            raise SkipTest(msg)
+            raise SkippedTestError(msg)
 
         self._log("Setting up test database...")
         self.temp_dir = tempfile.mkdtemp(prefix="dbbackup_postgres_")
@@ -364,7 +363,7 @@ class PostgreSQLLiveTest:
             self._log(f"{SYMBOL_PASS} {self.connector_name} backup/restore test PASSED")
             return 0
 
-        except SkipTest as e:
+        except SkippedTestError as e:
             self._log(f"{SYMBOL_SKIP} {self.connector_name} backup/restore test SKIPPED: {e}")
             return 77
 
@@ -408,7 +407,7 @@ def run_single_connector_test(connector_name, verbose=False):
         process = _run_subprocess()
         if process.exitcode is None:
             return 1
-        if process.exitcode != 0 and process.exitcode != 77 and os.name == "nt":  # Fallback path on Windows
+        if process.exitcode not in {0, 77} and os.name == "nt":  # Fallback path on Windows
             # Retry in-process so at least we capture a meaningful failure message
             test_runner = PostgreSQLLiveTest(connector_name, verbose)
             return test_runner.run_backup_restore_test()

@@ -56,8 +56,10 @@ class DbbackupCommandSaveNewBackupTest(TestCase):
         self.command.path = os.path.join(local_tmp, "foo.bak")
         self.command._save_new_backup(TEST_DATABASE)
         assert os.path.exists(self.command.path)
+        assert os.path.exists(f"{self.command.path}.metadata")
         # tearDown
         os.remove(self.command.path)
+        os.remove(f"{self.command.path}.metadata")
 
     def test_schema(self):
         self.command.schemas = ["public"]
@@ -108,9 +110,11 @@ class DbbackupCommandSaveNewBackupTest(TestCase):
 
         # Verify the file was created (meaning write_local_file was used)
         assert os.path.exists(local_path)
+        assert os.path.exists(f"{local_path}.metadata")
 
         # Cleanup
         os.remove(local_path)
+        os.remove(f"{local_path}.metadata")
 
         # Test that paths containing 's3' but not starting with 's3://' are treated as local
         with patch("dbbackup.management.commands._base.BaseDbBackupCommand.write_local_file") as mock_write_local_file:

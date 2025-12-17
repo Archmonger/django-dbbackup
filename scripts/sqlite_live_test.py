@@ -1,4 +1,4 @@
-# ruff: noqa: TRY300, BLE001
+# ruff: noqa: TRY300
 """SQLite Live Functional Test Script for django-dbbackup
 
 Usage:
