@@ -38,7 +38,7 @@ TEST_DATABASE = settings.DATABASES["default"]
 GPG_PRIVATE_PATH = os.path.join(settings.BLOB_DIR, "gpg/secring.gpg")
 GPG_PUBLIC_PATH = os.path.join(settings.BLOB_DIR, "gpg/pubring.gpg")
 GPG_FINGERPRINT = "7438 8D4E 02AF C011 4E2F  1E79 F7D1 BBF0 1F63 FDE9"
-DEV_NULL = open(os.devnull, "w")  # noqa
+DEV_NULL = open(os.devnull, "w")
 
 
 class HandledFiles(dict):

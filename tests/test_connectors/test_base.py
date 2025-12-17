@@ -132,40 +132,40 @@ class BaseCommandDBConnectorTest(TestCase):
     def test_run_command_with_env(self):
         connector = BaseCommandDBConnector()
         # Empty env
-        stdout, stderr = connector.run_command("env")
+        stdout, _stderr = connector.run_command("env")
         assert stdout.read()
         # env from self.env
         connector.env = {"foo": "bar"}
-        stdout, stderr = connector.run_command("env")
+        stdout, _stderr = connector.run_command("env")
         assert b"foo=bar\n" in stdout.read()
         # method override global env
-        stdout, stderr = connector.run_command("env", env={"foo": "ham"})
+        stdout, _stderr = connector.run_command("env", env={"foo": "ham"})
         assert b"foo=ham\n" in stdout.read()
         # get a var from parent env
         os.environ["BAR"] = "foo"
-        stdout, stderr = connector.run_command("env")
+        stdout, _stderr = connector.run_command("env")
         assert b"bar=foo\n" in stdout.read()
         # Conf overrides parendt env
         connector.env = {"bar": "bar"}
-        stdout, stderr = connector.run_command("env")
+        stdout, _stderr = connector.run_command("env")
         assert b"bar=bar\n" in stdout.read()
         # method overrides all
-        stdout, stderr = connector.run_command("env", env={"bar": "ham"})
+        stdout, _stderr = connector.run_command("env", env={"bar": "ham"})
         assert b"bar=ham\n" in stdout.read()
 
     def test_run_command_with_parent_env(self):
         connector = BaseCommandDBConnector(use_parent_env=False)
         # Empty env
-        stdout, stderr = connector.run_command("env")
+        stdout, _stderr = connector.run_command("env")
         assert not stdout.read()
         # env from self.env
         connector.env = {"foo": "bar"}
-        stdout, stderr = connector.run_command("env")
+        stdout, _stderr = connector.run_command("env")
         assert stdout.read() == b"foo=bar\n"
         # method override global env
-        stdout, stderr = connector.run_command("env", env={"foo": "ham"})
+        stdout, _stderr = connector.run_command("env", env={"foo": "ham"})
         assert stdout.read() == b"foo=ham\n"
         # no var from parent env
         os.environ["BAR"] = "foo"
-        stdout, stderr = connector.run_command("env")
+        stdout, _stderr = connector.run_command("env")
         assert b"bar=foo\n" not in stdout.read()

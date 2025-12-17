@@ -72,7 +72,8 @@ class DbbackupCommandSaveNewBackupTest(TestCase):
         self.command._save_new_backup(TEST_DATABASE)
         assert mock_write_to_storage.called
         # Verify the S3 path was passed correctly to write_to_storage
-        args, kwargs = mock_write_to_storage.call_args
+        # The first call should be the backup file
+        args, _kwargs = mock_write_to_storage.call_args_list[0]
         assert args[1] == "s3://mybucket/backups/db.bak"
 
     @patch("dbbackup.management.commands._base.BaseDbBackupCommand.write_to_storage")
@@ -91,7 +92,8 @@ class DbbackupCommandSaveNewBackupTest(TestCase):
                 self.command.path = s3_uri
                 self.command._save_new_backup(TEST_DATABASE)
                 assert mock_write_to_storage.called
-                args, kwargs = mock_write_to_storage.call_args
+                # The first call should be the backup file
+                args, _kwargs = mock_write_to_storage.call_args_list[0]
                 assert args[1] == s3_uri
 
     def test_path_local_file_still_works(self):
@@ -129,7 +131,7 @@ class DbbackupCommandSaveNewBackupTest(TestCase):
                         self.command._save_new_backup(TEST_DATABASE)
                     # Verify write_local_file was called
                     assert mock_write_local_file.called
-                    args, kwargs = mock_write_local_file.call_args
+                    args, _kwargs = mock_write_local_file.call_args
                     assert args[1] == local_path
 
     @patch("dbbackup.settings.DATABASES", ["db-from-settings"])

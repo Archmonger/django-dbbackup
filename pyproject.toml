@@ -209,6 +209,8 @@ lint.extend-ignore = [
   "S101",    # Use of assert detected.
   "S105",    # Use of hardcoded password
   "PLC0415", # Import should be at top-level of a file
+  "SIM115",  # Use a context manager to open files
+  "BLE001",  # Do not catch generic `Exception`
 ]
 
 [tool.pytest.ini_options]

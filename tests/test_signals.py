@@ -40,6 +40,7 @@ class SignalsTestCase(TestCase):
         # Mock the connector and its methods
         mock_connector = Mock()
         mock_connector.generate_filename.return_value = "test_backup.sql"
+        mock_connector.connection.settings_dict = {"ENGINE": "django.db.backends.sqlite3"}
 
         # Create a proper mock for the file object
         mock_file = Mock()
@@ -84,6 +85,7 @@ class SignalsTestCase(TestCase):
         # Mock the connector and its methods
         mock_connector = Mock()
         mock_connector.generate_filename.return_value = "test_backup.sql"
+        mock_connector.connection.settings_dict = {"ENGINE": "django.db.backends.sqlite3"}
 
         # Create a proper mock for the file object
         mock_file = Mock()

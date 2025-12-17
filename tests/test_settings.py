@@ -1,5 +1,6 @@
 """Tests for dbbackup.settings module."""
 
+import pytest
 from django.test import TestCase, override_settings
 
 
@@ -27,9 +28,8 @@ class SettingsTest(TestCase):
         del sys.modules["dbbackup.settings"]
 
         try:
-            with self.assertRaises(RuntimeError):
-                with override_settings(DBBACKUP_STORAGE="some.storage.Backend"):
-                    importlib.import_module("dbbackup.settings")
+            with pytest.raises(RuntimeError), override_settings(DBBACKUP_STORAGE="some.storage.Backend"):
+                importlib.import_module("dbbackup.settings")
         finally:
             sys.modules["dbbackup.settings"] = original_settings
 
@@ -43,8 +43,7 @@ class SettingsTest(TestCase):
         del sys.modules["dbbackup.settings"]
 
         try:
-            with self.assertRaises(RuntimeError):
-                with override_settings(DBBACKUP_STORAGE_OPTIONS={"option": True}):
-                    importlib.import_module("dbbackup.settings")
+            with pytest.raises(RuntimeError), override_settings(DBBACKUP_STORAGE_OPTIONS={"option": True}):
+                importlib.import_module("dbbackup.settings")
         finally:
             sys.modules["dbbackup.settings"] = original_settings

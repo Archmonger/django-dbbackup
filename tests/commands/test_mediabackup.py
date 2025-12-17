@@ -90,7 +90,7 @@ class MediabackupBackupMediafilesTest(TestCase):
 
             # Verify write_to_storage was called with the S3 path
             assert mock_write_to_storage.called
-            args, kwargs = mock_write_to_storage.call_args
+            args, _kwargs = mock_write_to_storage.call_args
             assert args[1] == "s3://mybucket/media/backup.tar"
 
             # Verify no files were written to local storage

@@ -1,7 +1,7 @@
 import re
 from datetime import datetime
 
-from django.core.checks import Tags, Warning, register
+from django.core.checks import Tags, Warning, register  # noqa: A004
 
 from dbbackup import settings
 

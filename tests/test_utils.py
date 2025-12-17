@@ -125,7 +125,7 @@ class EncryptFileTest(TestCase):
 
     def test_func(self, *args):
         with open(self.path, mode="rb") as fd:
-            encrypted_file, filename = utils.encrypt_file(inputfile=fd, filename="foo.txt")
+            encrypted_file, _filename = utils.encrypt_file(inputfile=fd, filename="foo.txt")
         encrypted_file.seek(0)
         assert encrypted_file.read()
 
@@ -161,7 +161,7 @@ class UnencryptFileTest(TestCase):
     @patch("dbbackup.utils.getpass", return_value=None)
     def test_unencrypt(self, *args):
         with open(ENCRYPTED_FILE, "r+b") as inputfile:
-            uncryptfile, filename = utils.unencrypt_file(inputfile, "foofile.gpg")
+            uncryptfile, _filename = utils.unencrypt_file(inputfile, "foofile.gpg")
             uncryptfile.seek(0)
             assert uncryptfile.read() == b"foo\n"
 
@@ -178,7 +178,7 @@ class CompressFileTest(TestCase):
 
     def test_func(self, *args):
         with open(self.path, mode="rb") as fd:
-            compressed_file, filename = utils.encrypt_file(inputfile=fd, filename="foo.txt")
+            _compressed_file, _filename = utils.encrypt_file(inputfile=fd, filename="foo.txt")
 
 
 @unittest.skipIf(not GPG_AVAILABLE, "gpg executable not available")

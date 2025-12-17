@@ -143,7 +143,7 @@ def create_spooled_temporary_file(filepath=None, fileobj=None):
     """
     spooled_file = tempfile.SpooledTemporaryFile(max_size=settings.TMP_FILE_MAX_SIZE, dir=settings.TMP_DIR)
     if filepath:
-        fileobj = open(filepath, "r+b")  # noqa: SIM115
+        fileobj = open(filepath, "r+b")
     if fileobj is not None:
         fileobj.seek(0)
         copyfileobj(fileobj, spooled_file, settings.TMP_FILE_READ_SIZE)
