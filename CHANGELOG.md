@@ -14,10 +14,14 @@ Don't forget to remove deprecated code on each major release!
 
 ## [Unreleased]
 
+-   Nothing (yet)!
+
+## [5.1.0] - 2025-12-17
+
 ### Fixed
 
 -   Prevent restoring a backup from a different database connector (e.g. Postgres backup to SQLite) by adding an additional metadata file to all new backups.
--   Fixed compressed media backup restoration by using `utils.uncompress_file()` instead of relying on tarfile's built-in gzip decompression. This aligns the behavior with database restore and ensures reliable decompression with all file-like objects.
+-   Fixed compressed media backup restoration by using `gzip.GzipFile` instead of `tarfile`'s gzip decompression algorithm.
 
 ## [5.0.1] - 2025-11-07
 
@@ -330,7 +334,8 @@ Don't forget to remove deprecated code on each major release!
 
 -   Miscellaneous maintenance and minor bug fixes.
 
-[Unreleased]: https://github.com/Archmonger/django-dbbackup/compare/5.0.1...HEAD
+[Unreleased]: https://github.com/Archmonger/django-dbbackup/compare/5.1.0...HEAD
+[5.1.0]: https://github.com/Archmonger/django-dbbackup/compare/5.0.1...5.1.0
 [5.0.1]: https://github.com/Archmonger/django-dbbackup/compare/5.0.0...5.0.1
 [5.0.0]: https://github.com/Archmonger/django-dbbackup/compare/4.3.0...5.0.0
 [4.3.0]: https://github.com/Archmonger/django-dbbackup/compare/4.2.1...4.3.0
