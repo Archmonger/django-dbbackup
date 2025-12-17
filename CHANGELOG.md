@@ -16,6 +16,7 @@ Don't forget to remove deprecated code on each major release!
 
 ### Fixed
 
+-   Prevent restoring a backup from a different database connector (e.g. Postgres backup to SQLite) by adding an additional metadata file to all new backups.
 -   Fixed compressed media backup restoration by using `utils.uncompress_file()` instead of relying on tarfile's built-in gzip decompression. This aligns the behavior with database restore and ensures reliable decompression with all file-like objects.
 
 ## [5.0.1] - 2025-11-07
