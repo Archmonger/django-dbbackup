@@ -46,5 +46,5 @@ datasets
 mysql
 postgis
 postgresql
-zip
+gzip
 tarfile
