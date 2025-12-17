@@ -2,6 +2,9 @@
 Command for backup database.
 """
 
+import json
+
+from django.core.files.base import ContentFile
 from django.core.management.base import CommandError
 
 from dbbackup import settings, utils
@@ -89,6 +92,25 @@ class Command(BaseDbBackupCommand):
             return [key.strip() for key in self.database.split(",") if key.strip()]
         return settings.DATABASES
 
+    def _save_metadata(self, filename, local=False):
+        """
+        Save metadata file for the backup.
+        """
+        metadata = {
+            "engine": self.connector.connection.settings_dict["ENGINE"],
+            "connector": f"{self.connector.__module__}.{self.connector.__class__.__name__}",
+        }
+        metadata_filename = f"{filename}.metadata"
+        metadata_content = json.dumps(metadata)
+
+        if local:
+            self.logger.info("Writing metadata file to %s", metadata_filename)
+            with open(metadata_filename, "w") as fd:
+                fd.write(metadata_content)
+        else:
+            metadata_file = ContentFile(metadata_content)
+            self.write_to_storage(metadata_file, metadata_filename)
+
     def _save_new_backup(self, database):
         """
         Save a new backup file.
@@ -129,11 +151,14 @@ class Command(BaseDbBackupCommand):
 
         if self.path is None:
             self.write_to_storage(outputfile, filename)
+            self._save_metadata(filename)
         elif self.path.startswith("s3://"):
             # Handle S3 URIs through storage backend
             self.write_to_storage(outputfile, self.path)
+            self._save_metadata(self.path)
         else:
             self.write_local_file(outputfile, self.path)
+            self._save_metadata(self.path, local=True)
 
         # Send post_backup signal
         post_backup.send(

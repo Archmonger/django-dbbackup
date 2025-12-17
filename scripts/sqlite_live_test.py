@@ -152,6 +152,8 @@ def main() -> int:  # (complexity acceptable for test harness)
         run_management_command(["", "dbbackup", "--noinput"], verbose=verbose)
         post_existing = set(os.listdir(backups_dir))
         new_files = sorted(post_existing - pre_existing)
+        # Filter out metadata files
+        new_files = [f for f in new_files if not f.endswith(".metadata")]
         latest_backup = new_files[-1] if new_files else None
         log(f"Database backup completed (file: {latest_backup})", verbose=verbose)
 

@@ -3,6 +3,8 @@ Restore database.
 """
 
 import io
+import json
+import os
 
 from django.conf import settings
 from django.core.management.base import CommandError
@@ -98,6 +100,56 @@ class Command(BaseDbBackupCommand):
             raise CommandError(msg)
         return database_name, settings.DATABASES[database_name]
 
+    def _check_metadata(self, filename):
+        """
+        Check if the backup file has metadata and if it matches the current database.
+        """
+        metadata_filename = f"{filename}.metadata"
+        metadata = None
+
+        if self.path:
+            # Local file
+            # self.path is the full path to the backup file
+            metadata_path = f"{self.path}.metadata"
+            if os.path.exists(metadata_path):
+                with open(metadata_path) as fd:
+                    metadata = json.load(fd)
+        else:
+            # Storage file
+            try:
+                # Check if metadata file exists in storage
+                # list_directory returns a list of filenames
+                # We can't easily check existence without listing or trying to open
+                # But read_file might fail if not exists depending on storage
+                # Let's try to read it
+                metadata_file = self.storage.read_file(metadata_filename)
+            except Exception:
+                self.logger.debug("No metadata file found for '%s'", filename)
+                return
+
+            # Read and parse metadata
+            try:
+                metadata = json.load(metadata_file)
+            except Exception:
+                self.logger.warning(
+                    "Malformatted metadata file for '%s'! Dbbackup will ignore this metadata.", filename
+                )
+                return
+
+        if not metadata:
+            return
+
+        backup_engine = metadata.get("engine")
+        current_engine = settings.DATABASES[self.database_name]["ENGINE"]
+
+        if backup_engine != current_engine:
+            msg = (
+                f"Backup file '{filename}' was created with database engine '{backup_engine}', "
+                f"but you are restoring to a database using '{current_engine}'. "
+                "Restoring to a different database engine is not supported."
+            )
+            raise CommandError(msg)
+
     def _restore_backup(self):
         """Restore the specified database."""
         input_filename, input_file = self._get_backup_file(
@@ -114,6 +166,8 @@ class Command(BaseDbBackupCommand):
             self.logger.info(f"Restoring schemas: {self.schemas}")  # noqa: G004
 
         self.logger.info(f"Restoring: {input_filename}")  # noqa: G004
+
+        self._check_metadata(input_filename)
 
         # Send pre_restore signal
         pre_restore.send(

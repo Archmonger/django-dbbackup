@@ -126,6 +126,8 @@ class Storage:
             raise TypeError(msg)
         # TODO: Make better filter for include only backups
         files = [f for f in self.list_directory() if utils.filename_to_datestring(f)]
+        # Exclude metadata files
+        files = [f for f in files if not f.endswith(".metadata")]
         if encrypted is not None:
             files = [f for f in files if (".gpg" in f) == encrypted]
         if compressed is not None:

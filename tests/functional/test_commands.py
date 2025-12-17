@@ -36,8 +36,8 @@ class DbBackupCommandTest(TestCase):
     def test_database(self):
         argv = ["", "dbbackup", "--database=default"]
         execute_from_command_line(argv)
-        assert len(HANDLED_FILES["written_files"]) == 1
-        filename, outputfile = HANDLED_FILES["written_files"][0]
+        assert len(HANDLED_FILES["written_files"]) == 2
+        _filename, outputfile = HANDLED_FILES["written_files"][0]
         # Test file content
         outputfile.seek(0)
         assert outputfile.read()
@@ -45,7 +45,7 @@ class DbBackupCommandTest(TestCase):
     def test_encrypt(self):
         argv = ["", "dbbackup", "--encrypt"]
         execute_from_command_line(argv)
-        assert len(HANDLED_FILES["written_files"]) == 1
+        assert len(HANDLED_FILES["written_files"]) == 2
         filename, outputfile = HANDLED_FILES["written_files"][0]
         assert filename.endswith(".gpg")
         # Test file content
@@ -56,14 +56,14 @@ class DbBackupCommandTest(TestCase):
     def test_compress(self):
         argv = ["", "dbbackup", "--compress"]
         execute_from_command_line(argv)
-        assert len(HANDLED_FILES["written_files"]) == 1
-        filename, outputfile = HANDLED_FILES["written_files"][0]
+        assert len(HANDLED_FILES["written_files"]) == 2
+        filename, _outputfile = HANDLED_FILES["written_files"][0]
         assert filename.endswith(".gz")
 
     def test_compress_and_encrypt(self):
         argv = ["", "dbbackup", "--compress", "--encrypt"]
         execute_from_command_line(argv)
-        assert len(HANDLED_FILES["written_files"]) == 1
+        assert len(HANDLED_FILES["written_files"]) == 2
         filename, outputfile = HANDLED_FILES["written_files"][0]
         assert filename.endswith(".gz.gpg")
         # Test file content
@@ -189,7 +189,7 @@ class MediaBackupCommandTest(TestCase):
         argv = ["", "mediabackup", "--compress"]
         execute_from_command_line(argv)
         assert len(HANDLED_FILES["written_files"]) == 1
-        filename, outputfile = HANDLED_FILES["written_files"][0]
+        filename, _outputfile = HANDLED_FILES["written_files"][0]
         assert ".gz" in filename
 
     @patch("dbbackup.utils.getpass", return_value=None)
