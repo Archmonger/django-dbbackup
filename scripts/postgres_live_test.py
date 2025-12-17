@@ -30,6 +30,14 @@ SYMBOL_FAIL = _SYMS["FAIL"]
 SYMBOL_SUMMARY = _SYMS["SUMMARY"]
 SYMBOL_PG = _SYMS["PG"]
 SYMBOL_TEST = _SYMS["TEST"]
+SYMBOL_SKIP = _SYMS["SKIP"]
+
+
+class SkipTest(Exception):
+    """Exception raised when a test should be skipped."""
+
+    pass
+
 
 # Available PostgreSQL connectors
 POSTGRES_CONNECTORS = [
@@ -115,7 +123,7 @@ class PostgreSQLTestRunner:
                     "and ensure pg_dump and psql are in your PATH."
                 )
             msg = f"PostgreSQL client tools (pg_dump, psql, etc) are not installed!{install_instructions}"
-            raise RuntimeError(msg)
+            raise SkipTest(msg)
 
         self._log("Setting up test database...")
         self.temp_dir = tempfile.mkdtemp(prefix="dbbackup_postgres_")
@@ -355,11 +363,15 @@ class PostgreSQLLiveTest:
             self._verify_test_data(char_obj, text_obj)
 
             self._log(f"{SYMBOL_PASS} {self.connector_name} backup/restore test PASSED")
-            return True
+            return 0
+
+        except SkipTest as e:
+            self._log(f"{SYMBOL_SKIP} {self.connector_name} backup/restore test SKIPPED: {e}")
+            return 77
 
         except Exception as e:
             self._log(f"{SYMBOL_FAIL} {self.connector_name} backup/restore test FAILED: {e}")
-            return False
+            return 1
 
         finally:
             self.postgres_runner.cleanup()
@@ -372,9 +384,8 @@ def _connector_test_entry(connector_name: str, verbose: bool):  # pragma: no cov
     (the 'spawn' start method). Exits with status code 1 if the test fails.
     """
     test_runner = PostgreSQLLiveTest(connector_name, verbose)
-    success = test_runner.run_backup_restore_test()
-    if not success:
-        sys.exit(1)
+    exit_code = test_runner.run_backup_restore_test()
+    sys.exit(exit_code)
 
 
 def run_single_connector_test(connector_name, verbose=False):
@@ -397,12 +408,12 @@ def run_single_connector_test(connector_name, verbose=False):
     try:
         process = _run_subprocess()
         if process.exitcode is None:
-            return False
-        if process.exitcode != 0 and os.name == "nt":  # Fallback path on Windows
+            return 1
+        if process.exitcode != 0 and process.exitcode != 77 and os.name == "nt":  # Fallback path on Windows
             # Retry in-process so at least we capture a meaningful failure message
             test_runner = PostgreSQLLiveTest(connector_name, verbose)
             return test_runner.run_backup_restore_test()
-        return process.exitcode == 0
+        return process.exitcode
     except AttributeError as exc:  # Defensive: pickling or spawn related
         if os.name == "nt":
             print(f"{SYMBOL_FAIL} Multiprocessing issue on Windows ({exc}); running in-process instead.")
@@ -435,16 +446,26 @@ def main():
     for connector in connectors_to_test:
         print(f"\n{SYMBOL_TEST} Testing {connector}...")
         results[connector] = run_single_connector_test(connector, verbose=args.verbose)
-        passed = results[connector]
-        status = f"{SYMBOL_PASS} PASSED" if passed else f"{SYMBOL_FAIL} FAILED"
+        exit_code = results[connector]
+        if exit_code == 0:
+            status = f"{SYMBOL_PASS} PASSED"
+        elif exit_code == 77:
+            status = f"{SYMBOL_SKIP} SKIPPED"
+        else:
+            status = f"{SYMBOL_FAIL} FAILED"
         print(f"  {connector}: {status}")
 
     # Summary
     print(f"\n{SYMBOL_SUMMARY} PostgreSQL Connector Test Summary")
     overall_success = True
-    for connector, passed in results.items():
-        overall_success &= passed
-        symbol = SYMBOL_PASS if passed else SYMBOL_FAIL
+    for connector, exit_code in results.items():
+        if exit_code == 0:
+            symbol = SYMBOL_PASS
+        elif exit_code == 77:
+            symbol = SYMBOL_SKIP
+        else:
+            symbol = SYMBOL_FAIL
+            overall_success = False
         print(f"  {symbol} {connector}")
 
     # Exit with error code if any tests failed

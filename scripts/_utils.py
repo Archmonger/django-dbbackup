@@ -27,6 +27,7 @@ _EMOJI_SYMBOLS = {
     "SUMMARY": "📊",
     "TEST": "📋",
     "PG": "🐘",
+    "SKIP": "⚠️",
 }
 
 _ASCII_SYMBOLS = {
@@ -35,6 +36,7 @@ _ASCII_SYMBOLS = {
     "SUMMARY": "SUMMARY:",
     "TEST": "TEST:",
     "PG": ">>",
+    "SKIP": "SKIP:",
 }
 
 
