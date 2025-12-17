@@ -144,7 +144,8 @@ STORAGES = {
 ### Settings
 
 !!! note
-See the [Django Storage S3 storage official documentation](https://django-storages.readthedocs.io/en/latest/backends/amazon-S3.html) for all options.
+
+    See the [Django Storage S3 storage official documentation](https://django-storages.readthedocs.io/en/latest/backends/amazon-S3.html) for all options.
 
     The options listed here are a selection of dictionary keys returned by
     `get_default_settings` in django-storages' [`storages/backends/s3boto3.py`](https://github.com/jschneier/django-storages/blob/master/storages/backends/s3boto3.py#L293-L324),
