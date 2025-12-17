@@ -7,6 +7,7 @@ from unittest.mock import patch
 import pytest
 from django.conf import settings
 from django.core.management import execute_from_command_line
+from django.db import connection
 from django.test import TransactionTestCase as TestCase
 
 from tests.testapp import models
@@ -90,6 +91,19 @@ class DbRestoreCommandTest(TestCase):
         self.instance.delete()
         # Restore
         execute_from_command_line(["", "dbrestore"])
+        restored = models.CharModel.objects.all().exists()
+        assert restored
+
+    def test_compressed_restore_fresh_db(self, *args):
+        # Create backup
+        execute_from_command_line(["", "dbbackup", "--compress"])
+
+        # Drop the table to simulate a fresh database
+        with connection.cursor() as cursor:
+            cursor.execute(f"DROP TABLE {models.CharModel._meta.db_table}")
+
+        # Restore
+        execute_from_command_line(["", "dbrestore", "--uncompress"])
         restored = models.CharModel.objects.all().exists()
         assert restored
 
