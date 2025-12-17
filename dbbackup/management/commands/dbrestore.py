@@ -143,8 +143,9 @@ class Command(BaseDbBackupCommand):
 
         backup_engine = metadata.get("engine")
         current_engine = settings.DATABASES[self.database_name]["ENGINE"]
+        backup_connector = metadata.get("connector")
 
-        if backup_engine != current_engine:
+        if backup_engine != current_engine and backup_connector != "dbbackup.db.django.DjangoConnector":
             msg = (
                 f"Backup file '{filename}' was created with database engine '{backup_engine}', "
                 f"but you are restoring to a database using '{current_engine}'. "

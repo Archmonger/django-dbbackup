@@ -72,6 +72,17 @@ class DbrestoreMetadataTest(TestCase):
             with pytest.raises(CommandError):
                 self.command._check_metadata("local_backup.dump")
 
+    def test_django_connector_mismatch_allowed(self):
+        # Setup metadata with different engine but DjangoConnector
+        metadata = {
+            "engine": "django.db.backends.postgresql",
+            "connector": "dbbackup.db.django.DjangoConnector",
+        }
+        self.command.storage.read_file.return_value = Mock(read=lambda: json.dumps(metadata))
+
+        # Should not raise
+        self.command._check_metadata("backup.dump")
+
 
 class DbrestoreConnectorOverrideTest(TestCase):
     def setUp(self):
