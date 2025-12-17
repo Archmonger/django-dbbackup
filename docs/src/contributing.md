@@ -102,9 +102,10 @@ all code changes. To streamline review:
 7. Follow up politely if there's no feedback after a few days
 
 !!! note
-We recommend testing with multiple Python and Django versions using
-`hatch test --all` before pushing. DBBackup uses a lot of file operations,
-so breaks between versions are possible.
+
+    We recommend testing with multiple Python and Django versions using
+    `hatch test --all` before pushing. DBBackup uses a lot of file operations,
+    so breaks between versions are possible.
 
 ## Test environment configuration
 

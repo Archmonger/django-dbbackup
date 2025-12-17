@@ -37,17 +37,19 @@ STORAGES = {
 ```
 
 !!! warning
-Do not configure backup storage with the same configuration as your media
-files as you'll risk sharing backups inside public directories.
 
-If no explicit `STORAGES['dbbackup']` is provided the default File System Storage
-is used (pointing at your project media root). Consider isolating backups in a
-dedicated directory with restricted permissions. Browse additional providers
-at [Django Packages](https://djangopackages.org/grids/g/storage-backends/).
+    Do not configure backup storage with the same configuration as your media
+    files as you'll risk sharing backups inside public directories.
+
+    If no explicit `STORAGES['dbbackup']` is provided the default File System Storage
+    is used (pointing at your project media root). Consider isolating backups in a
+    dedicated directory with restricted permissions. Browse additional providers
+    at [Django Packages](https://djangopackages.org/grids/g/storage-backends/).
 
 !!! note
-Storing backups to local disk may also be useful for Dropbox if you
-already have the official Dropbox client installed on your system.
+
+    Storing backups to local disk may also be useful for Dropbox if you
+    already have the official Dropbox client installed on your system.
 
 ## File system storage
 
@@ -224,7 +226,8 @@ STORAGES = {
 ### Settings
 
 !!! note
-See [django-storages dropbox official documentation](https://django-storages.readthedocs.io/en/latest/backends/dropbox.html) for more details.
+
+    See [django-storages dropbox official documentation](https://django-storages.readthedocs.io/en/latest/backends/dropbox.html) for more details.
 
 **`oauth2_access_token`** - Required
 
@@ -246,8 +249,9 @@ pip install django-storages
 ```
 
 !!! warning
-This storage doesn't use a private connection for communication, so don't use it
-if you're not certain about the security of the link between the client and the server.
+
+    This storage doesn't use a private connection for communication, so don't use it
+    if you're not certain about the security of the link between the client and the server.
 
 ```python
 STORAGES = {
