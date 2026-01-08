@@ -189,9 +189,11 @@ class DbrestoreConnectorOverrideTest(TestCase):
         metadata = {"engine": settings.DATABASES["default"]["ENGINE"], "connector": "my.broken.Connector"}
         self.command.storage.read_file.return_value = Mock(read=lambda: json.dumps(metadata))
 
-        with patch("dbbackup.management.commands.dbrestore.import_module", side_effect=ImportError):
-            with pytest.raises(SystemExit):
-                self.command._restore_backup()
+        with (
+            patch("dbbackup.management.commands.dbrestore.import_module", side_effect=ImportError),
+            pytest.raises(SystemExit),
+        ):
+            self.command._restore_backup()
 
         # Verify input was called
         mock_input.assert_called()

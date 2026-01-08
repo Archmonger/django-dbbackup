@@ -108,7 +108,7 @@ class Command(BaseDbBackupCommand):
             with open(metadata_filename, "w") as fd:
                 fd.write(metadata_content)
         else:
-            metadata_file = ContentFile(metadata_content)
+            metadata_file = ContentFile(metadata_content.encode("utf-8"))
             self.write_to_storage(metadata_file, metadata_filename)
 
     def _save_new_backup(self, database):

@@ -80,6 +80,22 @@ class DbbackupCommandSaveNewBackupTest(TestCase):
 
         assert result is None
 
+    def test_metadata_is_bytes(self):
+        """Test that metadata content is passed as bytes to storage."""
+        self.command._save_new_backup(TEST_DATABASE)
+
+        # Find the metadata file in HANDLED_FILES
+        # HANDLED_FILES["written_files"] contains tuples (name, file_object)
+        metadata_file_entry = next((f for f in HANDLED_FILES["written_files"] if f[0].endswith(".metadata")), None)
+        assert metadata_file_entry is not None
+
+        metadata_file = metadata_file_entry[1]
+        metadata_file.open()
+        content = metadata_file.read()
+
+        # Check if content is bytes
+        assert isinstance(content, bytes), f"Metadata content should be bytes, but got {type(content)}"
+
     @patch("dbbackup.management.commands._base.BaseDbBackupCommand.write_to_storage")
     def test_path_s3_uri(self, mock_write_to_storage):
         """Test that S3 URIs in output path are handled by write_to_storage instead of write_local_file."""

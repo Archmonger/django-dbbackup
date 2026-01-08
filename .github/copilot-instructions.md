@@ -17,7 +17,7 @@ Bootstrap, build, and test the repository:
 - `hatch run functional:all` – end-to-end functional (SQLite + PostgreSQL live scripts) (≈10–15s) **NEVER CANCEL.**
   - `hatch run functional:sqlite --all` – only SQLite functional cycle
   - `hatch run functional:postgres --all` – only PostgreSQL functional cycle
-- `hatch run lint:check` – lint (ruff) (≈5s)
+- `hatch fmt --check` – lint (ruff) (≈5s)
 - `hatch run docs:build` – build documentation (≈2s, strict)
 - `hatch run docs:serve` – local docs server (http://localhost:8000)
 - `hatch run docs:linkcheck` – validate internal/external links & spelling

@@ -14,7 +14,9 @@ Don't forget to remove deprecated code on each major release!
 
 ## [Unreleased]
 
--   Nothing (yet)!
+### Fixed
+
+-   Ensure `dbbackup` metadata file is always written as bytes to support storage backends that enforce bytes content (e.g. Google Cloud Storage).
 
 ## [5.1.0] - 2025-12-17
 
