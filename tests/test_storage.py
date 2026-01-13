@@ -220,6 +220,27 @@ class StorageCleanOldBackupsTest(TestCase):
         self.storage.clean_old_backups(keep_number=1)
         assert HANDLED_FILES["deleted_files"] == ["2015-02-07-042810.bak"]
 
+    def test_clean_includes_metadata(self):
+        for f in [
+            "2015-02-06-042810.bak.metadata",
+            "2015-02-07-042810.bak.metadata",
+            "2015-02-08-042810.bak.metadata",
+        ]:
+            HANDLED_FILES["written_files"].append((f, None))
+
+        self.storage.clean_old_backups(keep_number=1)
+
+        deleted_files = sorted(HANDLED_FILES["deleted_files"])
+        expected_deleted = sorted(
+            [
+                "2015-02-06-042810.bak",
+                "2015-02-06-042810.bak.metadata",
+                "2015-02-07-042810.bak",
+                "2015-02-07-042810.bak.metadata",
+            ]
+        )
+        self.assertEqual(deleted_files, expected_deleted)
+
 
 class StorageEdgeCasesTest(TestCase):
     @patch("dbbackup.settings.STORAGE", "")

@@ -281,6 +281,10 @@ class Storage:
                 continue
             self.delete_file(filename)
 
+            metadata_filename = f"{filename}.metadata"
+            if self.storage.exists(metadata_filename):
+                self.delete_file(metadata_filename)
+
 
 def get_storage_class(path=None):
     """

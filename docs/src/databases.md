@@ -34,11 +34,11 @@ below.
 
 All connectors have the following parameters:
 
-| Setting   | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                        | Default                     |
-| --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------- |
-| CONNECTOR | Absolute path to connector class. Defaults by engine: `dbbackup.db.sqlite.SqliteBackupConnector` (sqlite3), `dbbackup.db.mysql.MysqlDumpConnector` (mysql), `dbbackup.db.postgresql.PgDumpConnector` (postgresql), `dbbackup.db.postgresql.PgDumpGisConnector` (postgis), `dbbackup.db.mongodb.MongoDumpConnector` (django_mongodb_engine), `dbbackup.db.django.DjangoConnector` (fallback / any unmapped). Prometheus wrappers are also supported mapping to the same connectors. | Auto-detected from `ENGINE` |
-| EXCLUDE   | List of table names to exclude from dump (may be unsupported for raw file copy snapshot approaches). Example below.                                                                                                                                                                                                                                                                                                                                                                | None                        |
-| EXTENSION | File extension used for the generated dump archive.                                                                                                                                                                                                                                                                                                                                                                                                                                | `dump`                      |
+| Setting   | Description                                                                                                                                                 | Default                     |
+| --------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------- |
+| CONNECTOR | Absolute path to connector class. For example: `dbbackup.db.django.DjangoConnector`. Prometheus wrappers are also supported mapping to the same connectors. | Auto-detected from `ENGINE` |
+| EXCLUDE   | List of table names to exclude from dump (may be unsupported for raw file copy snapshot approaches). Example below.                                         | None                        |
+| EXTENSION | File extension used for the generated dump archive.                                                                                                         | `dump`                      |
 
 Example for `EXCLUDE` usage:
 
@@ -95,7 +95,7 @@ This connector can be used to restore a backup to an existing (dirty) database d
 
 The `dbbackup.db.sqlite.SqliteCPConnector` connector can be used to make a simple raw copy of your database file, like a snapshot.
 
-In-memory databases are **not** dumpable with it. Since it works by copying the database file directly, it is not suitable for databases that are have active connections.
+In-memory databases are **not** dumpable with it. Since it works by copying the database file directly, it is not suitable for databases that have ongoing connections.
 
 ### MySQL
 
@@ -214,7 +214,7 @@ The Django connector is ideal for:
 ### Limitations
 
 -   **Performance**: Slower than native database tools for large datasets
--   **Database structure**: Only backs up data, not database schema, indices, or procedures
+-   **Database structure**: Only provides backups of data; not database schema, indices, or procedures
 
 ### File Extension
 

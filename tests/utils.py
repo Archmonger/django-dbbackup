@@ -64,7 +64,7 @@ class FakeStorage(Storage):
     name = "FakeStorage"
 
     def exists(self, name):
-        return name in HANDLED_FILES["written_files"]
+        return any(f[0] == name for f in HANDLED_FILES["written_files"])
 
     def get_available_name(self, name, max_length=None):
         return name[:max_length]

@@ -14,7 +14,9 @@ Don't forget to remove deprecated code on each major release!
 
 ## [Unreleased]
 
-- Nothing (yet)!
+### Fixed
+
+-   Fixed a bug where metadata files were not being removed during clean-up.
 
 ## [5.1.1] - 2026-01-07
 

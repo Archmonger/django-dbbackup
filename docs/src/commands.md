@@ -19,7 +19,7 @@ Backup size: 3.3 KiB
 Writing file to tmp-zuluvm-2016-07-29-100954.dump
 ```
 
-For detailed help information, run:
+For parameters and more information, run:
 
 ```bash
 python manage.py dbbackup --help
@@ -37,7 +37,7 @@ Restoring: tmp-zuluvm-2016-07-29-100954.dump
 Restore tempfile created: 3.3 KiB
 ```
 
-For detailed help information, run:
+For parameters and more information, run:
 
 ```bash
 python manage.py dbrestore --help
@@ -54,7 +54,7 @@ Backup size: 10.0 KiB
 Writing file to zuluvm-2016-07-04-081612.tar
 ```
 
-For detailed help information, run:
+For parameters and more information, run:
 
 ```bash
 python manage.py mediabackup --help
@@ -75,7 +75,7 @@ Are you sure you want to continue? [Y/n]
 2 file(s) restored
 ```
 
-For detailed help information, run:
+For parameters and more information, run:
 
 ```bash
 python manage.py mediarestore --help
@@ -85,7 +85,7 @@ python manage.py mediarestore --help
 
 This command lists backups filtered by type (`'media'` or `'db'`), compression, or encryption.
 
-For detailed help information, run:
+For parameters and more information, run:
 
 ```bash
 python manage.py listbackups --help

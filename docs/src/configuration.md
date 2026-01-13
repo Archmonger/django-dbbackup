@@ -142,8 +142,9 @@ when using `--encrypt` and for automatic decryption with `--decrypt`.
 
 ### DBBACKUP_CONNECTORS
 
-Optional per database override mapping similar to `DATABASES`. Lets you define
-different credentials / hosts exclusively for backup / restore operations
+Allows for overriding the connector used for specific Django database(s).
+This mapping is similar to `DATABASES`. Lets you define different
+credentials / hosts exclusively for backup / restore operations
 (e.g. read from a replica). Keys correspond to database aliases.
 
 See the [Databases](databases.md) section for details on how to configure
@@ -154,9 +155,9 @@ Default: `{}`
 ### DBBACKUP_CONNECTOR_MAPPING
 
 Map custom database engine names (e.g. from wrappers like `transaction_hooks`
-or third party observability packages) to an existing DBBackup connector class path.
-Useful when a third party backend subclasses a supported Django backend but
-uses a different engine string.
+or third party observability packages) to a DBBackup connector class.
+Useful when you are using a third party backend that subclasses a supported
+Django database backend.
 
 See the [Databases](databases.md) section for details on how to configure the
 connector mapping.
