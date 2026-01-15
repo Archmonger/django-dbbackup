@@ -466,11 +466,13 @@ def load_custom_metadata() -> dict:
         loader_function = _load_function_from_path(loader_setting)
         try:
             custom_metadata = loader_function()
-            if not isinstance(custom_metadata, dict):
-                raise ValueError("DBBACKUP_CUSTOM_METADATA_LOADER must return a dictionary.")
         except Exception as e:
             logger = logging.getLogger("dbbackup")
             logger.error(f"Error loading custom metadata: {e}")
+
+        if not isinstance(custom_metadata, dict):
+            raise ValueError("DBBACKUP_CUSTOM_METADATA_LOADER must return a dictionary.")
+
         # Validate that we can serialize the provided data
         try:
             json.dumps(custom_metadata)
@@ -493,10 +495,7 @@ def validate_custom_metadata(metadata):
     if validator_setting:
         validator_function = _load_function_from_path(validator_setting)
         try:
-            is_valid = validator_function(metadata)
-            if not isinstance(is_valid, bool):
-                raise ValueError("DBBACKUP_CUSTOM_METADATA_VALIDATOR must return a boolean.")
-            return is_valid
+            return  bool(validator_function(metadata))
         except Exception as e:
             raise ValueError(f"Error during custom metadata validation: {e}") from e
     return True
