@@ -14,6 +14,10 @@ Don't forget to remove deprecated code on each major release!
 
 ## [Unreleased]
 
+- Nothing (yet)!
+
+## [5.1.2] - 2026-01-14
+
 ### Fixed
 
 -   Fixed a bug where metadata files were not being removed during clean-up.
@@ -342,7 +346,8 @@ Don't forget to remove deprecated code on each major release!
 
 -   Miscellaneous maintenance and minor bug fixes.
 
-[Unreleased]: https://github.com/Archmonger/django-dbbackup/compare/5.1.1...HEAD
+[Unreleased]: https://github.com/Archmonger/django-dbbackup/compare/5.1.2...HEAD
+[5.1.2]: https://github.com/Archmonger/django-dbbackup/compare/5.1.1...5.1.2
 [5.1.1]: https://github.com/Archmonger/django-dbbackup/compare/5.1.0...5.1.1
 [5.1.0]: https://github.com/Archmonger/django-dbbackup/compare/5.0.1...5.1.0
 [5.0.1]: https://github.com/Archmonger/django-dbbackup/compare/5.0.0...5.0.1
