@@ -1,6 +1,8 @@
+import importlib
 import json
 from unittest.mock import Mock, patch
-
+from django.test.utils import override_settings
+from dbbackup.management.commands import dbbackup
 import pytest
 from django.conf import settings
 from django.core.management.base import CommandError
@@ -82,6 +84,38 @@ class DbrestoreMetadataTest(TestCase):
 
         # Should not raise
         self.command._check_metadata("backup.dump")
+
+    @override_settings(DBBACKUP_CUSTOM_METADATA_VALIDATOR="tests.test_custommeta.dummy_validator")
+    def test_metadata_match_custom(self):
+        importlib.reload(dbbackup.settings)
+        # Setup metadata
+        metadata = {"engine": settings.DATABASES["default"]["ENGINE"], "CSMT_VAL": "aabbcc-1122-3344_eu-west"}
+        self.command.storage.read_file.return_value = Mock(read=lambda: json.dumps(metadata))
+
+        # Should not raise
+        self.command._check_metadata("backup.dump")
+
+    @override_settings(DBBACKUP_CUSTOM_METADATA_VALIDATOR="tests.test_custommeta.dummy_validator")
+    def test_metadata_match_custom_fail(self):
+        importlib.reload(dbbackup.settings)
+        # Setup metadata
+        metadata = {"engine": settings.DATABASES["default"]["ENGINE"], "CSMT_VAL": "aabbcc-1122-3344_eu-ttt"}
+        self.command.storage.read_file.return_value = Mock(read=lambda: json.dumps(metadata))
+
+        # Should raise CommandError due to validation failure
+        with pytest.raises(CommandError):
+            self.command._check_metadata("backup.dump")
+
+    @override_settings(DBBACKUP_CUSTOM_METADATA_VALIDATOR="tests.test_custommeta.dummy_validator")
+    def test_metadata_match_custom_failwithcustomerror(self):
+        importlib.reload(dbbackup.settings)
+        # Setup metadata
+        metadata = {"engine": settings.DATABASES["default"]["ENGINE"], "CSMT_VAL": "xx-1122-3344_eu-west"}
+        self.command.storage.read_file.return_value = Mock(read=lambda: json.dumps(metadata))
+
+        # Should raise CommandError due to validation failure
+        with pytest.raises(ValueError, match="CSMT_VAL must start with 'aabbcc'"):
+            self.command._check_metadata("backup.dump")
 
 
 class DbrestoreConnectorOverrideTest(TestCase):

@@ -90,8 +90,7 @@ class CustomMetadataTest(TestCase):
     @override_settings(DBBACKUP_CUSTOM_METADATA_VALIDATOR="tests.test_custommeta.dummy_validator")
     def test_metadata_validator_valid(self):
         """Test that setting DBBACKUP_CUSTOM_METADATA_VALIDATOR works."""
-        with override_settings(DBBACKUP_CUSTOM_METADATA_VALIDATOR="tests.test_custommeta.dummy_validator"):
-            importlib.reload(dbbackup.settings)
+        importlib.reload(dbbackup.settings)
 
         assert dbbackup.settings.CUSTOM_METADATA_VALIDATOR == "tests.test_custommeta.dummy_validator"
         assert dbbackup.utils.validate_custom_metadata({"CSMT_VAL": TEST_VAL}) is True
