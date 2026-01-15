@@ -13,7 +13,8 @@ from datetime import datetime
 from functools import wraps
 from getpass import getpass
 from shutil import copyfileobj
-
+import json
+from importlib import import_module
 from django.core.mail import EmailMultiAlternatives
 from django.db import connection
 from django.http import HttpRequest
@@ -431,3 +432,71 @@ def filename_generate(extension, database_name="", servername=None, content_type
         filename = REG_FILENAME_CLEAN.sub("-", filename)
         filename = filename.removeprefix("-")
     return filename
+
+def _load_function_from_path(path):
+    """
+    Load a callable from a dotted path.
+
+    :param path: Dotted path to callable
+    :type path: str
+
+    :returns: Callable object
+    :rtype: callable
+    """
+    module_path, func_name = path.rsplit(".", 1)
+    try:
+        module = import_module(module_path)
+    except ImportError as e:
+        raise ImportError(f"Could not import module '{module_path}': {e}") from e
+    func = getattr(module, func_name)
+    if not callable(func):
+        raise ValueError(f"The object at '{path}' is not callable.")
+    return func
+
+def load_custom_metadata() -> dict:
+    """
+    Load custom metadata from a callable defined in settings.
+
+    :returns: Custom metadata dictionary
+    :rtype: dict
+    """
+    custom_metadata = {}
+    loader_setting = settings.CUSTOM_METADATA_LOADER
+    if loader_setting:
+        loader_function = _load_function_from_path(loader_setting)
+        try:
+            custom_metadata = loader_function()
+            if not isinstance(custom_metadata, dict):
+                raise ValueError("DBBACKUP_CUSTOM_METADATA_LOADER must return a dictionary.")
+        except Exception as e:
+            logger = logging.getLogger("dbbackup")
+            logger.error(f"Error loading custom metadata: {e}")
+        # Validate that we can serialize the provided data
+        try:
+            json.dumps(custom_metadata)
+        except Exception as e:
+            raise ValueError(f"Custom metadata is not JSON serializable: {e}")
+    return custom_metadata
+
+def validate_custom_metadata(metadata):
+    """
+    Validate custom metadata using a callable defined in settings.
+    Raise a CommandError to provide custom feedback if validation fails.
+
+    :param metadata: Metadata dictionary to validate
+    :type metadata: dict
+
+    :returns: True if validation passes, False otherwise
+    :rtype: bool
+    """
+    validator_setting = settings.CUSTOM_METADATA_VALIDATOR
+    if validator_setting:
+        validator_function = _load_function_from_path(validator_setting)
+        try:
+            is_valid = validator_function(metadata)
+            if not isinstance(is_valid, bool):
+                raise ValueError("DBBACKUP_CUSTOM_METADATA_VALIDATOR must return a boolean.")
+            return is_valid
+        except Exception as e:
+            raise ValueError(f"Error during custom metadata validation: {e}") from e
+    return True

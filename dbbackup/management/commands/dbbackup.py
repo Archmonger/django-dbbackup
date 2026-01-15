@@ -101,6 +101,11 @@ class Command(BaseDbBackupCommand):
             "connector": f"{self.connector.__module__}.{self.connector.__class__.__name__}",
         }
         metadata_filename = f"{filename}.metadata"
+
+        # Load custom metadata if configured
+        custom_metadata = utils.load_custom_metadata()
+        metadata.update(custom_metadata)
+
         metadata_content = json.dumps(metadata)
 
         if local:
