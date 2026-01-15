@@ -1,46 +1,51 @@
 """Tests for custom metadata."""
 
-import re
 import pytest
 from django.test import TestCase, override_settings
 import importlib
-import importlib
 
 import dbbackup.settings
 import dbbackup.utils
-import dbbackup.settings
-import dbbackup.utils
 
+# Helpers
 TEST_VAL = "aabbcc-1122-3344_eu-west"
+
 
 def dummy_loader():
     return {"CSMT_VAL": TEST_VAL}
 
+
 def broken_loader():
     return ["not", "a", "dict"]
 
+
 class CSTM:
-    abc='123'
+    abc = "123"
+
 
 def anotherbroken_loader():
     return {"CSMT_VAL": TEST_VAL, "CSTM_OBJ": CSTM()}
 
+
 def dummy_validator(metadata):
     """Dummy validator for testing purposes that assues we only allow one type of customer and region.
-    
+
     A real validator would probably do more complex checks.
     """
-    if val:=metadata.get("CSMT_VAL", ""):
+    if val := metadata.get("CSMT_VAL", ""):
         if not val.startswith("aabbcc"):
             raise ValueError("CSMT_VAL must start with 'aabbcc'")
         if not val.endswith("eu-west"):
             return False
     return True
 
+
 def broken_validator(metadata):
     print(1 / 0)  # Always raises ZeroDivisionError
     return True
 
+
+# Actual tests
 class CustomMetadataTest(TestCase):
     @override_settings(DBBACKUP_CUSTOM_METADATA_LOADER="tests.test_custommeta.dummy_loader")
     def test_metadata_loader_valid(self):
@@ -49,6 +54,7 @@ class CustomMetadataTest(TestCase):
 
         assert dbbackup.settings.CUSTOM_METADATA_LOADER == "tests.test_custommeta.dummy_loader"
         assert dbbackup.utils.load_custom_metadata() == {"CSMT_VAL": TEST_VAL}
+
     @override_settings(DBBACKUP_CUSTOM_METADATA_LOADER="non.existent.loader")
     def test_metadata_loader_invalid_1(self):
         """Test that various loader missconfigurations do not work - Non-existent module."""
@@ -56,6 +62,7 @@ class CustomMetadataTest(TestCase):
 
         with pytest.raises(ImportError, match="Could not import module 'non.existent': No module named 'non'"):
             dbbackup.utils.load_custom_metadata()
+
     @override_settings(DBBACKUP_CUSTOM_METADATA_LOADER="tests.test_custommeta.TEST_VAL")
     def test_metadata_loader_invalid_2(self):
         """Test that various loader missconfigurations do not work - Non-callable object."""
@@ -63,13 +70,15 @@ class CustomMetadataTest(TestCase):
 
         with pytest.raises(ValueError, match="The object at 'tests.test_custommeta.TEST_VAL' is not callable."):
             dbbackup.utils.load_custom_metadata()
+
     @override_settings(DBBACKUP_CUSTOM_METADATA_LOADER="tests.test_custommeta.broken_loader")
     def test_metadata_loader_invalid_3(self):
         """Test that various loader missconfigurations do not work - Wrong return type."""
         importlib.reload(dbbackup.settings)
 
-        with pytest.raises(ValueError,match='DBBACKUP_CUSTOM_METADATA_LOADER must return a dictionary.'):
+        with pytest.raises(ValueError, match="DBBACKUP_CUSTOM_METADATA_LOADER must return a dictionary."):
             dbbackup.utils.load_custom_metadata()
+
     @override_settings(DBBACKUP_CUSTOM_METADATA_LOADER="tests.test_custommeta.anotherbroken_loader")
     def test_metadata_loader_invalid_4(self):
         """Test that various loader missconfigurations do not work - Not JSON serializable."""
@@ -110,4 +119,3 @@ class CustomMetadataTest(TestCase):
         with pytest.raises(ValueError, match="Error during custom metadata validation:"):
             assert dbbackup.utils.validate_custom_metadata({"CSMT_VAL": TEST_VAL}) is False
             assert False, "Should not reach this point"
-
