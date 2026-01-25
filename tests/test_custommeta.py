@@ -71,7 +71,7 @@ class CustomMetadataTest(TestCase):
         """Test that various setter missconfigurations do not work - Non-callable object."""
         importlib.reload(dbbackup.settings)
 
-        with pytest.raises(ValueError, match="The object at 'tests.test_custommeta.TEST_VAL' is not callable."):
+        with pytest.raises(TypeError, match="The object at 'tests.test_custommeta.TEST_VAL' is not callable."):
             dbbackup.utils.load_custom_metadata(DEFAULT_META)
 
     @override_settings(DBBACKUP_BACKUP_METADATA_SETTER="tests.test_custommeta.broken_setter")

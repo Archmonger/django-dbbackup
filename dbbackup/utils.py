@@ -2,7 +2,10 @@
 Utility functions for dbbackup.
 """
 
+from __future__ import annotations
+
 import gzip
+import json
 import logging
 import os
 import re
@@ -12,14 +15,13 @@ import traceback
 from datetime import datetime
 from functools import wraps
 from getpass import getpass
-from shutil import copyfileobj
-import json
 from importlib import import_module
+from shutil import copyfileobj
+
 from django.core.mail import EmailMultiAlternatives
 from django.db import connection
 from django.http import HttpRequest
 from django.utils import timezone
-from typing import Optional
 
 from dbbackup import settings
 
@@ -434,6 +436,7 @@ def filename_generate(extension, database_name="", servername=None, content_type
         filename = filename.removeprefix("-")
     return filename
 
+
 def _load_function_from_path(path):
     """
     Load a callable from a dotted path.
@@ -448,13 +451,16 @@ def _load_function_from_path(path):
     try:
         module = import_module(module_path)
     except ImportError as e:
-        raise ImportError(f"Could not import module '{module_path}': {e}") from e
+        msg = f"Could not import module '{module_path}': {e}"
+        raise ImportError(msg) from e
     func = getattr(module, func_name)
     if not callable(func):
-        raise ValueError(f"The object at '{path}' is not callable.")
+        msg = f"The object at '{path}' is not callable."
+        raise TypeError(msg)
     return func
 
-def load_custom_metadata(metadata: Optional[dict] = None) -> dict:
+
+def load_custom_metadata(metadata: dict | None = None) -> dict:
     """
     Load custom metadata from a callable defined in settings.
 
@@ -467,21 +473,24 @@ def load_custom_metadata(metadata: Optional[dict] = None) -> dict:
         setter_function = _load_function_from_path(setter_setting)
         try:
             custom_metadata = setter_function(metadata)
-        except Exception as e:
+        except Exception:
             logger = logging.getLogger("dbbackup")
-            logger.error(f"Error loading custom metadata: {e}")
+            logger.exception("Error loading custom metadata: %s")
 
         if not isinstance(custom_metadata, dict):
-            raise ValueError("DBBACKUP_BACKUP_METADATA_SETTER must return a dictionary.")
+            msg = "DBBACKUP_BACKUP_METADATA_SETTER must return a dictionary."
+            raise ValueError(msg)
 
         # Validate that we can serialize the provided data
         try:
             json.dumps(custom_metadata)
         except Exception as e:
-            raise ValueError(f"Custom metadata is not JSON serializable: {e}")
+            msg = f"Custom metadata is not JSON serializable: {e}"
+            raise ValueError(msg) from e
     return custom_metadata
 
-def validate_custom_metadata(metadata) -> Optional[bool]:
+
+def validate_custom_metadata(metadata) -> bool | None:
     """
     Validate custom metadata using a callable defined in settings.
     Raise a CommandError to provide custom feedback if validation fails.
@@ -499,7 +508,8 @@ def validate_custom_metadata(metadata) -> Optional[bool]:
             custom_metadata = validator_function(metadata)
             if custom_metadata is None:
                 return None
-            return  bool(custom_metadata)
+            return bool(custom_metadata)
         except Exception as e:
-            raise ValueError(f"Error during custom metadata validation: {e}") from e
+            msg = f"Error during custom metadata validation: {e}"
+            raise ValueError(msg) from e
     return True
