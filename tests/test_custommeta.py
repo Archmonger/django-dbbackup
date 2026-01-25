@@ -46,6 +46,9 @@ def broken_validator(metadata):
     print(1 / 0)  # Always raises ZeroDivisionError
     return True
 
+def non_bool_validator(metadata):
+    return "not a boolean"
+
 DEFAULT_META = {'ENGINE': 'django.db.backends.sqlite3'}
 
 # Actual tests
@@ -122,5 +125,14 @@ class CustomMetadataTest(TestCase):
         importlib.reload(dbbackup.settings)
 
         with pytest.raises(ValueError, match="Error during custom metadata validation:"):
+            assert dbbackup.utils.validate_custom_metadata({"CSMT_VAL": TEST_VAL}) is False
+            assert False, "Should not reach this point"
+
+    @override_settings(DBBACKUP_RESTORE_METADATA_VALIDATOR="tests.test_custommeta.non_bool_validator")
+    def test_metadata_validator_invalid_3(self):
+        """Test that various validator missconfigurations do not work - Exception during validation."""
+        importlib.reload(dbbackup.settings)
+
+        with pytest.raises(ValueError, match="DBBACKUP_RESTORE_METADATA_VALIDATOR must return a boolean or None"):
             assert dbbackup.utils.validate_custom_metadata({"CSMT_VAL": TEST_VAL}) is False
             assert False, "Should not reach this point"
