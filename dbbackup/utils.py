@@ -481,7 +481,7 @@ def load_custom_metadata(metadata: Optional[dict] = None) -> dict:
             raise ValueError(f"Custom metadata is not JSON serializable: {e}")
     return custom_metadata
 
-def validate_custom_metadata(metadata):
+def validate_custom_metadata(metadata) -> Optional[bool]:
     """
     Validate custom metadata using a callable defined in settings.
     Raise a CommandError to provide custom feedback if validation fails.
@@ -489,8 +489,8 @@ def validate_custom_metadata(metadata):
     :param metadata: Metadata dictionary to validate
     :type metadata: dict
 
-    :returns: True if validation passes, False otherwise
-    :rtype: bool
+    :returns: True if validation passes (or None), False otherwise
+    :rtype: Optional[bool]
     """
     validator_setting = settings.RESTORE_METADATA_VALIDATOR
     if validator_setting:
