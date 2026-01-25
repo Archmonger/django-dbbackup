@@ -133,6 +133,6 @@ class CustomMetadataTest(TestCase):
         """Test that various validator missconfigurations do not work - Exception during validation."""
         importlib.reload(dbbackup.settings)
 
-        with pytest.raises(ValueError, match="DBBACKUP_RESTORE_METADATA_VALIDATOR must return a boolean or None"):
+        with pytest.raises(TypeError, match="DBBACKUP_RESTORE_METADATA_VALIDATOR must return a boolean or None"):
             assert dbbackup.utils.validate_custom_metadata({"CSMT_VAL": TEST_VAL}) is False
             assert False, "Should not reach this point"

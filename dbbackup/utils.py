@@ -506,13 +506,13 @@ def validate_custom_metadata(metadata) -> bool | None:
         validator_function = _load_function_from_path(validator_setting)
         try:
             custom_metadata = validator_function(metadata)
-            if custom_metadata is None:
-                return None
-            if not isinstance(custom_metadata, bool):
-                msg = "DBBACKUP_RESTORE_METADATA_VALIDATOR must return a boolean or None."
-                raise ValueError(msg)
-            return custom_metadata
         except Exception as e:
             msg = f"Error during custom metadata validation: {e}"
             raise ValueError(msg) from e
+        if custom_metadata is None:
+            return None
+        if not isinstance(custom_metadata, bool):
+            msg = "DBBACKUP_RESTORE_METADATA_VALIDATOR must return a boolean or None."
+            raise TypeError(msg)
+        return custom_metadata
     return True
