@@ -155,7 +155,7 @@ class Command(BaseDbBackupCommand):
         
         # Check if we custom metadata validation is configured
         custom_metadata_valid = utils.validate_custom_metadata(metadata)
-        if not custom_metadata_valid:
+        if custom_metadata_valid==False:
             msg = f"Custom metadata validation failed for backup file '{filename}'."
             raise CommandError(msg)
 

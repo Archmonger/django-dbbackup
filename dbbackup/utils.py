@@ -495,7 +495,10 @@ def validate_custom_metadata(metadata):
     if validator_setting:
         validator_function = _load_function_from_path(validator_setting)
         try:
-            return  bool(validator_function(metadata))
+            custom_metadata = validator_function(metadata)
+            if custom_metadata is None:
+                return None
+            return  bool(custom_metadata)
         except Exception as e:
             raise ValueError(f"Error during custom metadata validation: {e}") from e
     return True
