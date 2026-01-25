@@ -19,6 +19,7 @@ from django.core.mail import EmailMultiAlternatives
 from django.db import connection
 from django.http import HttpRequest
 from django.utils import timezone
+from typing import Optional
 
 from dbbackup import settings
 
@@ -453,7 +454,7 @@ def _load_function_from_path(path):
         raise ValueError(f"The object at '{path}' is not callable.")
     return func
 
-def load_custom_metadata(metadata: dict) -> dict:
+def load_custom_metadata(metadata: Optional[dict] = None) -> dict:
     """
     Load custom metadata from a callable defined in settings.
 

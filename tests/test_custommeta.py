@@ -11,11 +11,11 @@ import dbbackup.utils
 TEST_VAL = "aabbcc-1122-3344_eu-west"
 
 
-def dummy_setter():
+def dummy_setter(metadata):
     return {"CSMT_VAL": TEST_VAL}
 
 
-def broken_setter():
+def broken_setter(metadata):
     return ["not", "a", "dict"]
 
 
@@ -23,7 +23,7 @@ class CSTM:
     abc = "123"
 
 
-def anotherbroken_setter():
+def anotherbroken_setter(metadata):
     return {"CSMT_VAL": TEST_VAL, "CSTM_OBJ": CSTM()}
 
 
@@ -44,6 +44,7 @@ def broken_validator(metadata):
     print(1 / 0)  # Always raises ZeroDivisionError
     return True
 
+DEFAULT_META = {'ENGINE': 'django.db.backends.sqlite3'}
 
 # Actual tests
 class CustomMetadataTest(TestCase):
@@ -53,7 +54,7 @@ class CustomMetadataTest(TestCase):
         importlib.reload(dbbackup.settings)
 
         assert dbbackup.settings.BACKUP_METADATA_SETTER == "tests.test_custommeta.dummy_setter"
-        assert dbbackup.utils.load_custom_metadata() == {"CSMT_VAL": TEST_VAL}
+        assert dbbackup.utils.load_custom_metadata(DEFAULT_META) == {"CSMT_VAL": TEST_VAL}
 
     @override_settings(DBBACKUP_BACKUP_METADATA_SETTER="non.existent.loader")
     def test_metadata_setter_invalid_1(self):
@@ -61,7 +62,7 @@ class CustomMetadataTest(TestCase):
         importlib.reload(dbbackup.settings)
 
         with pytest.raises(ImportError, match="Could not import module 'non.existent': No module named 'non'"):
-            dbbackup.utils.load_custom_metadata()
+            dbbackup.utils.load_custom_metadata(DEFAULT_META)
 
     @override_settings(DBBACKUP_BACKUP_METADATA_SETTER="tests.test_custommeta.TEST_VAL")
     def test_metadata_setter_invalid_2(self):
@@ -69,7 +70,7 @@ class CustomMetadataTest(TestCase):
         importlib.reload(dbbackup.settings)
 
         with pytest.raises(ValueError, match="The object at 'tests.test_custommeta.TEST_VAL' is not callable."):
-            dbbackup.utils.load_custom_metadata()
+            dbbackup.utils.load_custom_metadata(DEFAULT_META)
 
     @override_settings(DBBACKUP_BACKUP_METADATA_SETTER="tests.test_custommeta.broken_setter")
     def test_metadata_setter_invalid_3(self):
@@ -77,7 +78,7 @@ class CustomMetadataTest(TestCase):
         importlib.reload(dbbackup.settings)
 
         with pytest.raises(ValueError, match="DBBACKUP_BACKUP_METADATA_SETTER must return a dictionary."):
-            dbbackup.utils.load_custom_metadata()
+            dbbackup.utils.load_custom_metadata(DEFAULT_META)
 
     @override_settings(DBBACKUP_BACKUP_METADATA_SETTER="tests.test_custommeta.anotherbroken_setter")
     def test_metadata_setter_invalid_4(self):
@@ -85,7 +86,7 @@ class CustomMetadataTest(TestCase):
         importlib.reload(dbbackup.settings)
 
         with pytest.raises(ValueError, match="Custom metadata is not JSON serializable"):
-            dbbackup.utils.load_custom_metadata()
+            dbbackup.utils.load_custom_metadata(DEFAULT_META)
 
     @override_settings(DBBACKUP_RESTORE_METADATA_VALIDATOR="tests.test_custommeta.dummy_validator")
     def test_metadata_validator_valid(self):
