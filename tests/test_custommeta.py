@@ -32,6 +32,8 @@ def dummy_validator(metadata):
 
     A real validator would probably do more complex checks.
     """
+    if metadata.get("NO-OP", False):
+        return None
     if val := metadata.get("CSMT_VAL", ""):
         if not val.startswith("aabbcc"):
             raise ValueError("CSMT_VAL must start with 'aabbcc'")
@@ -102,6 +104,9 @@ class CustomMetadataTest(TestCase):
 
         # Test that a wrong also raises a ValueError
         assert dbbackup.utils.validate_custom_metadata({"CSMT_VAL": "aabbcc-xyz_eu-central"}) is False
+
+        # Test that no-op works
+        assert dbbackup.utils.validate_custom_metadata({"NO-OP": True}) is None
 
     @override_settings(DBBACKUP_RESTORE_METADATA_VALIDATOR="non.existent.validator")
     def test_metadata_validator_invalid_1(self):
