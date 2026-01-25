@@ -17,7 +17,7 @@ Don't forget to remove deprecated code on each major release!
 - Nothing (yet)!
 
 ### Added
-- Added support for custom metadata writing and validation during operations via `DBBACKUP_CUSTOM_METADATA_LOADER` and `DBBACKUP_CUSTOM_METADATA_VALIDATOR` settings.
+- Added support for custom metadata writing and validation during operations via `DBBACKUP_BACKUP_METADATA_SETTER` and `DBBACKUP_RESTORE_METADATA_VALIDATOR` settings.
 
 ## [5.1.2] - 2026-01-14
 

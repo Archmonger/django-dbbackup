@@ -461,17 +461,17 @@ def load_custom_metadata() -> dict:
     :rtype: dict
     """
     custom_metadata = {}
-    loader_setting = settings.CUSTOM_METADATA_LOADER
-    if loader_setting:
-        loader_function = _load_function_from_path(loader_setting)
+    setter_setting = settings.BACKUP_METADATA_SETTER
+    if setter_setting:
+        setter_function = _load_function_from_path(setter_setting)
         try:
-            custom_metadata = loader_function()
+            custom_metadata = setter_function()
         except Exception as e:
             logger = logging.getLogger("dbbackup")
             logger.error(f"Error loading custom metadata: {e}")
 
         if not isinstance(custom_metadata, dict):
-            raise ValueError("DBBACKUP_CUSTOM_METADATA_LOADER must return a dictionary.")
+            raise ValueError("DBBACKUP_BACKUP_METADATA_SETTER must return a dictionary.")
 
         # Validate that we can serialize the provided data
         try:
@@ -491,7 +491,7 @@ def validate_custom_metadata(metadata):
     :returns: True if validation passes, False otherwise
     :rtype: bool
     """
-    validator_setting = settings.CUSTOM_METADATA_VALIDATOR
+    validator_setting = settings.RESTORE_METADATA_VALIDATOR
     if validator_setting:
         validator_function = _load_function_from_path(validator_setting)
         try:

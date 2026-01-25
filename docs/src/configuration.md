@@ -207,13 +207,13 @@ backups. See [Storage settings](storage.md) for supported options.
 
 ## Custom metadata
 
-### DBBACKUP_CUSTOM_METADATA_LOADER
+### DBBACKUP_BACKUP_METADATA_SETTER
 
 Optional dotted path to a callable that returns a dictionary of custom metadata that will be written to each backup's metadata file. The callable should take no arguments.
 
 Default: `None`
 
-### DBBACKUP_CUSTOM_METADATA_VALIDATOR
+### DBBACKUP_RESTORE_METADATA_VALIDATOR
 
 Optional dotted path to a callable that validates custom metadata during restore. The callable should accept a single argument: the metadata dictionary loaded from the backup's metadata file, and return `True` if the metadata is valid or `False` otherwise. It may raise a `CommandError` with a descriptive message if validation fails.
 

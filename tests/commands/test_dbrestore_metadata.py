@@ -85,7 +85,7 @@ class DbrestoreMetadataTest(TestCase):
         # Should not raise
         self.command._check_metadata("backup.dump")
 
-    @override_settings(DBBACKUP_CUSTOM_METADATA_VALIDATOR="tests.test_custommeta.dummy_validator")
+    @override_settings(DBBACKUP_RESTORE_METADATA_VALIDATOR="tests.test_custommeta.dummy_validator")
     def test_metadata_match_custom(self):
         importlib.reload(dbbackup.settings)
         # Setup metadata
@@ -95,7 +95,7 @@ class DbrestoreMetadataTest(TestCase):
         # Should not raise
         self.command._check_metadata("backup.dump")
 
-    @override_settings(DBBACKUP_CUSTOM_METADATA_VALIDATOR="tests.test_custommeta.dummy_validator")
+    @override_settings(DBBACKUP_RESTORE_METADATA_VALIDATOR="tests.test_custommeta.dummy_validator")
     def test_metadata_match_custom_fail(self):
         importlib.reload(dbbackup.settings)
         # Setup metadata
@@ -106,7 +106,7 @@ class DbrestoreMetadataTest(TestCase):
         with pytest.raises(CommandError):
             self.command._check_metadata("backup.dump")
 
-    @override_settings(DBBACKUP_CUSTOM_METADATA_VALIDATOR="tests.test_custommeta.dummy_validator")
+    @override_settings(DBBACKUP_RESTORE_METADATA_VALIDATOR="tests.test_custommeta.dummy_validator")
     def test_metadata_match_custom_failwithcustomerror(self):
         importlib.reload(dbbackup.settings)
         # Setup metadata
