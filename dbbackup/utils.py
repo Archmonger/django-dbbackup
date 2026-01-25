@@ -453,7 +453,7 @@ def _load_function_from_path(path):
         raise ValueError(f"The object at '{path}' is not callable.")
     return func
 
-def load_custom_metadata() -> dict:
+def load_custom_metadata(metadata: dict) -> dict:
     """
     Load custom metadata from a callable defined in settings.
 
@@ -465,7 +465,7 @@ def load_custom_metadata() -> dict:
     if setter_setting:
         setter_function = _load_function_from_path(setter_setting)
         try:
-            custom_metadata = setter_function()
+            custom_metadata = setter_function(metadata)
         except Exception as e:
             logger = logging.getLogger("dbbackup")
             logger.error(f"Error loading custom metadata: {e}")

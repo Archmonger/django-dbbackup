@@ -103,7 +103,7 @@ class Command(BaseDbBackupCommand):
         metadata_filename = f"{filename}.metadata"
 
         # Load custom metadata if configured
-        custom_metadata = utils.load_custom_metadata()
+        custom_metadata = utils.load_custom_metadata(metadata)
         metadata.update(custom_metadata)
 
         metadata_content = json.dumps(metadata)
