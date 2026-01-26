@@ -213,8 +213,31 @@ Optional dotted path to a callable that returns a dictionary of custom metadata 
 
 Default: `None`
 
+```python
+import os
+
+def metadata_set(metadata):
+    region = os.environ.get('AWS_REGION')
+    return {'environment': 'AWS', 'region': region}
+
+DBBACKUP_BACKUP_METADATA_SETTER = metadata_set
+```
+
 ### DBBACKUP_RESTORE_METADATA_VALIDATOR
 
 Optional dotted path to a callable that validates custom metadata during restore. The callable should accept a single argument: the metadata dictionary loaded from the backup's metadata file, and return `True` if the metadata is valid or `False` otherwise. It may raise a `CommandError` with a descriptive message if validation fails.
 
 Default: `None`
+
+
+```python
+import os
+
+def validate_restore(metadata):
+    region = os.environ.get('AWS_REGION')
+    if not metadata.get('region') == region:
+        raise CommandError(f"Backup region does not match current region {region}; cross region restores are not allowed due to SMP-0123.")
+    return True
+
+DBBACKUP_RESTORE_METADATA_VALIDATOR = validate_restore
+```
