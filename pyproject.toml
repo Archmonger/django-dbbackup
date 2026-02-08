@@ -120,6 +120,7 @@ matrix.django.dependencies = [
 
 [tool.hatch.envs.docs]
 installer = "uv"
+python = "3.11"
 template = "docs"
 detached = true
 dependencies = [
@@ -224,8 +225,3 @@ run.parallel = true
 run.source = ["dbbackup/"]
 paths.source = ["dbbackup/"]
 report.show_missing = true
-
-# `editdistpy` (v0.1.6) was included because `mkdocs-spellcheck[all]`, but has forgotten to
-# declare `pkg_resources` as a dependency.
-[tool.uv.extra-build-dependencies]
-editdistpy = ["setuptools", "wheel"]
