@@ -24,7 +24,7 @@ Bootstrap, build, and test the repository:
 
 **Interactive Development Shell:**
 
-- `hatch shell [ENV_NAME]` - Enter an interactive shell environment with all dependencies installed. ENV_NAME is optional and defaults to the main environment. Use `hatch shell functional` for the functional test environment, `hatch shell lint` for the linting environment, etc.
+- `hatch shell [ENV_NAME]` - Enter an interactive shell environment with all dependencies installed. ENV_NAME is optional and defaults to the main environment. Use `hatch shell functional` for the functional test environment.
 
 Build documentation:
 
@@ -101,14 +101,14 @@ Modern development process using Hatch:
 2. **Make your changes** to the codebase
 3. **Run unit tests**: `hatch test` (≈30s) **All must pass - failures are never expected or allowed.**
 4. **Run functional tests**: `hatch run functional:all -v` (≈10–15s)
-5. **Run linting**: `hatch run lint:check` (5 seconds)
+5. **Run linting**: `hatch fmt --check` (2 seconds)
 6. **Auto-format code**: `hatch fmt` (2 seconds)
 7. **Test documentation**: `hatch run docs:build` (2 seconds)
 8. **Update documentation** when making changes to Python source code (required)
 9. **Add changelog entry** for all significant changes (bug fixes, new features, breaking changes) to `CHANGELOG.md` under the "Unreleased" section.
 10. **Lint the changelog** by running `python scripts/validate_changelog.py` (or inside any hatch shell) to ensure format correctness
 
-Always run `hatch run lint:check` before committing. The CI (.github/workflows/build.yml) includes comprehensive checks across all supported Python/Django combinations.
+Always run `hatch fmt --check` before committing. The CI (.github/workflows/ci.yml) includes comprehensive checks across all supported Python/Django combinations.
 
 **IMPORTANT**: Documentation must be updated whenever changes are made to Python source code. This is enforced as part of the development workflow.
 
@@ -226,7 +226,7 @@ Development dependencies (managed by hatch):
 
 ## CI/CD Pipeline
 
-Modern GitHub Actions workflow (.github/workflows/build.yml):
+Modern GitHub Actions workflow (.github/workflows/ci.yml):
 
 - **Lint Python**: Code quality checks (temporarily set to pass)
 - **Test Python**: Matrix testing across Python 3.9-3.13 with coverage

@@ -51,20 +51,23 @@ def dummy_validator(metadata):
         return None
     if val := metadata.get("CSMT_VAL", ""):
         if not val.startswith("aabbcc"):
-            raise ValueError("CSMT_VAL must start with 'aabbcc'")
+            msg = "CSMT_VAL must start with 'aabbcc'"
+            raise ValueError(msg)
         if not val.endswith("eu-west"):
             return False
     return True
 
 
 def broken_validator(metadata):
-    print(1 / 0)  # Always raises ZeroDivisionError
     return True
+
 
 def non_bool_validator(metadata):
     return "not a boolean"
 
-DEFAULT_META = {'ENGINE': 'django.db.backends.sqlite3'}
+
+DEFAULT_META = {"ENGINE": "django.db.backends.sqlite3"}
+
 
 # Actual tests
 class CustomMetadataTest(TestCase):
@@ -81,7 +84,7 @@ class CustomMetadataTest(TestCase):
         """Test that setting DBBACKUP_BACKUP_METADATA_SETTER works with a callable."""
         importlib.reload(dbbackup.settings)
 
-        assert dbbackup.settings.BACKUP_METADATA_SETTER == dummy_setter
+        assert dummy_setter == dbbackup.settings.BACKUP_METADATA_SETTER
         assert dbbackup.utils.get_user_metadata(DEFAULT_META) == {"CSMT_VAL": TEST_VAL}
 
     @override_settings(DBBACKUP_BACKUP_METADATA_SETTER="tests.test_user_metadata.setter_returning_none")
@@ -174,7 +177,6 @@ class CustomMetadataTest(TestCase):
 
         with pytest.raises(ValueError, match="Error during custom metadata validation:"):
             assert dbbackup.utils.validate_user_metadata({"CSMT_VAL": TEST_VAL}) is False
-            assert False, "Should not reach this point"
 
     @override_settings(DBBACKUP_RESTORE_METADATA_VALIDATOR="tests.test_user_metadata.non_bool_validator")
     def test_metadata_validator_invalid_3(self):
@@ -183,4 +185,3 @@ class CustomMetadataTest(TestCase):
 
         with pytest.raises(TypeError, match="DBBACKUP_RESTORE_METADATA_VALIDATOR must return a boolean or None"):
             assert dbbackup.utils.validate_user_metadata({"CSMT_VAL": TEST_VAL}) is False
-            assert False, "Should not reach this point"

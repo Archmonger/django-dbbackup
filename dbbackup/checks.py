@@ -1,7 +1,7 @@
 import re
 from datetime import datetime
 
-from django.core.checks import Tags, Warning, register  # noqa: A004
+from django.core.checks import Tags, Warning, register
 
 from dbbackup import settings
 
@@ -72,7 +72,7 @@ def _check_filename_template(filename_template, check_code, content_type) -> lis
         }
         filename_template = filename_template(params)
 
-    if "/" in filename_template:
+    if isinstance(filename_template, str) and "/" in filename_template:
         return [check_code]
     return []
 

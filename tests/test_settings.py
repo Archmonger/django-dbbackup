@@ -16,7 +16,7 @@ class SettingsTest(TestCase):
         importlib.reload(dbbackup.settings)
 
         # Check that ADMINS is set to DBBACKUP_ADMIN
-        assert dbbackup.settings.ADMINS == ["admin@example.com"]
+        assert ["admin@example.com"] == dbbackup.settings.ADMINS
 
     def test_deprecated_dbbackup_storage_raises(self):
         """Importing dbbackup.settings raises if DBBACKUP_STORAGE is set."""

@@ -231,15 +231,13 @@ class StorageCleanOldBackupsTest(TestCase):
         self.storage.clean_old_backups(keep_number=1)
 
         deleted_files = sorted(HANDLED_FILES["deleted_files"])
-        expected_deleted = sorted(
-            [
-                "2015-02-06-042810.bak",
-                "2015-02-06-042810.bak.metadata",
-                "2015-02-07-042810.bak",
-                "2015-02-07-042810.bak.metadata",
-            ]
-        )
-        self.assertEqual(deleted_files, expected_deleted)
+        expected_deleted = sorted([
+            "2015-02-06-042810.bak",
+            "2015-02-06-042810.bak.metadata",
+            "2015-02-07-042810.bak",
+            "2015-02-07-042810.bak.metadata",
+        ])
+        assert deleted_files == expected_deleted
 
 
 class StorageEdgeCasesTest(TestCase):

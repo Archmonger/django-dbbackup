@@ -123,10 +123,7 @@ class DbrestoreMetadataTest(TestCase):
         """Test that built-in validation runs before custom validation."""
         importlib.reload(dbbackup.settings)
         # Setup metadata with different engine (primary fail) but valid custom data
-        metadata = {
-            "engine": "django.db.backends.postgresql",
-            "CSMT_VAL": "aabbcc-1122-3344_eu-west"
-        }
+        metadata = {"engine": "django.db.backends.postgresql", "CSMT_VAL": "aabbcc-1122-3344_eu-west"}
         self.command.storage.read_file.return_value = Mock(read=lambda: json.dumps(metadata))
 
         # Should raise CommandError due to engine mismatch (primary), not custom validation

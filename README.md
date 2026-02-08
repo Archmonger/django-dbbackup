@@ -21,12 +21,12 @@ This Django application provides management commands to help backup and restore 
 
 The main features include:
 
--   Secure your backup with GPG signature and encryption.
--   Archive with compression.
--   Easily manage remote archiving.
--   Keep your development database up to date.
--   Set up automated backups with Crontab or Celery.
--   Manually backup and restore via Django management commands.
+- Secure your backup with GPG signature and encryption.
+- Archive with compression.
+- Easily manage remote archiving.
+- Keep your development database up to date.
+- Set up automated backups with Crontab or Celery.
+- Manually backup and restore via Django management commands.
 
 <!--docs-top-end-->
 

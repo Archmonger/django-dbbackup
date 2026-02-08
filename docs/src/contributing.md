@@ -7,9 +7,9 @@ welcome. This guide explains how to develop, test, and propose changes.
 
 If you plan to make code changes to this repository, you will need to install the following dependencies first:
 
--   [Git](https://git-scm.com/downloads)
--   [Python 3.9+](https://www.python.org/downloads/)
--   [Hatch](https://hatch.pypa.io/latest/)
+- [Git](https://git-scm.com/downloads)
+- [Python 3.9+](https://www.python.org/downloads/)
+- [Hatch](https://hatch.pypa.io/latest/)
 
 Once you finish installing these dependencies, you can clone this repository:
 
@@ -42,17 +42,16 @@ cd django-dbbackup
 
 ### Linting and Formatting
 
-| Command                       | Description                                                                                |
-| ----------------------------- | ------------------------------------------------------------------------------------------ |
-| `hatch run lint:format`       | Run formatters to fix code style                                                           |
-| `hatch run lint:format-check` | Check code formatting without making changes                                               |
-| `hatch run lint:check`        | Run all linters                                                                            |
-| `hatch run precommit:check`   | Run all [`pre-commit`](https://pre-commit.com/) checks configured within this repository   |
-| `hatch run precommit:update`  | Update the [`pre-commit`](https://pre-commit.com/) hooks configured within this repository |
+| Command                      | Description                                                                                |
+| ---------------------------- | ------------------------------------------------------------------------------------------ |
+| `hatch fmt`                  | Run formatters to fix code style                                                           |
+| `hatch fmt --check`          | Check code formatting without making changes                                               |
+| `hatch run precommit:check`  | Run all [`pre-commit`](https://pre-commit.com/) checks configured within this repository   |
+| `hatch run precommit:update` | Update the [`pre-commit`](https://pre-commit.com/) hooks configured within this repository |
 
 ??? tip "Configure your IDE for linting"
 
-    This repository uses `ruff` and `pylint` for linting and formatting.
+    This repository uses `ruff` for linting and formatting.
 
     You can install `ruff` as a plugin to your preferred code editor to create a similar environment.
 
@@ -83,10 +82,10 @@ Track bugs, feature proposals, and questions via
 [GitHub Issues](https://github.com/Archmonger/django-dbbackup/issues). Open an
 issue if:
 
--   You have an improvement idea
--   You found a bug
--   You've got a question
--   More generally something seems wrong for you
+- You have an improvement idea
+- You found a bug
+- You've got a question
+- More generally something seems wrong for you
 
 ## Make a patch
 
@@ -95,8 +94,8 @@ all code changes. To streamline review:
 
 1. Fork the project and make a new branch
 2. Make your changes with tests if possible and documentation if needed
-3. Run `hatch test` and `hatch run functional:test` to verify your changes
-4. Run `hatch run lint:check` to ensure code quality
+3. Run `hatch test` and `hatch run functional:all` to verify your changes
+4. Run `hatch fmt` to ensure code quality
 5. Push changes to your fork repository and test it with GitHub Actions
 6. If it succeeds, open a pull request
 7. Follow up politely if there's no feedback after a few days
@@ -132,7 +131,7 @@ Database password
 
 Database host
 
-**`MEDIA_ROOT`** - Default= `tempfile.mkdtemp()`
+**`MEDIA_ROOT`** - Default: `tmp/media/`
 
 Django `MEDIA_ROOT`; override to test media backup from a custom path.
 

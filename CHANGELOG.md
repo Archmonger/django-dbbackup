@@ -15,32 +15,33 @@ Don't forget to remove deprecated code on each major release!
 ## [Unreleased]
 
 ### Added
+
 - Added support for custom metadata writing and validation during operations via `DBBACKUP_BACKUP_METADATA_SETTER` and `DBBACKUP_RESTORE_METADATA_VALIDATOR` settings.
 
 ## [5.1.2] - 2026-01-14
 
 ### Fixed
 
--   Fixed a bug where metadata files were not being removed during clean-up.
+- Fixed a bug where metadata files were not being removed during clean-up.
 
 ## [5.1.1] - 2026-01-07
 
 ### Fixed
 
--   Ensure `dbbackup` metadata file is always written as bytes to support storage backends that enforce bytes content (e.g. Google Cloud Storage).
+- Ensure `dbbackup` metadata file is always written as bytes to support storage backends that enforce bytes content (e.g. Google Cloud Storage).
 
 ## [5.1.0] - 2025-12-17
 
 ### Fixed
 
--   Prevent restoring a backup from a different database connector (e.g. Postgres backup to SQLite) by adding an additional metadata file to all new backups.
--   Fixed compressed media backup restoration by using `gzip.GzipFile` instead of `tarfile`'s gzip decompression algorithm.
+- Prevent restoring a backup from a different database connector (e.g. Postgres backup to SQLite) by adding an additional metadata file to all new backups.
+- Fixed compressed media backup restoration by using `gzip.GzipFile` instead of `tarfile`'s gzip decompression algorithm.
 
 ## [5.0.1] - 2025-11-07
 
 ### Security
 
--   To prevent accidental media exports, this package will now generate an exception if utilizing the legacy `DBBACKUP_STORAGE` or `DBBACKUP_STORAGE_OPTIONS` settings. These settings have been removed in favor of using Django's built-in `STORAGES` setting. Please refer to the documentation for more information on how to migrate your configuration.
+- To prevent accidental media exports, this package will now generate an exception if utilizing the legacy `DBBACKUP_STORAGE` or `DBBACKUP_STORAGE_OPTIONS` settings. These settings have been removed in favor of using Django's built-in `STORAGES` setting. Please refer to the documentation for more information on how to migrate your configuration.
 
 ## [5.0.0] - 2025-08-30
 
@@ -54,298 +55,298 @@ Don't forget to remove deprecated code on each major release!
 
 ### Added
 
--   Implement new `SqliteBackupConnector` to backup SQLite3 databases using the `.backup` command (safe to execute on databases with active connections).
--   Verified full Windows compatibility via new CI workflows.
--   Add Django Signals support for backup and restore operations. New signals include `pre_backup`, `post_backup`, `pre_restore`, `post_restore`, `pre_media_backup`, `post_media_backup`, `pre_media_restore`, and `post_media_restore`.
--   New `DjangoConnector` that provides database-agnostic backup and restore functionality using Django's built-in `dumpdata` and `loaddata` management commands.
+- Implement new `SqliteBackupConnector` to backup SQLite3 databases using the `.backup` command (safe to execute on databases with active connections).
+- Verified full Windows compatibility via new CI workflows.
+- Add Django Signals support for backup and restore operations. New signals include `pre_backup`, `post_backup`, `pre_restore`, `post_restore`, `pre_media_backup`, `post_media_backup`, `pre_media_restore`, and `post_media_restore`.
+- New `DjangoConnector` that provides database-agnostic backup and restore functionality using Django's built-in `dumpdata` and `loaddata` management commands.
 
 ### Changed
 
--   This repository has been transferred out of Jazzband due to logistical concerns.
--   Improve error message for missing database tools (`pg_dump`, `mysqldump`, etc.) to provide guidance instead of generic "No such file or directory" errors.
--   Changed default SQLite connector from `SqliteConnector` to `SqliteBackupConnector` to adhere to best practices.
--   Set default `IF_EXISTS` to `True` for PostgreSQL connectors (`PgDumpConnector` and `PgDumpBinaryConnector`) to reduce restore errors when objects are absent.
--   If `PASSWORD` is set to `None` for PostgreSQL connectors, the `--no-password` flag is now automatically used.
+- This repository has been transferred out of Jazzband due to logistical concerns.
+- Improve error message for missing database tools (`pg_dump`, `mysqldump`, etc.) to provide guidance instead of generic "No such file or directory" errors.
+- Changed default SQLite connector from `SqliteConnector` to `SqliteBackupConnector` to adhere to best practices.
+- Set default `IF_EXISTS` to `True` for PostgreSQL connectors (`PgDumpConnector` and `PgDumpBinaryConnector`) to reduce restore errors when objects are absent.
+- If `PASSWORD` is set to `None` for PostgreSQL connectors, the `--no-password` flag is now automatically used.
 
 ### Removed
 
--   Drop support for end-of-life Python 3.7 and 3.8.
--   Drop support for end-of-life Django 3.2.
--   Drop `pytz` dependency in favor of Python's standard library `zoneinfo` (following Django 4.0+ timezone implementation).
--   Drop support for `DBBACKUP_STORAGE` AND `DBBACKUP_STORAGE_OPTIONS` settings, use Django's `STORAGES['dbbackup']` setting instead.
--   Remove deprecated `DBBACKUP_FAILURE_RECIPIENTS` setting, use `DBBACKUP_ADMINS` instead.
--   Remove deprecated code for legacy Django version compatibility.
+- Drop support for end-of-life Python 3.7 and 3.8.
+- Drop support for end-of-life Django 3.2.
+- Drop `pytz` dependency in favor of Python's standard library `zoneinfo` (following Django 4.0+ timezone implementation).
+- Drop support for `DBBACKUP_STORAGE` AND `DBBACKUP_STORAGE_OPTIONS` settings, use Django's `STORAGES['dbbackup']` setting instead.
+- Remove deprecated `DBBACKUP_FAILURE_RECIPIENTS` setting, use `DBBACKUP_ADMINS` instead.
+- Remove deprecated code for legacy Django version compatibility.
 
 ### Fixed
 
--   Fixed `-O` flag to properly handle S3 URIs. Now `python manage.py dbbackup -O s3://bucket/path/` and `python manage.py mediabackup -O s3://bucket/path/` correctly route S3 URIs to the storage backend instead of attempting to write to local filesystem.
--   Fix issues with parsing excess whitespace within `dbbackup -d "<COMMA_SEPARATED_ARGS>"`
--   Fix encryption support when using `gnupg==5.x`.
--   Resolve SQLite backup temporary file locking issues on Windows.
--   Fix MediaRestore path corruption for files containing "media" in their paths.
--   Fix FTP storage restore issue where file objects without `fileno()` support caused `io.UnsupportedOperation` error during database restore operations.
--   Fix SQLite restore failing when multi-line `TextField` content contains semicolons.
--   Fix SQLite `no such table` errors.
--   Fix SQLite `UNIQUE constraint` errors.
--   Fix SQLite `index`/`trigger`/`view` `<NAME> already exists` errors.
--   Fix PostgreSQL restore errors with identity columns by automatically enabling `--if-exists` when using `--clean` in `PgDumpBinaryConnector`.
+- Fixed `-O` flag to properly handle S3 URIs. Now `python manage.py dbbackup -O s3://bucket/path/` and `python manage.py mediabackup -O s3://bucket/path/` correctly route S3 URIs to the storage backend instead of attempting to write to local filesystem.
+- Fix issues with parsing excess whitespace within `dbbackup -d "<COMMA_SEPARATED_ARGS>"`
+- Fix encryption support when using `gnupg==5.x`.
+- Resolve SQLite backup temporary file locking issues on Windows.
+- Fix MediaRestore path corruption for files containing "media" in their paths.
+- Fix FTP storage restore issue where file objects without `fileno()` support caused `io.UnsupportedOperation` error during database restore operations.
+- Fix SQLite restore failing when multi-line `TextField` content contains semicolons.
+- Fix SQLite `no such table` errors.
+- Fix SQLite `UNIQUE constraint` errors.
+- Fix SQLite `index`/`trigger`/`view` `<NAME> already exists` errors.
+- Fix PostgreSQL restore errors with identity columns by automatically enabling `--if-exists` when using `--clean` in `PgDumpBinaryConnector`.
 
 ### Security
 
--   Use environment variable for PostgreSQL password to prevent password leakage in logs/emails.
+- Use environment variable for PostgreSQL password to prevent password leakage in logs/emails.
 
 ## [4.3.0] - 2025-05-09
 
 ### Added
 
--   Add generic `--pg-options` to pass custom options to postgres.
--   Add option `--if-exists` for `pg_dump` command.
--   Support Python 3.13 and Django 5.2.
+- Add generic `--pg-options` to pass custom options to postgres.
+- Add option `--if-exists` for `pg_dump` command.
+- Support Python 3.13 and Django 5.2.
 
 ### Fixed
 
--   Empty string as HOST for postgres unix domain socket connection is now supported.
+- Empty string as HOST for postgres unix domain socket connection is now supported.
 
 ## [4.2.1] - 2024-08-23
 
 ### Added
 
--   Add `--no-drop` option to `dbrestore` command to prevent dropping tables before restoring data.
+- Add `--no-drop` option to `dbrestore` command to prevent dropping tables before restoring data.
 
 ### Fixed
 
--   Fix bug where sqlite `dbrestore` would fail if field data contains the line break character.
+- Fix bug where sqlite `dbrestore` would fail if field data contains the line break character.
 
 ## [4.2.0] - 2024-08-22
 
 ### Added
 
--   Add PostgreSQL Schema support.
--   Add support for new `STORAGES` (Django 4.2+) setting under the 'dbbackup' alias.
+- Add PostgreSQL Schema support.
+- Add support for new `STORAGES` (Django 4.2+) setting under the 'dbbackup' alias.
 
 ### Changed
 
--   Set postgres default database `HOST` to `"localhost"`.
--   Add warning for filenames with slashes in them.
+- Set postgres default database `HOST` to `"localhost"`.
+- Add warning for filenames with slashes in them.
 
 ### Removed
 
--   Remove usage of deprecated `get_storage_class` function in newer Django versions.
+- Remove usage of deprecated `get_storage_class` function in newer Django versions.
 
 ### Fixed
 
--   Fix restore of database from S3 storage by reintroducing `inputfile.seek(0)` to `utils.uncompress_file`.
--   Fix bug where dbbackup management commands would not respect `settings.py:DBBACKUP_DATABASES`.
+- Fix restore of database from S3 storage by reintroducing `inputfile.seek(0)` to `utils.uncompress_file`.
+- Fix bug where dbbackup management commands would not respect `settings.py:DBBACKUP_DATABASES`.
 
 ## [4.1.0] - 2024-01-14
 
 ### Added
 
--   Support Python 3.11 and 3.12.
--   Support Django 4.1, 4.2, and 5.0.
+- Support Python 3.11 and 3.12.
+- Support Django 4.1, 4.2, and 5.0.
 
 ### Changed
 
--   Update documentation for backup directory consistency and update links.
+- Update documentation for backup directory consistency and update links.
 
 ### Removed
 
--   Drop python 3.6.
+- Drop python 3.6.
 
 ### Fixed
 
--   Fix restore fail after editing filename.
--   `RESTORE_PREFIX` for `RESTORE_SUFFIX`.
+- Fix restore fail after editing filename.
+- `RESTORE_PREFIX` for `RESTORE_SUFFIX`.
 
 ## [4.0.2] - 2022-09-27
 
 ### Added
 
--   Support for prometheus wrapped databases.
+- Support for prometheus wrapped databases.
 
 ### Fixed
 
--   Backup of SQLite fail if there are Virtual Tables (e.g. FTS tables).
--   Fix broken `unencrypt_file` function in `python-gnupg`.
+- Backup of SQLite fail if there are Virtual Tables (e.g. FTS tables).
+- Fix broken `unencrypt_file` function in `python-gnupg`.
 
 ## [4.0.1] - 2022-07-09
 
 ### Added
 
--   Add authentication database support for MongoDB.
--   Explicitly support Python 3.6+.
--   Add support for exclude tables data in the command interface.
--   Enable functional tests in CI.
+- Add authentication database support for MongoDB.
+- Explicitly support Python 3.6+.
+- Add support for exclude tables data in the command interface.
+- Enable functional tests in CI.
 
 ### Changed
 
--   Replace `ugettext_lazy` with `gettext_lazy`.
--   Changed logging settings from `settings.py` to late init.
--   Use `exclude-table-data` instead of `exclude-table`.
--   Move author and version information into `setup.py` to allow building package in isolated environment (e.g. with the `build` package).
--   As of this version, dbbackup is now within Jazzband! This version tests our Jazzband release CI, and adds miscellaneous refactoring/cleanup.
--   Update `settings.py` comment.
--   Jazzband transfer tasks.
--   Refactoring and tooling.
+- Replace `ugettext_lazy` with `gettext_lazy`.
+- Changed logging settings from `settings.py` to late init.
+- Use `exclude-table-data` instead of `exclude-table`.
+- Move author and version information into `setup.py` to allow building package in isolated environment (e.g. with the `build` package).
+- As of this version, dbbackup is now within Jazzband! This version tests our Jazzband release CI, and adds miscellaneous refactoring/cleanup.
+- Update `settings.py` comment.
+- Jazzband transfer tasks.
+- Refactoring and tooling.
 
 ### Removed
 
--   Remove six dependency.
--   Drop support for end of life Django versions. Currently support 2.2, 3.2, 4.0.
+- Remove six dependency.
+- Drop support for end of life Django versions. Currently support 2.2, 3.2, 4.0.
 
 ### Fixed
 
--   Fix `RemovedInDjango41Warning` related to `default_app_config`.
--   Fix authentication error when postgres is password protected.
--   Documentation fixes.
--   Fix GitHub Actions configuration.
+- Fix `RemovedInDjango41Warning` related to `default_app_config`.
+- Fix authentication error when postgres is password protected.
+- Documentation fixes.
+- Fix GitHub Actions configuration.
 
 ## [3.3.0] - 2020-04-14
 
 ### Added
 
--   `"output-filename"` in `mediabackup` command.
--   Updates to include SFTP storage.
+- `"output-filename"` in `mediabackup` command.
+- Updates to include SFTP storage.
 
 ### Fixed
 
--   Fixes for test infrastructure and mongodb support.
--   sqlite3: don't throw warnings if table already exists.
--   Fixes for django v3 and update travis.
--   Restoring from FTP.
--   Fix management commands when using Postgres on non-latin Windows.
--   Fix improper database name selection when performing a restore.
+- Fixes for test infrastructure and mongodb support.
+- sqlite3: don't throw warnings if table already exists.
+- Fixes for django v3 and update travis.
+- Restoring from FTP.
+- Fix management commands when using Postgres on non-latin Windows.
+- Fix improper database name selection when performing a restore.
 
 ## [3.2.0] - 2017-09-18
 
 ### Added
 
--   `PgDumpBinaryConnector` (binary `pg_dump` integration) with related functional tests.
--   Option to keep specific old backups (custom clean old backups logic).
+- `PgDumpBinaryConnector` (binary `pg_dump` integration) with related functional tests.
+- Option to keep specific old backups (custom clean old backups logic).
 
 ### Changed
 
--   Updated PostgreSQL documentation and help text for clarity.
+- Updated PostgreSQL documentation and help text for clarity.
 
 ### Fixed
 
--   SFTP storage file attribute error ("SFTPStorageFile object has no attribute name").
--   Escaping of passwords passed to commands.
--   Corrected management command help text after flag logic change.
+- SFTP storage file attribute error ("SFTPStorageFile object has no attribute name").
+- Escaping of passwords passed to commands.
+- Corrected management command help text after flag logic change.
 
 ## [3.1.3] - 2016-11-25
 
 ### Fixed
 
--   Reverted a regression in `pg_dump` database name handling introduced shortly before.
+- Reverted a regression in `pg_dump` database name handling introduced shortly before.
 
 ## [3.1.2] - 2016-11-25
 
 ### Fixed
 
--   Correct `pg_dump` invocation: proper username and database argument handling.
+- Correct `pg_dump` invocation: proper username and database argument handling.
 
 ## [3.1.1] - 2016-11-16
 
 ### Fixed
 
--   Unicode handling issues with SQLite backups.
+- Unicode handling issues with SQLite backups.
 
 ## [3.1.0] - 2016-11-15
 
 ### Added
 
--   Support for inheriting parent environment variables in command connectors (`USE_PARENT_ENV`).
+- Support for inheriting parent environment variables in command connectors (`USE_PARENT_ENV`).
 
 ### Changed
 
--   Complete revamp of logging and error email notification system (more structured logging & tests).
+- Complete revamp of logging and error email notification system (more structured logging & tests).
 
 ## [3.0.4] - 2016-11-14
 
 ### Added
 
--   Ability to link / register custom connectors.
+- Ability to link / register custom connectors.
 
 ### Changed
 
--   Use naïve (timezone-unaware) `datetime` in backup filenames for broader compatibility.
+- Use naïve (timezone-unaware) `datetime` in backup filenames for broader compatibility.
 
 ### Fixed
 
--   `mediabackup` timeout issue.
--   Improved PostgreSQL `dbrestore` error recognition.
+- `mediabackup` timeout issue.
+- Improved PostgreSQL `dbrestore` error recognition.
 
 ## [3.0.3] - 2016-09-15
 
 ### Added
 
--   Server name filter for database and media backup/restore.
--   Ability to select multiple databases for backup.
+- Server name filter for database and media backup/restore.
+- Ability to select multiple databases for backup.
 
 ### Changed
 
--   Improved filename generation logic.
+- Improved filename generation logic.
 
 ### Fixed
 
--   Database filter logic and clean backup behavior.
+- Database filter logic and clean backup behavior.
 
 ## [3.0.2] - 2016-08-06
 
 ### Fixed
 
--   Disabled Django loggers inadvertently affecting application logging.
+- Disabled Django loggers inadvertently affecting application logging.
 
 ## [3.0.1] - 2016-08-04
 
 ### Added
 
--   New connector architecture with dedicated connectors for PostgreSQL, MySQL, SQLite (copy) and MongoDB.
--   Media backup & restore system overhaul (per-file processing, media restore command & tests).
--   Exclude table/data options, prefix & suffix options for connector commands.
--   Environment variable control for command execution.
--   GIS database engine mapping support.
--   Functional, integration and upgrade test suites; app & system checks integration.
+- New connector architecture with dedicated connectors for PostgreSQL, MySQL, SQLite (copy) and MongoDB.
+- Media backup & restore system overhaul (per-file processing, media restore command & tests).
+- Exclude table/data options, prefix & suffix options for connector commands.
+- Environment variable control for command execution.
+- GIS database engine mapping support.
+- Functional, integration and upgrade test suites; app & system checks integration.
 
 ### Changed
 
--   Refactored and unified code between database & media backup/restore commands.
--   Renamed `mediabackup` option (`--no-compress` replaced by explicit `--compress`).
+- Refactored and unified code between database & media backup/restore commands.
+- Renamed `mediabackup` option (`--no-compress` replaced by explicit `--compress`).
 
 ### Removed
 
--   Legacy `DBCommand` code in favor of new connector system.
+- Legacy `DBCommand` code in favor of new connector system.
 
 ## [2.5.0] - 2016-03-29
 
 ### Added
 
--   `--filename` and `--path` options for `dbbackup` / `dbrestore` commands.
--   Binary size unit prefixes in output.
+- `--filename` and `--path` options for `dbbackup` / `dbrestore` commands.
+- Binary size unit prefixes in output.
 
 ### Changed
 
--   Dropbox storage updated to OAuth2 & Python 3 compatibility.
+- Dropbox storage updated to OAuth2 & Python 3 compatibility.
 
 ### Removed
 
--   `DBBACKUP_DROPBOX_ACCESS_TYPE` setting (deprecated by OAuth2 changes).
+- `DBBACKUP_DROPBOX_ACCESS_TYPE` setting (deprecated by OAuth2 changes).
 
 ### Fixed
 
--   NameError for missing `warnings` import.
--   Wildcard handling in generated filenames; proper server name derivation for SQLite paths.
+- NameError for missing `warnings` import.
+- Wildcard handling in generated filenames; proper server name derivation for SQLite paths.
 
 ## [2.3.3] - 2015-10-05
 
 ### Changed
 
--   Initial copy from BitBucket to GitHub.
+- Initial copy from BitBucket to GitHub.
 
 ### Fixed
 
--   Miscellaneous maintenance and minor bug fixes.
+- Miscellaneous maintenance and minor bug fixes.
 
 [Unreleased]: https://github.com/Archmonger/django-dbbackup/compare/5.1.2...HEAD
 [5.1.2]: https://github.com/Archmonger/django-dbbackup/compare/5.1.1...5.1.2

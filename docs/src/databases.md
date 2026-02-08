@@ -2,11 +2,11 @@
 
 The following databases are supported by this application:
 
--   SQLite
--   MySQL
--   PostgreSQL
--   MongoDB
--   ... and any other Django-supported database (via `DjangoConnector`)
+- SQLite
+- MySQL
+- PostgreSQL
+- MongoDB
+- ... and any other Django-supported database (via `DjangoConnector`)
 
 By default DBBackup reuses connection details from `settings.DATABASES`.
 Sometimes you want different credentials or a different host (e.g. read-only
@@ -176,10 +176,10 @@ DATABASES = {
 
 All supported built-in connectors are described in more detail below. Following database wrappers from `django-prometheus` are supported:
 
--   `django_prometheus.db.backends.postgresql`
--   `django_prometheus.db.backends.sqlite3`
--   `django_prometheus.db.backends.mysql`
--   `django_prometheus.db.backends.postgis`
+- `django_prometheus.db.backends.postgresql`
+- `django_prometheus.db.backends.sqlite3`
+- `django_prometheus.db.backends.mysql`
+- `django_prometheus.db.backends.postgis`
 
 ## Django Connector
 
@@ -197,24 +197,24 @@ DBBACKUP_CONNECTORS = {
 
 ### Key Features
 
--   **Universal compatibility**: Works with any database backend supported by Django
--   **No external dependencies**: Uses Django's serialization system
--   **Model-level backups**: Preserves foreign key relationships and data integrity
--   **JSON format**: Creates human-readable backups in JSON format
+- **Universal compatibility**: Works with any database backend supported by Django
+- **No external dependencies**: Uses Django's serialization system
+- **Model-level backups**: Preserves foreign key relationships and data integrity
+- **JSON format**: Creates human-readable backups in JSON format
 
 ### When to Use
 
 The Django connector is ideal for:
 
--   Oracle databases (used by default)
--   Custom or third-party database backends not explicitly supported
--   Development environments where simplicity is preferred
--   Cases where external database tools are not available
+- Oracle databases (used by default)
+- Custom or third-party database backends not explicitly supported
+- Development environments where simplicity is preferred
+- Cases where external database tools are not available
 
 ### Limitations
 
--   **Performance**: Slower than native database tools for large datasets
--   **Database structure**: Only provides backups of data; not database schema, indices, or procedures
+- **Performance**: Slower than native database tools for large datasets
+- **Database structure**: Only provides backups of data; not database schema, indices, or procedures
 
 ### File Extension
 
