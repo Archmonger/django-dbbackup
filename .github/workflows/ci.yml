@@ -47,7 +47,7 @@ jobs:
                   python-version: 3.x
                   cache: pip
             - name: Install dependencies
-              run: pip install --upgrade setuptools hatch uv
+              run: pip install --upgrade setuptools wheel hatch uv
             # FIXME: Link checking disabled due to github.com link HTTP rate limit issues.
             # - name: Check documentation links
             #   run: hatch run docs:linkcheck
