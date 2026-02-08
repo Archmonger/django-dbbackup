@@ -119,6 +119,8 @@ matrix.django.dependencies = [
 # >>> Documentation Scripts <<<
 
 [tool.hatch.envs.docs]
+installer = "uv"
+python = "3.11" # `editdistpy` (v0.1.6) is a dependency of `mkdocs-spellcheck[all]`, and is incompatible with Python 3.12+.
 template = "docs"
 detached = true
 dependencies = [

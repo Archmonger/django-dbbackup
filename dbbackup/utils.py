@@ -465,7 +465,7 @@ def _get_function_from_path(func_or_path):
     return func
 
 
-def get_user_metadata(context: dict | None = None) -> dict:
+def get_user_metadata(metadata: dict | None = None) -> dict:
     """
     Get user generated metadata from the user's custom metadata setter.
 
@@ -478,7 +478,7 @@ def get_user_metadata(context: dict | None = None) -> dict:
         setter_function = _get_function_from_path(setter_setting)
         try:
             # We pass a copy to avoid side effects
-            user_metadata = setter_function(copy.deepcopy(context))
+            user_metadata = setter_function(copy.deepcopy(metadata))
         except Exception:
             logger = logging.getLogger("dbbackup")
             logger.exception("Error loading custom metadata: %s")
