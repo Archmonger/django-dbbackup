@@ -4,6 +4,7 @@ Utility functions for dbbackup.
 
 from __future__ import annotations
 
+import copy
 import gzip
 import json
 import logging
@@ -437,16 +438,20 @@ def filename_generate(extension, database_name="", servername=None, content_type
     return filename
 
 
-def _load_function_from_path(path):
+def _get_function_from_path(func_or_path):
     """
-    Load a callable from a dotted path.
+    Load a callable from a dotted path or return the callable itself.
 
-    :param path: Dotted path to callable
-    :type path: str
+    :param func_or_path: Dotted path to callable or callable itself
+    :type func_or_path: str | callable
 
     :returns: Callable object
     :rtype: callable
     """
+    if callable(func_or_path):
+        return func_or_path
+
+    path = func_or_path
     module_path, func_name = path.rsplit(".", 1)
     try:
         module = import_module(module_path)
@@ -460,39 +465,43 @@ def _load_function_from_path(path):
     return func
 
 
-def load_custom_metadata(metadata: dict | None = None) -> dict:
+def get_user_metadata(context: dict | None = None) -> dict:
     """
-    Load custom metadata from a callable defined in settings.
+    Get user generated metadata from the user's custom metadata setter.
 
     :returns: Custom metadata dictionary
     :rtype: dict
     """
-    custom_metadata = {}
+    user_metadata = {}
     setter_setting = settings.BACKUP_METADATA_SETTER
     if setter_setting:
-        setter_function = _load_function_from_path(setter_setting)
+        setter_function = _get_function_from_path(setter_setting)
         try:
-            custom_metadata = setter_function(metadata)
+            # We pass a copy to avoid side effects
+            user_metadata = setter_function(copy.deepcopy(context))
         except Exception:
             logger = logging.getLogger("dbbackup")
             logger.exception("Error loading custom metadata: %s")
 
-        if not isinstance(custom_metadata, dict):
+        if user_metadata is None:
+            user_metadata = {}
+
+        if not isinstance(user_metadata, dict):
             msg = "DBBACKUP_BACKUP_METADATA_SETTER must return a dictionary."
             raise ValueError(msg)
 
         # Validate that we can serialize the provided data
         try:
-            json.dumps(custom_metadata)
+            json.dumps(user_metadata)
         except Exception as e:
             msg = f"Custom metadata is not JSON serializable: {e}"
             raise ValueError(msg) from e
-    return custom_metadata
+    return user_metadata
 
 
-def validate_custom_metadata(metadata) -> bool | None:
+def validate_user_metadata(metadata) -> bool | None:
     """
-    Validate custom metadata using a callable defined in settings.
+    Validate custom metadata using a callable defined in `settings.py`.
     Raise a CommandError to provide custom feedback if validation fails.
 
     :param metadata: Metadata dictionary to validate
@@ -503,16 +512,17 @@ def validate_custom_metadata(metadata) -> bool | None:
     """
     validator_setting = settings.RESTORE_METADATA_VALIDATOR
     if validator_setting:
-        validator_function = _load_function_from_path(validator_setting)
+        validator_function = _get_function_from_path(validator_setting)
         try:
-            custom_metadata = validator_function(metadata)
+            # We pass a copy to avoid side effects
+            user_metadata = validator_function(copy.deepcopy(metadata))
         except Exception as e:
             msg = f"Error during custom metadata validation: {e}"
             raise ValueError(msg) from e
-        if custom_metadata is None:
+        if user_metadata is None:
             return None
-        if not isinstance(custom_metadata, bool):
+        if not isinstance(user_metadata, bool):
             msg = "DBBACKUP_RESTORE_METADATA_VALIDATOR must return a boolean or None."
             raise TypeError(msg)
-        return custom_metadata
+        return user_metadata
     return True
