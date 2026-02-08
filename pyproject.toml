@@ -119,6 +119,7 @@ matrix.django.dependencies = [
 # >>> Documentation Scripts <<<
 
 [tool.hatch.envs.docs]
+installer = "uv"
 template = "docs"
 detached = true
 dependencies = [
