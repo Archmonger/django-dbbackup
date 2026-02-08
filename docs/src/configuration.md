@@ -231,7 +231,7 @@ DBBACKUP_BACKUP_METADATA_SETTER = metadata_set
 
 Function or dotted path (string) to a callable that performs additional validation on the backup's metadata during restore operations. This validator runs **after** the built-in validation (e.g. database engine checks).
 
-The callable should accept a single argument: the metadata dictionary loaded from the current restore operation's metadata file. If this function returns `True`, the metadata is valid, `False` means the restore operation will be aborted. `None` can be returned as a no-op. It may raise a `CommandError` with a descriptive message if validation fails.
+The callable should accept a single argument: the metadata dictionary loaded from the current restore operation's metadata file. If this function returns `True`, the metadata is valid, `False` means the restore operation will be aborted. `None` can be returned to do nothing and allow `dbbackup` to decide. It may raise a `CommandError` with a descriptive message if validation fails.
 
 Default: `None`
 
@@ -248,7 +248,7 @@ def validate_restore(metadata):
         return False # Skip restore since it is stale (>120 days)
 
     if os.environ.get('AWS_REGION') == None:
-        return None # No-op if performing a backup without AWS_REGION is not set
+        return None # Do nothing if performing a backup outside AWS_REGION
 
     return True
 
