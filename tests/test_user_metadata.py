@@ -59,7 +59,8 @@ def dummy_validator(metadata):
 
 
 def broken_validator(metadata):
-    return True
+    msg = "This validator is broken"
+    raise ValueError(msg)
 
 
 def non_bool_validator(metadata):
@@ -108,7 +109,7 @@ class CustomMetadataTest(TestCase):
         """Test that various setter missconfigurations do not work - Non-existent module."""
         importlib.reload(dbbackup.settings)
 
-        with pytest.raises(ImportError, match="Could not import module 'non.existent': No module named 'non'"):
+        with pytest.raises(ImportError, match=r"Could not import module 'non\.existent': No module named 'non'"):
             dbbackup.utils.get_user_metadata(DEFAULT_META)
 
     @override_settings(DBBACKUP_BACKUP_METADATA_SETTER="tests.test_user_metadata.TEST_VAL")
@@ -116,7 +117,7 @@ class CustomMetadataTest(TestCase):
         """Test that various setter missconfigurations do not work - Non-callable object."""
         importlib.reload(dbbackup.settings)
 
-        with pytest.raises(TypeError, match="The object at 'tests.test_user_metadata.TEST_VAL' is not callable."):
+        with pytest.raises(TypeError, match=r"The object at 'tests\.test_user_metadata\.TEST_VAL' is not callable\."):
             dbbackup.utils.get_user_metadata(DEFAULT_META)
 
     @override_settings(DBBACKUP_BACKUP_METADATA_SETTER="tests.test_user_metadata.broken_setter")
@@ -124,7 +125,7 @@ class CustomMetadataTest(TestCase):
         """Test that various setter missconfigurations do not work - Wrong return type."""
         importlib.reload(dbbackup.settings)
 
-        with pytest.raises(ValueError, match="DBBACKUP_BACKUP_METADATA_SETTER must return a dictionary."):
+        with pytest.raises(ValueError, match=r"DBBACKUP_BACKUP_METADATA_SETTER must return a dictionary\."):
             dbbackup.utils.get_user_metadata(DEFAULT_META)
 
     @override_settings(DBBACKUP_BACKUP_METADATA_SETTER="tests.test_user_metadata.anotherbroken_setter")
@@ -167,7 +168,7 @@ class CustomMetadataTest(TestCase):
         """Test that various validator missconfigurations do not work - Non-existent module."""
         importlib.reload(dbbackup.settings)
 
-        with pytest.raises(ImportError, match="Could not import module 'non.existent': No module named 'non'"):
+        with pytest.raises(ImportError, match=r"Could not import module 'non\.existent': No module named 'non'"):
             dbbackup.utils.validate_user_metadata({"CSMT_VAL": TEST_VAL})
 
     @override_settings(DBBACKUP_RESTORE_METADATA_VALIDATOR="tests.test_user_metadata.broken_validator")
