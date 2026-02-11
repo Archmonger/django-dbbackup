@@ -14,6 +14,10 @@ Don't forget to remove deprecated code on each major release!
 
 ## [Unreleased]
 
+- Nothing (yet)!
+
+## [5.2.0] - 2026-02-10
+
 ### Added
 
 - Added support for custom metadata writing and validation during operations via `DBBACKUP_BACKUP_METADATA_SETTER` and `DBBACKUP_RESTORE_METADATA_VALIDATOR` settings.
@@ -348,7 +352,8 @@ Don't forget to remove deprecated code on each major release!
 
 - Miscellaneous maintenance and minor bug fixes.
 
-[Unreleased]: https://github.com/Archmonger/django-dbbackup/compare/5.1.2...HEAD
+[Unreleased]: https://github.com/Archmonger/django-dbbackup/compare/5.2.0...HEAD
+[5.2.0]: https://github.com/Archmonger/django-dbbackup/compare/5.1.2...5.2.0
 [5.1.2]: https://github.com/Archmonger/django-dbbackup/compare/5.1.1...5.1.2
 [5.1.1]: https://github.com/Archmonger/django-dbbackup/compare/5.1.0...5.1.1
 [5.1.0]: https://github.com/Archmonger/django-dbbackup/compare/5.0.1...5.1.0

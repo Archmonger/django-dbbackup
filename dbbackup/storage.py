@@ -4,6 +4,7 @@ Utils for handle files.
 
 import contextlib
 import logging
+from datetime import datetime, timezone
 
 from django.core.exceptions import ImproperlyConfigured
 
@@ -185,7 +186,7 @@ class Storage:
         if not files:
             msg = "There's no backup file available."
             raise StorageError(msg)
-        return max(files, key=utils.filename_to_date)
+        return max(files, key=self._filename_to_date_or_min)
 
     def get_older_backup(
         self,
@@ -230,7 +231,7 @@ class Storage:
         if not files:
             msg = "There's no backup file available."
             raise StorageError(msg)
-        return min(files, key=utils.filename_to_date)
+        return min(files, key=self._filename_to_date_or_min)
 
     def clean_old_backups(
         self,
@@ -274,7 +275,7 @@ class Storage:
             database=database,
             servername=servername,
         )
-        files = sorted(files, key=utils.filename_to_date, reverse=True)
+        files = sorted(files, key=self._filename_to_date_or_min, reverse=True)
         files_to_delete = [fi for i, fi in enumerate(files) if i >= keep_number]
         for filename in files_to_delete:
             if keep_filter(filename):
@@ -284,6 +285,15 @@ class Storage:
             metadata_filename = f"{filename}.metadata"
             if self.storage.exists(metadata_filename):
                 self.delete_file(metadata_filename)
+
+    @staticmethod
+    def _filename_to_date_or_min(filename: str) -> datetime:
+        file_date = utils.filename_to_date(filename)
+        if file_date is None:
+            return datetime.min.replace(tzinfo=timezone.utc)
+        if file_date.tzinfo is None:
+            return file_date.replace(tzinfo=timezone.utc)
+        return file_date
 
 
 def get_storage_class(path=None):

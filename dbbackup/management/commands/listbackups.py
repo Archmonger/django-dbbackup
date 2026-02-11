@@ -62,10 +62,11 @@ class Command(BaseDbBackupCommand):
     def get_backup_attrs(self, options):
         filters = {k: v for k, v in options.items() if k in FILTER_KEYS}
         filenames = self.storage.list_backups(**filters)
-        return [
-            {
-                "datetime": utils.filename_to_date(filename).strftime("%x %X"),
+        backups = []
+        for filename in filenames:
+            file_date = utils.filename_to_date(filename)
+            backups.append({
+                "datetime": file_date.strftime("%x %X") if file_date is not None else "Unknown",
                 "name": filename,
-            }
-            for filename in filenames
-        ]
+            })
+        return backups

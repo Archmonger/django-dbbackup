@@ -2,6 +2,8 @@
 Restore database.
 """
 
+from __future__ import annotations
+
 import io
 import json
 import os
@@ -67,7 +69,7 @@ class Command(BaseDbBackupCommand):
 
     def handle(self, *args, **options):
         """Django command handler."""
-        self.verbosity = int(options.get("verbosity"))
+        self.verbosity = int(options.get("verbosity", "1"))
         self.quiet = options.get("quiet")
         self._set_logger_level()
 
@@ -90,7 +92,7 @@ class Command(BaseDbBackupCommand):
         except StorageError as err:
             raise CommandError(err) from err
 
-    def _get_database(self, database_name: str):
+    def _get_database(self, database_name: str | None):
         """Get the database to restore."""
         if not database_name:
             if len(settings.DATABASES) > 1:

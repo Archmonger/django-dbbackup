@@ -1,44 +1,45 @@
 import re
 from datetime import datetime
 
-from django.core.checks import Tags, Warning, register
+from django.core.checks import Tags, register
+from django.core.checks import Warning as DjangoWarning
 
 from dbbackup import settings
 
-W001 = Warning(
+W001 = DjangoWarning(
     "Invalid HOSTNAME parameter",
     hint="Set a non empty string to this settings.DBBACKUP_HOSTNAME",
     id="dbbackup.W001",
 )
-W002 = Warning(
+W002 = DjangoWarning(
     "Invalid STORAGE parameter",
     hint="Set a valid path to a storage in settings.DBBACKUP_STORAGE",
     id="dbbackup.W002",
 )
-W003 = Warning(
+W003 = DjangoWarning(
     "Invalid FILENAME_TEMPLATE parameter",
     hint="Include {datetime} to settings.DBBACKUP_FILENAME_TEMPLATE",
     id="dbbackup.W003",
 )
-W004 = Warning(
+W004 = DjangoWarning(
     "Invalid MEDIA_FILENAME_TEMPLATE parameter",
     hint="Include {datetime} to settings.DBBACKUP_MEDIA_FILENAME_TEMPLATE",
     id="dbbackup.W004",
 )
-W005 = Warning(
+W005 = DjangoWarning(
     "Invalid DATE_FORMAT parameter",
     hint="settings.DBBACKUP_DATE_FORMAT can contain only [A-Za-z0-9%_-]",
     id="dbbackup.W005",
 )
 # W006: Historical - "FAILURE_RECIPIENTS has been deprecated"
 
-W007 = Warning(
+W007 = DjangoWarning(
     "Invalid FILENAME_TEMPLATE parameter",
     hint="settings.DBBACKUP_FILENAME_TEMPLATE must not contain slashes ('/'). "
     "Did you mean to change the value for 'location'?",
     id="dbbackup.W007",
 )
-W008 = Warning(
+W008 = DjangoWarning(
     "Invalid MEDIA_FILENAME_TEMPLATE parameter",
     hint="settings.DBBACKUP_MEDIA_FILENAME_TEMPLATE must not contain slashes ('/')"
     "Did you mean to change the value for 'location'?",

@@ -47,7 +47,7 @@ class Command(BaseDbBackupCommand):
 
     def handle(self, *args, **options):
         """Django command handler."""
-        self.verbosity = int(options.get("verbosity"))
+        self.verbosity = int(options.get("verbosity", "1"))
         self.quiet = options.get("quiet")
         self._set_logger_level()
 

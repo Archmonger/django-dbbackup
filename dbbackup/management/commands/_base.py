@@ -2,13 +2,19 @@
 Abstract Command.
 """
 
+from __future__ import annotations
+
 import logging
 import sys
 from shutil import copyfileobj
+from typing import TYPE_CHECKING
 
 from django.core.management.base import BaseCommand, CommandError
 
 from dbbackup.storage import StorageError
+
+if TYPE_CHECKING:
+    from dbbackup.storage import Storage
 
 USELESS_ARGS = ("callback", "callback_args", "callback_kwargs", "metavar")
 TYPES = {
@@ -57,6 +63,14 @@ class BaseDbBackupCommand(BaseCommand):
     verbosity = 1
     quiet = False
     logger = logging.getLogger("dbbackup.command")
+    storage: Storage
+    path: str | None = None
+    filename: str | None = None
+    decrypt = False
+    uncompress = False
+    encrypt = False
+    compress = False
+    content_type = ""
 
     def __init__(self, *args, **kwargs):
         self.option_list = self.base_option_list + self.option_list

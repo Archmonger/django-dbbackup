@@ -123,7 +123,7 @@ def email_uncaught_exception(func):
             logger = logging.getLogger("dbbackup")
             exc_type, exc_value, tb = sys.exc_info()
             tb_str = "".join(traceback.format_tb(tb))
-            msg = f"{exc_type.__name__}: {exc_value}\n{tb_str}"
+            msg = f"{getattr(exc_type, '__name__', str(exc_type) or 'Exception')}: {exc_value}\n{tb_str}"
             logger.exception(msg)
             raise
         finally:
@@ -155,7 +155,19 @@ def create_spooled_temporary_file(filepath=None, fileobj=None):
     return spooled_file
 
 
-def encrypt_file(inputfile, filename):
+def _gpg_encrypt_file(inputfile, filepath, recipients, always_trust):
+    import gnupg
+
+    g = gnupg.GPG()
+    return g.encrypt_file(
+        inputfile,
+        output=filepath,
+        recipients=recipients,
+        always_trust=always_trust,
+    )
+
+
+def encrypt_file(inputfile, filename):  # sourcery skip: extract-method
     """
     Encrypt input file using GPG and remove .gpg extension to its name.
 
@@ -168,8 +180,6 @@ def encrypt_file(inputfile, filename):
     :returns: Tuple with file and new file's name
     :rtype: :class:`tempfile.SpooledTemporaryFile`, ``str``
     """
-    import gnupg
-
     tempdir = tempfile.mkdtemp(dir=settings.TMP_DIR)
     try:
         filename = f"{filename}.gpg"
@@ -179,14 +189,8 @@ def encrypt_file(inputfile, filename):
             raise ValueError(msg)
         try:
             inputfile.seek(0)
-            always_trust = settings.GPG_ALWAYS_TRUST
-            g = gnupg.GPG()
-            result = g.encrypt_file(
-                inputfile,
-                output=filepath,
-                recipients=settings.GPG_RECIPIENT,
-                always_trust=always_trust,
-            )
+            always_trust = bool(settings.GPG_ALWAYS_TRUST)
+            result = _gpg_encrypt_file(inputfile, filepath, settings.GPG_RECIPIENT, always_trust)
             inputfile.close()
             if not result:
                 msg = f"Encryption failed; status: {result.status}"

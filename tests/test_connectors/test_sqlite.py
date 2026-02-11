@@ -120,12 +120,12 @@ class SqliteConnectorTest(TestCase):
 
         # Should warn about the serious error
         dbbackup_warnings = [w for w in warning_list if "dbbackup" in str(w.filename)]
-        assert len(dbbackup_warnings) > 0, "Should warn about 'no such table' error"
+        assert dbbackup_warnings, "Should warn about 'no such table' error"
 
         warning_messages = [str(w.message) for w in dbbackup_warnings]
-        assert any(
-            "no such table" in msg.lower() for msg in warning_messages
-        ), f"Should warn about 'no such table', got: {warning_messages}"
+        assert any("no such table" in msg.lower() for msg in warning_messages), (
+            f"Should warn about 'no such table', got: {warning_messages}"
+        )
 
     def test_create_dump_with_virtual_tables(self):
         with connection.cursor() as c:
@@ -210,11 +210,11 @@ CREATE VIEW test_exists_view AS SELECT * FROM test_exists;
         dbbackup_warnings = [w for w in warning_list if "dbbackup" in str(w.filename)]
 
         # Should warn about "already exists" errors now that filtering is removed
-        assert len(dbbackup_warnings) > 0, "Should have warnings for 'already exists' errors"
+        assert dbbackup_warnings, "Should have warnings for 'already exists' errors"
 
         # Verify we get warnings about "already exists"
         already_exists_warnings = [w for w in dbbackup_warnings if "already exists" in str(w.message).lower()]
-        assert len(already_exists_warnings) > 0, "Should warn about 'already exists' errors"
+        assert already_exists_warnings, "Should warn about 'already exists' errors"
 
 
 @patch("dbbackup.db.sqlite.open", mock_open(read_data=b"foo"), create=True)
