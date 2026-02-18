@@ -45,7 +45,7 @@ classifiers = [
 ]
 dependencies = ["django>=4.2"]
 dynamic = ["version"]
-urls.Changelog = "https://archmonger.github.io/django-dbbackup /latest/changelog/"
+urls.Changelog = "https://archmonger.github.io/django-dbbackup/latest/changelog/"
 urls.Documentation = "https://archmonger.github.io/django-dbbackup"
 urls.Source = "https://github.com/Archmonger/django-dbbackup"
 
