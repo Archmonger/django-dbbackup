@@ -6,6 +6,7 @@ for database-agnostic backup and restore operations. It works with
 any Django-supported database backend.
 """
 
+import codecs
 import contextlib
 import os
 import tempfile
@@ -35,8 +36,11 @@ class DjangoConnector(BaseDBConnector):
         Returns a file-like object containing the serialized database data
         in JSON format.
         """
-        # Create a SpooledTemporaryFile in text mode for direct use with dumpdata
-        dump_file = SpooledTemporaryFile(mode="w+t", encoding="utf-8")
+
+        binary_dump_file = SpooledTemporaryFile(mode="w+b", encoding="utf-8")
+
+        # Wrap Binary SpooledTemporaryFile in text mode for direct use with dumpdata
+        dump_file = codecs.getwriter("utf-8")(binary_dump_file)
 
         # Prepare arguments for dumpdata command
         dump_args = []
@@ -108,8 +112,8 @@ class DjangoConnector(BaseDBConnector):
         call_command("dumpdata", *dump_args, **dump_kwargs)
 
         # Reset file position to beginning for reading
-        dump_file.seek(0)
-        return dump_file
+        binary_dump_file.seek(0)
+        return binary_dump_file
 
     def _restore_dump(self, dump):
         """
