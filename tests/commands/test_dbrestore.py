@@ -13,12 +13,13 @@ import pytest
 from django.conf import settings
 from django.core.files import File
 from django.core.management.base import CommandError
-from django.test import TestCase
+from django.test import TestCase, override_settings
 
 from dbbackup import utils
 from dbbackup.db.base import get_connector
 from dbbackup.db.mongodb import MongoDumpConnector
 from dbbackup.db.postgresql import PgDumpConnector
+from dbbackup.management.commands.dbbackup import Command as DbbackupCommand
 from dbbackup.management.commands.dbrestore import Command as DbrestoreCommand
 from dbbackup.settings import HOSTNAME
 from dbbackup.storage import get_storage
@@ -28,6 +29,7 @@ from tests.utils import (
     TARED_FILE,
     TEST_DATABASE,
     TEST_MONGODB,
+    LocationPrefixedFakeStorage,
     add_private_gpg,
     clean_gpg_keys,
     get_dump,
@@ -35,6 +37,35 @@ from tests.utils import (
 )
 
 GPG_AVAILABLE = shutil.which("gpg") is not None
+
+
+@patch("dbbackup.management.commands._base.input", return_value="y")
+class DbrestoreCommandWithLocationTest(TestCase):
+    def setUp(self):
+        self.dbbackup_command = DbbackupCommand()
+        self.dbbackup_command.stdout = DEV_NULL
+        self.dbrestore_command = DbrestoreCommand()
+        self.dbrestore_command.stdout = DEV_NULL
+        self.dbrestore_command.interactive = False
+        HANDLED_FILES.clean()
+
+    def tearDown(self):
+        clean_gpg_keys()
+
+    @override_settings(DBBACKUP_STORAGE="tests.utils.LocationPrefixedFakeStorage")
+    def test_restore_with_storage_location(self, *args):
+        """
+        GIVEN a storage that lists files with its location prefix
+        WHEN running dbrestore without --input-filename
+        THEN dbrestore should still resolve the latest backup correctly
+        """
+        self.dbbackup_command.handle(verbosity=1)
+
+        stored_names = [name for name, _file in HANDLED_FILES["written_files"]]
+        assert stored_names
+        assert all(not name.startswith(f"{LocationPrefixedFakeStorage.location}/") for name in stored_names)
+
+        self.dbrestore_command.handle(verbosity=1)
 
 
 @patch("dbbackup.management.commands._base.input", return_value="y")

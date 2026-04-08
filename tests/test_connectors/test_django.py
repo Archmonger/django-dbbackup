@@ -247,6 +247,7 @@ class DjangoConnectorTest(TestCase):
     @patch("dbbackup.db.django.call_command")
     def test_dump_is_binary(self, mock_call_command):
         """Test that the created dump is a binary file and can be compressed."""
+
         # Mock the dumpdata command to write JSON to stdout
         def mock_dumpdata(*args, **kwargs):
             if "stdout" in kwargs:
@@ -260,6 +261,7 @@ class DjangoConnectorTest(TestCase):
 
         # Try to compress it (this will fail if it's not a binary file)
         import gzip
+
         compressed_file = SpooledTemporaryFile()
         with gzip.GzipFile(fileobj=compressed_file, mode="wb") as gz_file:
             gz_file.write(dump_file.read())

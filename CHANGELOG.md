@@ -18,6 +18,7 @@ Don't forget to remove deprecated code on each major release!
 
 - Fix compression when using `DjangoConnector`.
 - Fix an issue with paramiko `os.stat` sizes were larger on the target compared to the source.
+- Fix issue with `dbrestore` not finding backups when `location` is set in storage options.
 
 ## [5.2.0] - 2026-02-10
 

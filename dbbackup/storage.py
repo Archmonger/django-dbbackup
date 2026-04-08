@@ -76,7 +76,7 @@ class Storage:
         self.storage.delete(name=filepath)
 
     def list_directory(self, path=""):
-        return self.storage.listdir(path)[1]
+        return [self._normalize_listed_name(name) for name in self.storage.listdir(path)[1]]
 
     def write_file(self, filehandle, filename):
         self.logger.debug("Writing file %s", filename)
@@ -294,6 +294,18 @@ class Storage:
         if file_date.tzinfo is None:
             return file_date.replace(tzinfo=timezone.utc)
         return file_date
+
+    def _normalize_listed_name(self, name: str) -> str:
+        location = getattr(self.storage, "location", "") or ""
+        if not location:
+            return name
+
+        normalized_location = location.replace("\\", "/").strip("/")
+        normalized_name = name.replace("\\", "/")
+        prefix = f"{normalized_location}/"
+        if normalized_location and normalized_name.startswith(prefix):
+            return normalized_name[len(prefix) :]
+        return name
 
 
 def get_storage_class(path=None):

@@ -1,11 +1,11 @@
 from unittest.mock import patch
 
 import pytest
-from django.test import TestCase
+from django.test import TestCase, override_settings
 
 from dbbackup import utils
 from dbbackup.storage import Storage, get_storage, get_storage_class
-from tests.utils import HANDLED_FILES, FakeStorage
+from tests.utils import HANDLED_FILES, FakeStorage, LocationPrefixedFakeStorage
 
 DEFAULT_STORAGE_PATH = "django.core.files.storage.FileSystemStorage"
 STORAGE_OPTIONS = {"location": "tmp"}
@@ -150,6 +150,19 @@ class StorageListBackupsTest(TestCase):
         files = self.storage.list_backups(content_type="media")
         for file in files:
             assert ".tar" in file
+
+    @override_settings(DBBACKUP_STORAGE="tests.utils.LocationPrefixedFakeStorage")
+    def test_location_prefixed_entries_are_normalized(self):
+        storage = get_storage()
+
+        HANDLED_FILES["written_files"] = [
+            (utils.filename_generate("db", "foodb"), None),
+        ]
+
+        files = storage.list_backups()
+
+        assert files == [HANDLED_FILES["written_files"][0][0]]
+        assert not files[0].startswith(f"{LocationPrefixedFakeStorage.location}/")
 
 
 class StorageGetLatestTest(TestCase):

@@ -93,6 +93,14 @@ class FakeStorage(Storage):
         HANDLED_FILES["deleted_files"].append(name)
 
 
+class LocationPrefixedFakeStorage(FakeStorage):
+    name = "LocationPrefixedFakeStorage"
+    location = "dev"
+
+    def listdir(self, path):
+        return ([], [f"{self.location}/{f[0]}" for f in HANDLED_FILES["written_files"]])
+
+
 def clean_gpg_keys():
     with contextlib.suppress(Exception):
         cmd = f"gpg --batch --yes --delete-key '{GPG_FINGERPRINT}'"

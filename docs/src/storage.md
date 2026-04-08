@@ -51,6 +51,13 @@ STORAGES = {
     Storing backups to local disk may also be useful for Dropbox if you
     already have the official Dropbox client installed on your system.
 
+!!! note
+
+    When a storage backend exposes a `location` or key prefix, django-dbbackup
+    treats backup names as relative to that location. This keeps
+    `listbackups`, `dbrestore`, and explicit `--input-filename` usage aligned
+    even if the backend returns prefixed names internally.
+
 ## File system storage
 
 ### Setup
