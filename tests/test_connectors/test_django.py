@@ -48,8 +48,8 @@ class DjangoConnectorTest(TestCase):
         assert isinstance(dump, SpooledTemporaryFile)
         dump.seek(0)
         content = dump.read()  # Already a string in text mode
-        assert '"model": "auth.user"' in content
-        assert '"username": "test"' in content
+        assert b'"model": "auth.user"' in content
+        assert b'"username": "test"' in content
 
     @patch("dbbackup.db.django.call_command")
     def test_create_dump_with_exclude_app_model_format(self, mock_call_command):
