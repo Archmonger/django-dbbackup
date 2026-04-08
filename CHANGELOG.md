@@ -14,6 +14,10 @@ Don't forget to remove deprecated code on each major release!
 
 ## [Unreleased]
 
+- Nothing (yet)!
+
+## [5.3.0] - 2026-04-08
+
 ### Fixed
 
 - Fix compression when using `DjangoConnector`.
@@ -356,7 +360,8 @@ Don't forget to remove deprecated code on each major release!
 
 - Miscellaneous maintenance and minor bug fixes.
 
-[Unreleased]: https://github.com/Archmonger/django-dbbackup/compare/5.2.0...HEAD
+[Unreleased]: https://github.com/Archmonger/django-dbbackup/compare/5.3.0...HEAD
+[5.3.0]: https://github.com/Archmonger/django-dbbackup/compare/5.2.0...5.3.0
 [5.2.0]: https://github.com/Archmonger/django-dbbackup/compare/5.1.2...5.2.0
 [5.1.2]: https://github.com/Archmonger/django-dbbackup/compare/5.1.1...5.1.2
 [5.1.1]: https://github.com/Archmonger/django-dbbackup/compare/5.1.0...5.1.1
