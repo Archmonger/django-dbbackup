@@ -47,7 +47,7 @@ class DjangoConnectorTest(TestCase):
         # Verify dump content
         assert isinstance(dump, SpooledTemporaryFile)
         dump.seek(0)
-        content = dump.read()  # Already a string in text mode
+        content = dump.read()
         assert b'"model": "auth.user"' in content
         assert b'"username": "test"' in content
 
@@ -243,3 +243,27 @@ class DjangoConnectorTest(TestCase):
 
         # Verify loaddata was called
         assert mock_call_command.call_count == 1
+
+    @patch("dbbackup.db.django.call_command")
+    def test_dump_is_binary(self, mock_call_command):
+        """Test that the created dump is a binary file and can be compressed."""
+        # Mock the dumpdata command to write JSON to stdout
+        def mock_dumpdata(*args, **kwargs):
+            if "stdout" in kwargs:
+                kwargs["stdout"].write('[{"model": "auth.user", "pk": 1, "fields": {"username": "test"}}]')
+
+        mock_call_command.side_effect = mock_dumpdata
+
+        # Create the dump
+        dump_file = self.connector.create_dump()
+        dump_file.seek(0)
+
+        # Try to compress it (this will fail if it's not a binary file)
+        import gzip
+        compressed_file = SpooledTemporaryFile()
+        with gzip.GzipFile(fileobj=compressed_file, mode="wb") as gz_file:
+            gz_file.write(dump_file.read())
+
+        # Check that we have compressed data
+        compressed_file.seek(0)
+        assert len(compressed_file.read()) > 0
