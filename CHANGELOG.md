@@ -14,7 +14,10 @@ Don't forget to remove deprecated code on each major release!
 
 ## [Unreleased]
 
-- Nothing (yet)!
+### Fixed
+
+- Fix compression when using `DjangoConnector`.
+- Fix an issue with paramiko `os.stat` sizes were larger on the target compared to the source.
 
 ## [5.2.0] - 2026-02-10
 
