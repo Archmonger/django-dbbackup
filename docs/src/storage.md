@@ -4,10 +4,15 @@ One of the most helpful features of django-dbbackup is the ability to store
 and retrieve backups from local or remote storage. This functionality is
 mainly based on the Django Storage API and extends its possibilities.
 
+A few common third party backends (via `django-storages`) are documented on this page.
+
+---
+
+## Quick Start
+
 Configure backup storage via the `STORAGES` setting using the key `'dbbackup'`.
 `BACKEND` is a dotted path to a Django storage class. For example use
-`'django.core.files.storage.FileSystemStorage'` for the local filesystem. A
-few common third party backends (via `django-storages`) are [documented below](#file-system-storage).
+`'django.core.files.storage.FileSystemStorage'` for the local filesystem.
 
 ```python
 STORAGES = {
@@ -58,7 +63,9 @@ STORAGES = {
     `listbackups`, `dbrestore`, and explicit `--input-filename` usage aligned
     even if the backend returns prefixed names internally.
 
-## File system storage
+---
+
+## File System Storage
 
 ### Setup
 
@@ -92,7 +99,9 @@ The file system permissions that the directory will receive when it is saved.
 
 See [FileSystemStorage's documentation](https://docs.djangoproject.com/en/stable/ref/files/storage/#the-filesystemstorage-class) for a full list of available settings.
 
-## Google cloud storage
+---
+
+## Google Cloud Storage
 
 Our backend for Google cloud storage uses django-storages.
 
@@ -104,8 +113,7 @@ Create a Google Cloud project and bucket, then install:
 pip install django-storages[google]
 ```
 
-Add the following to settings (only `bucket_name` is strictly required). See
-the [django-storages docs](https://django-storages.readthedocs.io/en/latest/backends/gcloud.html) for advanced options.
+Add this snippet to settings:
 
 ```python
 STORAGES = {
@@ -119,6 +127,13 @@ STORAGES = {
     },
 }
 ```
+
+### Settings
+
+Add the following to settings (only `bucket_name` is strictly required). See
+the [django-storages docs](https://django-storages.readthedocs.io/en/latest/backends/gcloud.html) for advanced options.
+
+---
 
 ## Amazon S3
 
@@ -194,6 +209,8 @@ See their [CHANGELOG](https://github.com/jschneier/django-storages/blob/master/C
 Prefix inside the bucket; include trailing slash. Example:
 `location: 'backups/prod/'`.
 
+---
+
 ## Dropbox
 
 Create a Dropbox app and obtain an access token, then configure the backend.
@@ -245,6 +262,8 @@ OAuth 2 access token generated for the app.
 
 Restrict storage operations to this folder prefix.
 
+---
+
 ## FTP
 
 To store your database backups on a remote filesystem via FTP, simply
@@ -278,6 +297,8 @@ STORAGES = {
 
 FTP URI including optional credentials and port. Example:
 `ftp://user:pass@ftp.example.com:21`.
+
+---
 
 ## SFTP
 

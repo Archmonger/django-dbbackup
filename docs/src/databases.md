@@ -8,6 +8,14 @@ The following databases are supported by this application:
 - MongoDB
 - ... and any other Django-supported database (via `DjangoConnector`)
 
+DBBackup uses “connector” classes to implement backend specific dump and
+restore logic. Each connector may expose additional settings documented
+below.
+
+---
+
+## Settings Overrides
+
 By default DBBackup reuses connection details from `settings.DATABASES`.
 Sometimes you want different credentials or a different host (e.g. read-only
 replica) just for backups. Use `DBBACKUP_CONNECTORS` for that purpose; it
@@ -26,9 +34,7 @@ DBBACKUP_CONNECTORS = {
 This configuration will allow you to use a replica with a different host and user,
 which is a great practice if you don't want to overload your main database.
 
-DBBackup uses “connector” classes to implement backend specific dump and
-restore logic. Each connector may expose additional settings documented
-below.
+---
 
 ## Common Settings
 
@@ -50,8 +56,7 @@ DBBACKUP_CONNECTORS = {
 }
 ```
 
-Some connectors use a command line tool as a dump engine, `mysqldump` for
-example. These kinds of tools have common attributes:
+Additionally, some connectors within this repository use a command line tool as a dump engine, (`MysqlDumpConnector` for example). These kinds of connectors have additional common attributes:
 
 | Setting                      | Description                                                                                                                                                           | Default                                |
 | ---------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------- |
@@ -73,11 +78,19 @@ DBBACKUP_CONNECTORS = {
 }
 ```
 
-## Built-in Database Connectors
+---
+
+## Database Connectors
 
 These connectors are provided by default and are designed to work with specific database engines. They provide optimized backup and restore functionality.
 
 ### SQLite
+
+#### Settings
+
+SQLite connectors do not define any configurable settings beyond the common settings documented above.
+
+However, note that only the `SqliteConnector` supports the common `EXCLUDE` setting.
 
 #### SqliteBackupConnector
 
@@ -99,12 +112,20 @@ In-memory databases are **not** dumpable with it. Since it works by copying the 
 
 ### MySQL
 
-MySQL defaults to `dbbackup.db.mysql.MysqlDumpConnector` which shells out to
-`mysqldump` for creation and `mysql` for restore.
+#### Settings
+
+MySQL connectors do not define any configurable settings beyond the common settings documented above.
+
+However, note that when the common `EXCLUDE` setting is configured in your Django database, each table name is passed to `mysqldump` as `--ignore-table=<database>.<table>`, so the values should be plain table
+names from the target database.
+
+#### MysqlDumpConnector
+
+The `dbbackup.db.mysql.MysqlDumpConnector` creates a SQL dump with `mysqldump` and restores it by piping the dump into `mysql`.
+
+This is the default connector for MySQL databases.
 
 ### PostgreSQL
-
-All PostgreSQL connectors have the following settings:
 
 #### Settings
 
@@ -139,6 +160,15 @@ restoring the database.
 
 ### MongoDB
 
+#### Settings
+
+| Setting      | Description                                         | Default |
+| ------------ | --------------------------------------------------- | ------- |
+| OBJECT_CHECK | Validate documents before inserting (`--objcheck`). | `True`  |
+| DROP         | Replace existing objects during restore (`--drop`). | `True`  |
+
+#### MongoDumpConnector
+
 MongoDB uses by default `dbbackup.db.mongodb.MongoDumpConnector`. It
 uses `mongodump` and `mongorestore` for its job.
 
@@ -165,13 +195,6 @@ DATABASES = {
 }
 ```
 
-#### Settings
-
-| Setting      | Description                                         | Default |
-| ------------ | --------------------------------------------------- | ------- |
-| OBJECT_CHECK | Validate documents before inserting (`--objcheck`). | `True`  |
-| DROP         | Replace existing objects during restore (`--drop`). | `True`  |
-
 ### Django-Prometheus
 
 All supported built-in connectors are described in more detail below. Following database wrappers from `django-prometheus` are supported:
@@ -181,9 +204,25 @@ All supported built-in connectors are described in more detail below. Following 
 - `django_prometheus.db.backends.mysql`
 - `django_prometheus.db.backends.postgis`
 
-## Django Connector
+### All Databases (Universal)
 
 The Django connector (`dbbackup.db.django.DjangoConnector`) provides database-agnostic backup and restore functionality using Django's built-in `dumpdata` and `loaddata` management commands. This connector works with any Django-supported database backend.
+
+Key features include:
+
+- **Universal compatibility**: Works with any database backend supported by Django
+- **No external dependencies**: Uses Django's serialization system
+- **Model-level backups**: Preserves foreign key relationships and data integrity
+- **JSON format**: Creates human-readable backups in JSON format
+
+The Django connector is ideal for:
+
+- Oracle databases (used by default)
+- Custom or third-party database backends not explicitly supported
+- Development environments where simplicity is preferred
+- Cases where external database tools are not available
+
+#### DjangoConnector
 
 This connector is automatically used for any unmapped database engines. If needed, you can explicitly configure it:
 
@@ -195,30 +234,12 @@ DBBACKUP_CONNECTORS = {
 }
 ```
 
-### Key Features
-
-- **Universal compatibility**: Works with any database backend supported by Django
-- **No external dependencies**: Uses Django's serialization system
-- **Model-level backups**: Preserves foreign key relationships and data integrity
-- **JSON format**: Creates human-readable backups in JSON format
-
-### When to Use
-
-The Django connector is ideal for:
-
-- Oracle databases (used by default)
-- Custom or third-party database backends not explicitly supported
-- Development environments where simplicity is preferred
-- Cases where external database tools are not available
-
-### Limitations
+#### Limitations
 
 - **Performance**: Slower than native database tools for large datasets
 - **Database structure**: Only provides backups of data; not database schema, indices, or procedures
 
-### File Extension
-
-By default, backups use the `.json` extension.
+---
 
 ## Custom Connectors
 

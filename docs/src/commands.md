@@ -8,6 +8,8 @@ restore the most recent matching backup.
 
 Use `python manage.py <command> --help` for full option details.
 
+---
+
 ## dbbackup
 
 Create a database backup (optionally compressed/encrypted) and upload it.

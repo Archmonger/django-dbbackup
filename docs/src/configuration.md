@@ -1,6 +1,8 @@
 # Configuration
 
-## General settings
+---
+
+## General
 
 ### DBBACKUP_DATABASES
 
@@ -102,7 +104,9 @@ default this is `settings.MEDIA_ROOT`.
 
 Default: `settings.MEDIA_ROOT`
 
-## Encrypting your backups
+---
+
+## Encryption
 
 Backups may contain personal or otherwise sensitive data. When storing them
 outside trusted infrastructure you should encrypt them. Keep your private
@@ -164,7 +168,9 @@ connector mapping.
 
 Default: `{}`
 
-## Email configuration
+---
+
+## Email
 
 ### DBBACKUP_SEND_EMAIL
 
@@ -194,18 +200,9 @@ Subject-line prefix for email messages sent by DBBackup.
 
 Default: `'[dbbackup] '`
 
-## Database configuration
+---
 
-By default DBBackup uses values from `settings.DATABASES`. Use
-`DBBACKUP_CONNECTORS` (documented above) for backup specific overrides. See
-[Database settings](databases.md) for backend specific options.
-
-## Storage configuration
-
-You must configure a storage backend (`STORAGES['dbbackup']`) to persist
-backups. See [Storage settings](storage.md) for supported options.
-
-## Custom metadata
+## Metadata
 
 ### DBBACKUP_BACKUP_METADATA_SETTER
 
@@ -254,3 +251,18 @@ def validate_restore(metadata):
 
 DBBACKUP_RESTORE_METADATA_VALIDATOR = validate_restore
 ```
+
+---
+
+## Database
+
+By default DBBackup uses values from `settings.DATABASES`. Use
+`DBBACKUP_CONNECTORS` (documented above) for backup specific overrides. See
+[Database settings](databases.md) for backend specific options.
+
+---
+
+## Storage
+
+You must configure a storage backend (`STORAGES['dbbackup']`) to persist
+backups. See [Storage settings](storage.md) for supported options.

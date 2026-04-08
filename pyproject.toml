@@ -133,6 +133,7 @@ dependencies = [
   "mkdocs-git-authors-plugin",
   "mkdocs-minify-plugin",
   "mike",
+  "click==8.2.1", # Newer versions of click do not work with mkdocs<2.0
 ]
 
 [tool.hatch.envs.docs.scripts]
