@@ -37,7 +37,7 @@ class DjangoConnector(BaseDBConnector):
         in JSON format.
         """
 
-        binary_dump_file = SpooledTemporaryFile(mode="w+b", encoding="utf-8")
+        binary_dump_file = SpooledTemporaryFile(mode="w+b")
 
         # Wrap Binary SpooledTemporaryFile in text mode for direct use with dumpdata
         dump_file = codecs.getwriter("utf-8")(binary_dump_file)
