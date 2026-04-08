@@ -18,32 +18,32 @@ keywords = [
 ]
 license = "BSD-3-Clause"
 authors = [{ name = "Mark Bakhit", email = "archiethemonger@gmail.com" }]
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 classifiers = [
   "Development Status :: 5 - Production/Stable",
   "Environment :: Web Environment",
   "Environment :: Console",
-  "Framework :: Django :: 4.2",
   "Framework :: Django :: 5.0",
   "Framework :: Django :: 5.1",
   "Framework :: Django :: 5.2",
+  "Framework :: Django :: 6.0",
   "Intended Audience :: Developers",
   "Intended Audience :: System Administrators",
   "License :: OSI Approved :: BSD License",
   "Natural Language :: English",
   "Operating System :: OS Independent",
   "Programming Language :: Python",
-  "Programming Language :: Python :: 3.9",
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
   "Topic :: Database",
   "Topic :: System :: Archiving",
   "Topic :: System :: Archiving :: Backup",
   "Topic :: System :: Archiving :: Compression",
 ]
-dependencies = ["django>=4.2"]
+dependencies = ["django>=5.0"]
 dynamic = ["version"]
 urls.Changelog = "https://archmonger.github.io/django-dbbackup/latest/changelog/"
 urls.Documentation = "https://archmonger.github.io/django-dbbackup"
@@ -80,11 +80,6 @@ matrix-name-format = "{variable}-{value}"
 [tool.hatch.envs.hatch-test.env-vars]
 DJANGO_SETTINGS_MODULE = "tests.settings"
 
-# Django 4.2
-[[tool.hatch.envs.hatch-test.matrix]]
-python = ["3.9", "3.10", "3.11", "3.12"]
-django = ["4.2"]
-
 # Django 5.0
 [[tool.hatch.envs.hatch-test.matrix]]
 python = ["3.10", "3.11", "3.12"]
@@ -100,11 +95,13 @@ django = ["5.1"]
 python = ["3.10", "3.11", "3.12", "3.13"]
 django = ["5.2"]
 
+# Django 6.0
+[[tool.hatch.envs.hatch-test.matrix]]
+python = ["3.12", "3.13", "3.14"]
+django = ["6.0"]
+
 [tool.hatch.envs.hatch-test.overrides]
 matrix.django.dependencies = [
-  { if = [
-    "4.2",
-  ], value = "django>=4.2,<4.3" },
   { if = [
     "5.0",
   ], value = "django>=5.0,<5.1" },
@@ -114,6 +111,9 @@ matrix.django.dependencies = [
   { if = [
     "5.2",
   ], value = "django>=5.2,<5.3" },
+  { if = [
+    "6.0",
+  ], value = "django>=6.0,<6.1" },
 ]
 
 # >>> Documentation Scripts <<<
@@ -191,7 +191,6 @@ postgres = ["python scripts/postgres_live_test.py {args}"]
 
 [tool.ruff]
 line-length = 120
-target-version = "py39"
 extend-exclude = [".eggs/*", ".tox/*", ".venv/*", "build/*", "*/migrations/*"]
 format.preview = true
 lint.extend-ignore = [
