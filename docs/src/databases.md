@@ -195,15 +195,6 @@ DATABASES = {
 }
 ```
 
-### Django-Prometheus
-
-All supported built-in connectors are described in more detail below. Following database wrappers from `django-prometheus` are supported:
-
-- `django_prometheus.db.backends.postgresql`
-- `django_prometheus.db.backends.sqlite3`
-- `django_prometheus.db.backends.mysql`
-- `django_prometheus.db.backends.postgis`
-
 ### All Databases (Universal)
 
 The Django connector (`dbbackup.db.django.DjangoConnector`) provides database-agnostic backup and restore functionality using Django's built-in `dumpdata` and `loaddata` management commands. This connector works with any Django-supported database backend.
@@ -238,6 +229,15 @@ DBBACKUP_CONNECTORS = {
 
 - **Performance**: Slower than native database tools for large datasets
 - **Database structure**: Only provides backups of data; not database schema, indices, or procedures
+
+### Django Prometheus (External)
+
+All supported built-in connectors are described in more detail below. Following database wrappers from `django-prometheus` are supported:
+
+- `django_prometheus.db.backends.postgresql`
+- `django_prometheus.db.backends.sqlite3`
+- `django_prometheus.db.backends.mysql`
+- `django_prometheus.db.backends.postgis`
 
 ---
 

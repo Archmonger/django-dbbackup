@@ -15,7 +15,7 @@ Use `python manage.py <command> --help` for full option details.
 Create a database backup (optionally compressed/encrypted) and upload it.
 
 ```bash
-$ ./manage.py dbbackup
+$ python manage.py dbbackup
 Backing Up Database: tmp.x0kN9sYSqk
 Backup size: 3.3 KiB
 Writing file to tmp-zuluvm-2016-07-29-100954.dump
@@ -32,7 +32,7 @@ python manage.py dbbackup --help
 Download the latest database backup (or a specified one) then restore it.
 
 ```bash
-$ ./manage.py dbrestore
+$ python manage.py dbrestore
 Restoring backup for database: tmp.x0kN9sYSqk
 Finding latest backup
 Restoring: tmp-zuluvm-2016-07-29-100954.dump
@@ -51,7 +51,7 @@ Create an archive (tar) of media files, optionally compress/encrypt, and upload
 it to backup storage.
 
 ```bash
-$ ./manage.py mediabackup
+$ python manage.py mediabackup
 Backup size: 10.0 KiB
 Writing file to zuluvm-2016-07-04-081612.tar
 ```
@@ -67,7 +67,7 @@ python manage.py mediabackup --help
 Restore media files: extract files from the archive and put them into media storage.
 
 ```bash
-$ ./manage.py mediarestore
+$ python manage.py mediarestore
 Restoring backup for media files
 Finding latest backup
 Reading file zuluvm-2016-07-04-082551.tar

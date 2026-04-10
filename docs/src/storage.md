@@ -2,17 +2,16 @@
 
 One of the most helpful features of django-dbbackup is the ability to store
 and retrieve backups from local or remote storage. This functionality is
-mainly based on the Django Storage API and extends its possibilities.
+mainly based on the Django Storage API.
 
-A few common third party backends (via `django-storages`) are documented on this page.
+A few common third party backends (provided by `django-storages`) are documented on this page for convenience.
 
 ---
 
 ## Quick Start
 
 Configure backup storage via the `STORAGES` setting using the key `'dbbackup'`.
-`BACKEND` is a dotted path to a Django storage class. For example use
-`'django.core.files.storage.FileSystemStorage'` for the local filesystem.
+`BACKEND` is a dotted path to a Django storage class. The following example uses the local filesystem.
 
 ```python
 STORAGES = {
