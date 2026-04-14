@@ -22,7 +22,7 @@ def parse_postgres_settings(connector: PgDumpBinaryConnector | PgDumpConnector) 
     Returns:
         tuple: (cmd_part, environment_dict)
     """
-    host = connector.settings.get("HOST", "localhost")
+    host = quote(connector.settings.get("HOST", "localhost"), safe="")
     cmd_part = connector.settings.get("NAME", "")
     user = quote(connector.settings.get("USER") or "")
     password = connector.settings.get("PASSWORD", -1)
