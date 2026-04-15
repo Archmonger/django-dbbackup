@@ -509,6 +509,31 @@ class CreatePostgresDbNameAndEnvTest(TestCase):
         assert cmd_part == "--dbname=postgresql://inventree@%2Frun%2Fpostgresql:5432/inventree"
         assert env == {}
 
+    def test_function_preserves_ipv6_host(self):
+        """Test function preserves valid IPv6 host syntax in the URI hostspec"""
+        connector = Mock()
+        connector.settings = {
+            "HOST": "[2001:db8::1234]",
+            "PORT": 5432,
+            "NAME": "testdb",
+            "USER": "testuser",
+        }
+
+        cmd_part, env = parse_postgres_settings(connector)
+
+        assert cmd_part == "--dbname=postgresql://testuser@[2001:db8::1234]:5432/testdb"
+        assert env == {}
+
+    def test_function_defaults_none_host_to_localhost(self):
+        """Test function defaults an unset HOST value to localhost"""
+        connector = Mock()
+        connector.settings = {"HOST": None, "PORT": 5432, "NAME": "testdb"}
+
+        cmd_part, env = parse_postgres_settings(connector)
+
+        assert cmd_part == "--dbname=postgresql://localhost:5432/testdb"
+        assert env == {}
+
     def test_function_without_user_or_password(self):
         """Test function without user or password"""
         connector = Mock()

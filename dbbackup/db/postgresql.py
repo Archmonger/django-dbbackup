@@ -10,6 +10,13 @@ from dbbackup.db.base import BaseCommandDBConnector
 logger = logging.getLogger("dbbackup.command")
 
 
+def _host_requires_uri_quoting(host: str) -> bool:
+    return host.startswith(("/", "@")) or (
+        # Windows drive letter paths, e.g. C:\path\to\socket
+        len(host) >= 3 and host[0].isalpha() and host[1] == ":" and host[2] in ("/", "\\")
+    )
+
+
 def parse_postgres_settings(connector: PgDumpBinaryConnector | PgDumpConnector) -> tuple[str, dict[Any, Any]]:
     """
     Parse the common Postgres connectors settings and
@@ -22,7 +29,11 @@ def parse_postgres_settings(connector: PgDumpBinaryConnector | PgDumpConnector) 
     Returns:
         tuple: (cmd_part, environment_dict)
     """
-    host = quote(connector.settings.get("HOST", "localhost"), safe="")
+    host = connector.settings.get("HOST")
+    if host is None:
+        host = "localhost"
+    elif _host_requires_uri_quoting(host):
+        host = quote(host, safe="")
     cmd_part = connector.settings.get("NAME", "")
     user = quote(connector.settings.get("USER") or "")
     password = connector.settings.get("PASSWORD", -1)
