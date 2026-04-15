@@ -332,6 +332,16 @@ class PgDumpBinaryConnectorTest(TestCase):
         self.connector.restore_dump(dump)
         assert "secret" not in mock_dump_cmd.call_args[0][0]
 
+    def test_restore_dump_quotes_unix_socket_host(self, mock_run_command):
+        self.connector.settings["HOST"] = "/run/postgresql"
+        self.connector.settings["PORT"] = 5432
+        self.connector.settings["USER"] = "example"
+
+        dump = self.connector.create_dump()
+        self.connector.restore_dump(dump)
+
+        assert "--dbname=postgresql://example@%2Frun%2Fpostgresql:5432/dbname" in mock_run_command.call_args[0][0]
+
 
 @patch(
     "dbbackup.db.postgresql.PgDumpGisConnector.run_command",
@@ -483,6 +493,21 @@ class CreatePostgresDbNameAndEnvTest(TestCase):
         assert env["PGPASSWORD"] == "my'pass\"word"
         # Password should not appear in URL
         assert "my'pass" not in cmd_part
+
+    def test_function_url_quotes_unix_socket_host(self):
+        """Test function URL-quotes unix socket hosts in the connection string"""
+        connector = Mock()
+        connector.settings = {
+            "HOST": "/run/postgresql",
+            "PORT": 5432,
+            "NAME": "inventree",
+            "USER": "inventree",
+        }
+
+        cmd_part, env = parse_postgres_settings(connector)
+
+        assert cmd_part == "--dbname=postgresql://inventree@%2Frun%2Fpostgresql:5432/inventree"
+        assert env == {}
 
     def test_function_without_user_or_password(self):
         """Test function without user or password"""

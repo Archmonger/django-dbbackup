@@ -14,7 +14,9 @@ Don't forget to remove deprecated code on each major release!
 
 ## [Unreleased]
 
-- Nothing (yet)!
+### Fixed
+
+- Fix PostgreSQL backup and restore when `HOST` is a Unix socket path.
 
 ## [5.3.0] - 2026-04-09
 
