@@ -11,8 +11,8 @@ logger = logging.getLogger("dbbackup.command")
 
 
 def _host_requires_uri_quoting(host: str) -> bool:
+    # Match *nix paths (e.g. /run/postgres) and Windows paths (e.g. C:\path\to\socket)
     return host.startswith(("/", "@")) or (
-        # Windows drive letter paths, e.g. C:\path\to\socket
         len(host) >= 3 and host[0].isalpha() and host[1] == ":" and host[2] in ("/", "\\")
     )
 
