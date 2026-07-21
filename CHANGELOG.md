@@ -18,6 +18,10 @@ Don't forget to remove deprecated code on each major release!
 
 - PostgreSQL `HOST` that are Unix/Windows socket paths will now be automatically URI-encoded to uphold `pg_restore` command line requirements.
 
+### Fixed
+
+- `--verbosity` parameter now correctly outputs log messages to the console instead of suppressing all output regardless of verbosity level.
+
 ## [5.3.0] - 2026-04-09
 
 ### Fixed
