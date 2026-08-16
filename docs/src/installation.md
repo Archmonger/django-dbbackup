@@ -39,11 +39,16 @@ You need to configure at least one storage backend for database/media backups. T
 
 ```python
 STORAGES = {
-    ...,
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+    },
     'dbbackup': {
         'BACKEND': 'django.core.files.storage.FileSystemStorage',
         'OPTIONS': {
-            'location': '/my/backup/dir/',
+            'location': '/home/furukawa/programming/beutelnet/src/beutelnet/data/backup',
         },
     },
 }
