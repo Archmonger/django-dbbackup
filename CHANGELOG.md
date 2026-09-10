@@ -14,6 +14,10 @@ Don't forget to remove deprecated code on each major release!
 
 ## [Unreleased]
 
+- Nothing (yet)!
+
+## [5.3.1] - 2026-09-10
+
 ### Changed
 
 - PostgreSQL `HOST` that are Unix/Windows socket paths will now be automatically URI-encoded to uphold `pg_restore` command line requirements.
@@ -366,7 +370,8 @@ Don't forget to remove deprecated code on each major release!
 
 - Miscellaneous maintenance and minor bug fixes.
 
-[Unreleased]: https://github.com/Archmonger/django-dbbackup/compare/5.3.0...HEAD
+[Unreleased]: https://github.com/Archmonger/django-dbbackup/compare/5.3.1...HEAD
+[5.3.1]: https://github.com/Archmonger/django-dbbackup/compare/5.3.0...5.3.1
 [5.3.0]: https://github.com/Archmonger/django-dbbackup/compare/5.2.0...5.3.0
 [5.2.0]: https://github.com/Archmonger/django-dbbackup/compare/5.1.2...5.2.0
 [5.1.2]: https://github.com/Archmonger/django-dbbackup/compare/5.1.1...5.1.2
