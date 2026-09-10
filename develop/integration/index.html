@@ -5,24 +5,24 @@
 
 
 <span class=k>class</span><span class=w> </span><span class=nc>Backup</span><span class=p>(</span><span class=n>CronJobBase</span><span class=p>):</span>
-    <span class=n>RUN_AT_TIMES</span> <span class=o>=</span> <span class=p>[</span><span class=s1>&#39;6:00&#39;</span><span class=p>,</span> <span class=s1>&#39;18:00&#39;</span><span class=p>]</span>
+    <span class=n>RUN_AT_TIMES</span> <span class=o>=</span> <span class=p>[</span><span class=s1>'6:00'</span><span class=p>,</span> <span class=s1>'18:00'</span><span class=p>]</span>
     <span class=n>schedule</span> <span class=o>=</span> <span class=n>Schedule</span><span class=p>(</span><span class=n>run_at_times</span><span class=o>=</span><span class=n>RUN_AT_TIMES</span><span class=p>)</span>
-    <span class=n>code</span> <span class=o>=</span> <span class=s1>&#39;my_app.Backup&#39;</span>
+    <span class=n>code</span> <span class=o>=</span> <span class=s1>'my_app.Backup'</span>
 
     <span class=k>def</span><span class=w> </span><span class=nf>do</span><span class=p>(</span><span class=bp>self</span><span class=p>):</span>
-        <span class=n>management</span><span class=o>.</span><span class=n>call_command</span><span class=p>(</span><span class=s1>&#39;dbbackup&#39;</span><span class=p>)</span>
-</code></pre></div> <h2 id=django-crontab>Django-Crontab<a class=headerlink href=#django-crontab title="Permanent link">&para;</a></h2> <p>Example crontab entry using <a href=https://github.com/kraiz/django-crontab>django-crontab</a> and filesystem storage:</p> <p>In <code>settings.py</code>:</p> <div class=highlight><pre><span></span><code><span class=n>CRONTAB_COMMAND_SUFFIX</span> <span class=o>=</span> <span class=s1>&#39;2&gt;&amp;1&#39;</span>
+        <span class=n>management</span><span class=o>.</span><span class=n>call_command</span><span class=p>(</span><span class=s1>'dbbackup'</span><span class=p>)</span>
+</code></pre></div> <h2 id=django-crontab>Django-Crontab<a class=headerlink href=#django-crontab title="Permanent link">&para;</a></h2> <p>Example crontab entry using <a href=https://github.com/kraiz/django-crontab>django-crontab</a> and filesystem storage:</p> <p>In <code>settings.py</code>:</p> <div class=highlight><pre><span></span><code><span class=n>CRONTAB_COMMAND_SUFFIX</span> <span class=o>=</span> <span class=s1>'2&gt;&amp;1'</span>
 <span class=n>CRONJOBS</span> <span class=o>=</span> <span class=p>[</span>
-    <span class=p>(</span><span class=s1>&#39;0 5 * * *&#39;</span><span class=p>,</span> <span class=s1>&#39;core.backup.backup_job&#39;</span><span class=p>,</span> <span class=s1>&#39;&gt;&gt; &#39;</span> <span class=o>+</span> <span class=n>os</span><span class=o>.</span><span class=n>path</span><span class=o>.</span><span class=n>join</span><span class=p>(</span><span class=n>CORE_DIR</span><span class=p>,</span> <span class=s1>&#39;backup/backup.log&#39;</span><span class=p>))</span>
+    <span class=p>(</span><span class=s1>'0 5 * * *'</span><span class=p>,</span> <span class=s1>'core.backup.backup_job'</span><span class=p>,</span> <span class=s1>'&gt;&gt; '</span> <span class=o>+</span> <span class=n>os</span><span class=o>.</span><span class=n>path</span><span class=o>.</span><span class=n>join</span><span class=p>(</span><span class=n>CORE_DIR</span><span class=p>,</span> <span class=s1>'backup/backup.log'</span><span class=p>))</span>
 <span class=p>]</span>
 </code></pre></div> <p>In <code>backup.py</code>:</p> <div class=highlight><pre><span></span><code><span class=kn>from</span><span class=w> </span><span class=nn>datetime</span><span class=w> </span><span class=kn>import</span> <span class=n>datetime</span>
 <span class=kn>from</span><span class=w> </span><span class=nn>django.core</span><span class=w> </span><span class=kn>import</span> <span class=n>management</span>
 
 <span class=k>def</span><span class=w> </span><span class=nf>backup_job</span><span class=p>():</span>
-    <span class=nb>print</span><span class=p>(</span><span class=s2>&quot;[</span><span class=si>{}</span><span class=s2>] Backing up database and media files...&quot;</span><span class=o>.</span><span class=n>format</span><span class=p>(</span><span class=n>datetime</span><span class=o>.</span><span class=n>now</span><span class=p>()))</span>
-    <span class=n>management</span><span class=o>.</span><span class=n>call_command</span><span class=p>(</span><span class=s1>&#39;dbbackup&#39;</span><span class=p>,</span> <span class=s1>&#39;--clean&#39;</span><span class=p>)</span>
-    <span class=n>management</span><span class=o>.</span><span class=n>call_command</span><span class=p>(</span><span class=s1>&#39;mediabackup&#39;</span><span class=p>,</span> <span class=s1>&#39;--clean&#39;</span><span class=p>)</span>
-    <span class=nb>print</span><span class=p>(</span><span class=s2>&quot;[</span><span class=si>{}</span><span class=s2>] Backup done!&quot;</span><span class=o>.</span><span class=n>format</span><span class=p>(</span><span class=n>datetime</span><span class=o>.</span><span class=n>now</span><span class=p>()))</span>
+    <span class=nb>print</span><span class=p>(</span><span class=s2>"[</span><span class=si>{}</span><span class=s2>] Backing up database and media files..."</span><span class=o>.</span><span class=n>format</span><span class=p>(</span><span class=n>datetime</span><span class=o>.</span><span class=n>now</span><span class=p>()))</span>
+    <span class=n>management</span><span class=o>.</span><span class=n>call_command</span><span class=p>(</span><span class=s1>'dbbackup'</span><span class=p>,</span> <span class=s1>'--clean'</span><span class=p>)</span>
+    <span class=n>management</span><span class=o>.</span><span class=n>call_command</span><span class=p>(</span><span class=s1>'mediabackup'</span><span class=p>,</span> <span class=s1>'--clean'</span><span class=p>)</span>
+    <span class=nb>print</span><span class=p>(</span><span class=s2>"[</span><span class=si>{}</span><span class=s2>] Backup done!"</span><span class=o>.</span><span class=n>format</span><span class=p>(</span><span class=n>datetime</span><span class=o>.</span><span class=n>now</span><span class=p>()))</span>
 </code></pre></div> <p>Add the cron job:</p> <div class=highlight><pre><span></span><code>python<span class=w> </span>manage.py<span class=w> </span>crontab<span class=w> </span>add
 </code></pre></div> <h2 id=django-celery-beat>Django-Celery-Beat<a class=headerlink href=#django-celery-beat title="Permanent link">&para;</a></h2> <p>Example setup using <a href=https://docs.celeryq.dev/ >Celery</a> with <a href=https://django-celery-beat.readthedocs.io/ >django-celery-beat</a> for scheduled backups:</p> <p>First, create a <code>tasks.py</code> file in your app:</p> <div class=highlight><pre><span></span><code><span class=kn>from</span><span class=w> </span><span class=nn>celery</span><span class=w> </span><span class=kn>import</span> <span class=n>Celery</span>
 <span class=kn>from</span><span class=w> </span><span class=nn>django.core</span><span class=w> </span><span class=kn>import</span> <span class=n>management</span>
@@ -32,46 +32,46 @@
 
 <span class=nd>@app</span><span class=o>.</span><span class=n>task</span>
 <span class=k>def</span><span class=w> </span><span class=nf>backup_db</span><span class=p>():</span>
-    <span class=n>management</span><span class=o>.</span><span class=n>call_command</span><span class=p>(</span><span class=s1>&#39;dbbackup&#39;</span><span class=p>)</span>
+    <span class=n>management</span><span class=o>.</span><span class=n>call_command</span><span class=p>(</span><span class=s1>'dbbackup'</span><span class=p>)</span>
 
 
 <span class=nd>@app</span><span class=o>.</span><span class=n>task</span>
 <span class=k>def</span><span class=w> </span><span class=nf>backup_media</span><span class=p>():</span>
-    <span class=n>management</span><span class=o>.</span><span class=n>call_command</span><span class=p>(</span><span class=s1>&#39;mediabackup&#39;</span><span class=p>)</span>
+    <span class=n>management</span><span class=o>.</span><span class=n>call_command</span><span class=p>(</span><span class=s1>'mediabackup'</span><span class=p>)</span>
 </code></pre></div> <p>Then, create a Django management command to set up periodic tasks (e.g., <code>management/commands/setup_backup_schedule.py</code>):</p> <div class=highlight><pre><span></span><code><span class=kn>from</span><span class=w> </span><span class=nn>django.core.management.base</span><span class=w> </span><span class=kn>import</span> <span class=n>BaseCommand</span>
 <span class=kn>from</span><span class=w> </span><span class=nn>django_celery_beat.models</span><span class=w> </span><span class=kn>import</span> <span class=n>CrontabSchedule</span><span class=p>,</span> <span class=n>PeriodicTask</span>
 <span class=kn>import</span><span class=w> </span><span class=nn>pytz</span>
 
 
 <span class=k>class</span><span class=w> </span><span class=nc>Command</span><span class=p>(</span><span class=n>BaseCommand</span><span class=p>):</span>
-    <span class=n>help</span> <span class=o>=</span> <span class=s1>&#39;Creates crontab schedule objects and periodic tasks that use them&#39;</span>
+    <span class=n>help</span> <span class=o>=</span> <span class=s1>'Creates crontab schedule objects and periodic tasks that use them'</span>
 
     <span class=k>def</span><span class=w> </span><span class=nf>handle</span><span class=p>(</span><span class=bp>self</span><span class=p>,</span> <span class=o>*</span><span class=n>args</span><span class=p>,</span> <span class=o>**</span><span class=n>options</span><span class=p>):</span>
         <span class=c1># Schedule for daily backups at midnight UTC</span>
         <span class=n>every_day</span><span class=p>,</span> <span class=n>_</span> <span class=o>=</span> <span class=n>CrontabSchedule</span><span class=o>.</span><span class=n>objects</span><span class=o>.</span><span class=n>get_or_create</span><span class=p>(</span>
-            <span class=n>minute</span><span class=o>=</span><span class=s1>&#39;0&#39;</span><span class=p>,</span>
-            <span class=n>hour</span><span class=o>=</span><span class=s1>&#39;0&#39;</span><span class=p>,</span>
-            <span class=n>day_of_week</span><span class=o>=</span><span class=s1>&#39;*&#39;</span><span class=p>,</span>
-            <span class=n>day_of_month</span><span class=o>=</span><span class=s1>&#39;*&#39;</span><span class=p>,</span>
-            <span class=n>month_of_year</span><span class=o>=</span><span class=s1>&#39;*&#39;</span><span class=p>,</span>
-            <span class=n>timezone</span><span class=o>=</span><span class=n>pytz</span><span class=o>.</span><span class=n>timezone</span><span class=p>(</span><span class=s1>&#39;UTC&#39;</span><span class=p>)</span>
+            <span class=n>minute</span><span class=o>=</span><span class=s1>'0'</span><span class=p>,</span>
+            <span class=n>hour</span><span class=o>=</span><span class=s1>'0'</span><span class=p>,</span>
+            <span class=n>day_of_week</span><span class=o>=</span><span class=s1>'*'</span><span class=p>,</span>
+            <span class=n>day_of_month</span><span class=o>=</span><span class=s1>'*'</span><span class=p>,</span>
+            <span class=n>month_of_year</span><span class=o>=</span><span class=s1>'*'</span><span class=p>,</span>
+            <span class=n>timezone</span><span class=o>=</span><span class=n>pytz</span><span class=o>.</span><span class=n>timezone</span><span class=p>(</span><span class=s1>'UTC'</span><span class=p>)</span>
         <span class=p>)</span>
 
         <span class=c1># Create periodic tasks</span>
         <span class=n>PeriodicTask</span><span class=o>.</span><span class=n>objects</span><span class=o>.</span><span class=n>get_or_create</span><span class=p>(</span>
             <span class=n>crontab</span><span class=o>=</span><span class=n>every_day</span><span class=p>,</span>
-            <span class=n>name</span><span class=o>=</span><span class=s1>&#39;Backup DB&#39;</span><span class=p>,</span>
-            <span class=n>task</span><span class=o>=</span><span class=s1>&#39;myapp.tasks.backup_db&#39;</span><span class=p>,</span>
+            <span class=n>name</span><span class=o>=</span><span class=s1>'Backup DB'</span><span class=p>,</span>
+            <span class=n>task</span><span class=o>=</span><span class=s1>'myapp.tasks.backup_db'</span><span class=p>,</span>
         <span class=p>)</span>
 
         <span class=n>PeriodicTask</span><span class=o>.</span><span class=n>objects</span><span class=o>.</span><span class=n>get_or_create</span><span class=p>(</span>
             <span class=n>crontab</span><span class=o>=</span><span class=n>every_day</span><span class=p>,</span>
-            <span class=n>name</span><span class=o>=</span><span class=s1>&#39;Backup Media&#39;</span><span class=p>,</span>
-            <span class=n>task</span><span class=o>=</span><span class=s1>&#39;myapp.tasks.backup_media&#39;</span><span class=p>,</span>
+            <span class=n>name</span><span class=o>=</span><span class=s1>'Backup Media'</span><span class=p>,</span>
+            <span class=n>task</span><span class=o>=</span><span class=s1>'myapp.tasks.backup_media'</span><span class=p>,</span>
         <span class=p>)</span>
 
         <span class=bp>self</span><span class=o>.</span><span class=n>stdout</span><span class=o>.</span><span class=n>write</span><span class=p>(</span>
-            <span class=bp>self</span><span class=o>.</span><span class=n>style</span><span class=o>.</span><span class=n>SUCCESS</span><span class=p>(</span><span class=s1>&#39;Successfully created backup schedule&#39;</span><span class=p>)</span>
+            <span class=bp>self</span><span class=o>.</span><span class=n>style</span><span class=o>.</span><span class=n>SUCCESS</span><span class=p>(</span><span class=s1>'Successfully created backup schedule'</span><span class=p>)</span>
         <span class=p>)</span>
 </code></pre></div> <p>Run the setup command:</p> <div class=highlight><pre><span></span><code>python<span class=w> </span>manage.py<span class=w> </span>setup_backup_schedule
 </code></pre></div> <p>Make sure your Celery worker and beat scheduler are running:</p> <div class=highlight><pre><span></span><code>celery<span class=w> </span>-A<span class=w> </span>myproject<span class=w> </span>worker<span class=w> </span>--loglevel<span class=o>=</span>info

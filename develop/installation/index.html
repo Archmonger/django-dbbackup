@@ -2,14 +2,14 @@
 </code></pre></div> <details class=tip> <summary>Alternative: Install the latest from GitHub</summary> <p>In general, you should not be downloading and installing stuff directly from repositories. Security is important; bypassing PyPI repositories is a bad habit.</p> <p>However, if you are willing to accept the risks of installing directly from GitHub, you can do so with pip:</p> <div class=highlight><pre><span></span><code>pip<span class=w> </span>install<span class=w> </span>-e<span class=w> </span>git+https://github.com/Archmonger/django-dbbackup.git#egg<span class=o>=</span>django-dbbackup
 </code></pre></div> </details> <h2 id=step-2-configure-settingspy>Step 2: Configure <code>settings.py</code><a class=headerlink href=#step-2-configure-settingspy title="Permanent link">&para;</a></h2> <p>In your <code>settings.py</code>, make sure you have <code>dbbackup</code> in your <code>INSTALLED_APPS</code> have configured a storage backend.</p> <div class=highlight><pre><span></span><code><span class=n>INSTALLED_APPS</span> <span class=o>=</span> <span class=p>(</span>
     <span class=o>...</span> <span class=p>,</span>
-    <span class=s1>&#39;dbbackup&#39;</span><span class=p>,</span>
+    <span class=s1>'dbbackup'</span><span class=p>,</span>
 <span class=p>)</span>
 </code></pre></div> <h2 id=step-3-choose-a-storage-backend>Step 3: Choose a storage backend<a class=headerlink href=#step-3-choose-a-storage-backend title="Permanent link">&para;</a></h2> <p>You need to configure at least one storage backend for database/media backups. This is done by adding a <code>dbbackup</code> entry to the <code>STORAGES</code> setting in your <code>settings.py</code>.</p> <div class=highlight><pre><span></span><code><span class=n>STORAGES</span> <span class=o>=</span> <span class=p>{</span>
     <span class=o>...</span><span class=p>,</span>
-    <span class=s1>&#39;dbbackup&#39;</span><span class=p>:</span> <span class=p>{</span>
-        <span class=s1>&#39;BACKEND&#39;</span><span class=p>:</span> <span class=s1>&#39;django.core.files.storage.FileSystemStorage&#39;</span><span class=p>,</span>
-        <span class=s1>&#39;OPTIONS&#39;</span><span class=p>:</span> <span class=p>{</span>
-            <span class=s1>&#39;location&#39;</span><span class=p>:</span> <span class=s1>&#39;/my/backup/dir/&#39;</span><span class=p>,</span>
+    <span class=s1>'dbbackup'</span><span class=p>:</span> <span class=p>{</span>
+        <span class=s1>'BACKEND'</span><span class=p>:</span> <span class=s1>'django.core.files.storage.FileSystemStorage'</span><span class=p>,</span>
+        <span class=s1>'OPTIONS'</span><span class=p>:</span> <span class=p>{</span>
+            <span class=s1>'location'</span><span class=p>:</span> <span class=s1>'/my/backup/dir/'</span><span class=p>,</span>
         <span class=p>},</span>
     <span class=p>},</span>
 <span class=p>}</span>
