@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 import shlex
 from typing import Any, ClassVar
-from urllib.parse import quote
+from urllib.parse import quote, urlencode
 
 from dbbackup.db.base import BaseCommandDBConnector
 
@@ -40,6 +40,24 @@ def parse_postgres_settings(connector: PgDumpBinaryConnector | PgDumpConnector) 
     if user:
         host = f"@{host}"
     port = f":{connector.settings.get('PORT')}" if connector.settings.get("PORT") else ""
+    query_params = {}
+    # The SSL parameters are contained in the OPTION mapping.
+    # See settings_to_cmd_args_env in django/db/backends/postgresql/client.py
+    options = connector.settings.get("OPTIONS", {})
+    sslcert = options.get("sslcert", "")
+    sslkey = options.get("sslkey", "")
+    sslrootcert = options.get("sslrootcert", "")
+    sslmode = options.get("sslmode", "")
+    if sslcert:
+        query_params["sslcert"] = sslcert
+    if sslkey:
+        query_params["sslkey"] = sslkey
+    if sslrootcert:
+        query_params["sslrootcert"] = sslrootcert
+    if sslmode:
+        query_params["sslmode"] = sslmode
+    if len(query_params) > 0:
+        cmd_part += f"?{urlencode(query_params)}"
     cmd_part = f"--dbname=postgresql://{user}{host}{port}/{cmd_part}"
     env = {}
     if password is None:

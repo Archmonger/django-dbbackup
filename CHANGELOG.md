@@ -14,7 +14,7 @@ Don't forget to remove deprecated code on each major release!
 
 ## [Unreleased]
 
-- Nothing (yet)!
+- Added client certificate support for PostgreSQL.
 
 ## [5.3.1] - 2026-09-10
 

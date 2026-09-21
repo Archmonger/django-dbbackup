@@ -577,3 +577,25 @@ class CreatePostgresDbNameAndEnvTest(TestCase):
         # "None" password should not create PGPASSWORD env var, but should add --no-password flag
         assert env == {}
         assert "--no-password" in cmd_part
+
+    def test_function_with_client_certificate_authentication(self):
+        """Test function with client certificate authentication"""
+        connector = Mock()
+        connector.settings = {
+            "HOST": "localhost",
+            "PORT": 5432,
+            "NAME": "testdb",
+            "USER": "testuser",
+            "PASSWORD": "",
+            "OPTIONS": {
+                "sslcert": "/tmp/foo/bar/cert.crt",
+                "sslkey": "/tmp/foo/bar/cert.key",
+                "sslrootcert": "/tmp/foo/bar/ca.crt",
+                "sslmode": "verify-full"
+            }
+        }
+        cmd_part, env = parse_postgres_settings(connector)
+        assert "sslcert=%2Ftmp%2Ffoo%2Fbar%2Fcert.crt" in cmd_part
+        assert "sslkey=%2Ftmp%2Ffoo%2Fbar%2Fcert.key" in cmd_part
+        assert "sslrootcert=%2Ftmp%2Ffoo%2Fbar%2Fca.crt" in cmd_part
+        assert "sslmode=verify-full" in cmd_part
