@@ -18,6 +18,19 @@ class SettingsTest(TestCase):
         # Check that ADMINS is set to DBBACKUP_ADMIN
         assert dbbackup.settings.ADMINS == ["admin@example.com"]
 
+    @override_settings(DBBACKUP_GPG_RECIPIENT="test@test", DBBACKUP_GPG_ALWAYS_TRUST=False)
+    def test_gpg_always_trust_setting(self):
+        """GPG_ALWAYS_TRUST is read from DBBACKUP_GPG_ALWAYS_TRUST"""
+        import importlib
+
+        import dbbackup.settings
+
+        self.addCleanup(importlib.reload, dbbackup.settings)
+        importlib.reload(dbbackup.settings)
+
+        assert dbbackup.settings.GPG_RECIPIENT == "test@test"
+        assert dbbackup.settings.GPG_ALWAYS_TRUST is False
+
     def test_deprecated_dbbackup_storage_raises(self):
         """Importing dbbackup.settings raises if DBBACKUP_STORAGE is set."""
         import importlib
