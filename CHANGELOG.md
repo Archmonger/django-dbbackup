@@ -14,7 +14,9 @@ Don't forget to remove deprecated code on each major release!
 
 ## [Unreleased]
 
-- Nothing (yet)!
+### Fixed
+
+- `DBBACKUP_GPG_ALWAYS_TRUST` setting is now respected instead of being enabled whenever `DBBACKUP_GPG_RECIPIENT` is set. Encrypting to a public key that GPG does not trust will now fail, as documented, unless the key is trusted or `DBBACKUP_GPG_ALWAYS_TRUST = True` is set.
 
 ## [5.3.1] - 2026-09-10
 
