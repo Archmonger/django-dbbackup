@@ -40,7 +40,7 @@ if settings.CUSTOM_CONNECTOR_MAPPING:
     CONNECTOR_MAPPING.update(settings.CUSTOM_CONNECTOR_MAPPING)
 
 
-def get_connector(database_name=None):
+def get_connector(database_name=None, connector_path=None):
     """
     Get a connector from its database key in settings.
     """
@@ -53,7 +53,8 @@ def get_connector(database_name=None):
     connector_settings = settings.CONNECTORS.get(database_name, {})
 
     # Use Django connector as fallback for unmapped engines
-    connector_path = connector_settings.get("CONNECTOR", CONNECTOR_MAPPING.get(engine, DEFAULT_CONNECTOR))
+    if not connector_path:
+        connector_path = connector_settings.get("CONNECTOR", CONNECTOR_MAPPING.get(engine, DEFAULT_CONNECTOR))
 
     connector_module_path = ".".join(connector_path.split(".")[:-1])
     module = import_module(connector_module_path)

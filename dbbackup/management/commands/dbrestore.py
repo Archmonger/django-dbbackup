@@ -14,6 +14,7 @@ from django.conf import settings
 from django.core.management.base import CommandError
 from django.db import connection
 
+from dbbackup import settings as dbbackup_settings
 from dbbackup import utils
 from dbbackup.db.base import get_connector
 from dbbackup.management.commands._base import BaseDbBackupCommand, make_option
@@ -231,7 +232,8 @@ class Command(BaseDbBackupCommand):
                 class_name = connector_path.split(".")[-1]
                 module = import_module(module_name)
                 connector_class = getattr(module, class_name)
-                self.connector = connector_class(self.database_name)
+                connector_settings = dbbackup_settings.CONNECTORS.get(self.database_name, {})
+                self.connector = connector_class(self.database_name, **connector_settings)
                 self.logger.info("Using connector from metadata: '%s'", connector_path)
             except (ImportError, AttributeError):
                 self.logger.warning(

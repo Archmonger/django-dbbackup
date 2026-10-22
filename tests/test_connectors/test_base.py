@@ -56,6 +56,27 @@ class GetConnectorTest(TestCase):
             connector = get_connector()
             assert isinstance(connector, DjangoConnector)
 
+    def test_get_connector_explicit_connector_path(self):
+        """Test get_connector with explicit connector_path parameter."""
+        from dbbackup.db.sqlite import SqliteBackupConnector
+
+        connector = get_connector("default", connector_path="dbbackup.db.sqlite.SqliteBackupConnector")
+        assert isinstance(connector, SqliteBackupConnector)
+
+    def test_get_connector_applies_connector_settings(self):
+        """Test that get_connector applies kwargs from DBBACKUP_CONNECTORS."""
+        import importlib
+
+        from django.test.utils import override_settings
+
+        from dbbackup import settings as dbbackup_settings
+
+        with override_settings(DBBACKUP_CONNECTORS={"default": {"RESTORE_SUFFIX": " --skip-ssl"}}):
+            importlib.reload(dbbackup_settings)
+            connector = get_connector("default", connector_path="dbbackup.db.sqlite.SqliteBackupConnector")
+            assert connector.restore_suffix == " --skip-ssl"
+            importlib.reload(dbbackup_settings)
+
 
 class BaseDBConnectorTest(TestCase):
     def test_init(self):

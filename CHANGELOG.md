@@ -14,7 +14,9 @@ Don't forget to remove deprecated code on each major release!
 
 ## [Unreleased]
 
-- Nothing (yet)!
+### Fixed
+
+- Pass configured `DBBACKUP_CONNECTORS` settings when instantiating connector from backup metadata in `dbrestore`.
 
 ## [5.3.1] - 2026-09-10
 

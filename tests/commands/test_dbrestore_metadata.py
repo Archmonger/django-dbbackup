@@ -191,6 +191,27 @@ class DbrestoreConnectorOverrideTest(TestCase):
         mock_get_connector.assert_not_called()
 
     @patch("dbbackup.management.commands.dbrestore.get_connector")
+    @patch("dbbackup.management.commands.dbrestore.import_module")
+    def test_connector_override_applies_connector_settings(self, mock_import_module, mock_get_connector):
+        metadata = {"engine": settings.DATABASES["default"]["ENGINE"], "connector": "my.custom.Connector"}
+        self.command.storage.read_file.return_value = Mock(read=lambda: json.dumps(metadata))
+
+        mock_module = Mock()
+        mock_connector_class = Mock()
+        mock_connector_instance = Mock()
+        mock_connector_class.return_value = mock_connector_instance
+
+        mock_import_module.return_value = mock_module
+        mock_module.Connector = mock_connector_class
+
+        with override_settings(DBBACKUP_CONNECTORS={"default": {"RESTORE_SUFFIX": " --skip-ssl"}}):
+            importlib.reload(dbbackup.settings)
+            self.command._restore_backup()
+
+        mock_connector_class.assert_called_with("default", RESTORE_SUFFIX=" --skip-ssl")
+        importlib.reload(dbbackup.settings)
+
+    @patch("dbbackup.management.commands.dbrestore.get_connector")
     def test_connector_fallback_on_import_error(self, mock_get_connector):
         # Setup metadata with a specific connector that fails to import
         metadata = {"engine": settings.DATABASES["default"]["ENGINE"], "connector": "my.broken.Connector"}
