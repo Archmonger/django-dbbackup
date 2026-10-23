@@ -246,6 +246,54 @@ class DbrestoreConnectorOverrideTest(TestCase):
         assert "/usr/local/bin/mysql" in command, command
         assert command.endswith(" --skip-ssl"), command
 
+    def _restore_real_connector(self, connector_path, connector_settings, **command_options):
+        """Run a restore with a real connector class and capture the command line it builds."""
+        for option, value in command_options.items():
+            setattr(self.command, option, value)
+        metadata = {"engine": settings.DATABASES["default"]["ENGINE"], "connector": connector_path}
+        self.command.storage.read_file.return_value = Mock(read=lambda: json.dumps(metadata))
+
+        with (
+            patch.dict(dbbackup_settings.CONNECTORS, {"default": connector_settings}, clear=True),
+            patch(f"{connector_path}.run_command") as mock_run_command,
+        ):
+            mock_run_command.return_value = (Mock(), Mock())
+            self.command._restore_backup()
+
+        return mock_run_command.call_args[0][0]
+
+    def test_connector_settings_are_not_clobbered_by_option_defaults(self):
+        """Options configured in DBBACKUP_CONNECTORS must survive the restore."""
+        command = self._restore_real_connector(
+            "dbbackup.db.postgresql.PgDumpBinaryConnector",
+            {"DROP": False, "PG_OPTIONS": "--no-owner"},
+        )
+
+        assert self.command.connector.drop is False
+        assert self.command.connector.pg_options == "--no-owner"
+        assert "--no-owner" in command, command
+        assert "--clean" not in command, command
+
+    def test_command_flags_still_override_connector_settings(self):
+        """--no-drop and --pg-options must win over DBBACKUP_CONNECTORS."""
+        command = self._restore_real_connector(
+            "dbbackup.db.postgresql.PgDumpBinaryConnector",
+            {"DROP": True, "PG_OPTIONS": "--no-owner"},
+            no_drop=True,
+            pg_options="--if-exists",
+        )
+
+        assert self.command.connector.drop is False
+        assert self.command.connector.pg_options == "--if-exists"
+        assert "--if-exists" in command, command
+        assert "--no-owner" not in command, command
+
+    def test_default_restore_still_drops(self):
+        """Without any setting or flag the connector default (drop) is kept."""
+        command = self._restore_real_connector("dbbackup.db.postgresql.PgDumpBinaryConnector", {})
+
+        assert "--clean" in command, command
+
     @patch("dbbackup.management.commands.dbrestore.get_connector")
     def test_connector_fallback_on_import_error(self, mock_get_connector):
         # Setup metadata with a specific connector that fails to import

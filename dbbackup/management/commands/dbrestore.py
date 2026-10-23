@@ -245,8 +245,13 @@ class Command(BaseDbBackupCommand):
 
         if self.schemas:
             self.connector.schemas = self.schemas
-        self.connector.drop = not self.no_drop
-        self.connector.pg_options = self.pg_options
+        # Only override connector attributes when the flag was actually passed, otherwise
+        # options configured through DBBACKUP_CONNECTORS (e.g. DROP or PG_OPTIONS) are
+        # silently discarded in favour of the option defaults.
+        if self.no_drop:
+            self.connector.drop = False
+        if self.pg_options:
+            self.connector.pg_options = self.pg_options
         self.connector.restore_dump(input_file)
 
         # Send post_restore signal
