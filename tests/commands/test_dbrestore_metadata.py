@@ -175,7 +175,8 @@ class DbrestoreConnectorOverrideTest(TestCase):
         mock_module.Connector = mock_connector_class
 
         # Run restore
-        self.command._restore_backup()
+        with patch.dict(dbbackup.settings.CONNECTORS, {}, clear=True):
+            self.command._restore_backup()
 
         # Verify import_module was called with "my.custom"
         mock_import_module.assert_called_with("my.custom")
@@ -200,7 +201,9 @@ class DbrestoreConnectorOverrideTest(TestCase):
         mock_import_module.return_value = mock_module
         mock_module.Connector = mock_connector_class
 
-        with patch.dict(dbbackup.settings.CONNECTORS, {"default": {"RESTORE_SUFFIX": " --skip-ssl"}}):
+        # clear=True keeps the assertion below exact whatever DBBACKUP_CONNECTORS the
+        # environment (e.g. the CONNECTOR env var used by tests/settings.py) provides.
+        with patch.dict(dbbackup.settings.CONNECTORS, {"default": {"RESTORE_SUFFIX": " --skip-ssl"}}, clear=True):
             self.command._restore_backup()
 
         mock_connector_class.assert_called_with("default", RESTORE_SUFFIX=" --skip-ssl")

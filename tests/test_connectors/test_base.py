@@ -15,6 +15,7 @@ class GetConnectorTest(TestCase):
         connector = get_connector()
         assert isinstance(connector, BaseDBConnector)
 
+    @patch.dict("dbbackup.settings.CONNECTORS", {}, clear=True)
     def test_get_connector_sqlite_uses_backup_connector(self):
         """Test that SQLite database uses SqliteBackupConnector as default."""
         from unittest.mock import patch
@@ -29,6 +30,7 @@ class GetConnectorTest(TestCase):
             connector = get_connector()
             assert isinstance(connector, SqliteBackupConnector)
 
+    @patch.dict("dbbackup.settings.CONNECTORS", {}, clear=True)
     def test_get_connector_oracle_fallback(self):
         """Test that Oracle database uses Django connector as fallback."""
         from unittest.mock import patch
@@ -43,6 +45,7 @@ class GetConnectorTest(TestCase):
             connector = get_connector()
             assert isinstance(connector, DjangoConnector)
 
+    @patch.dict("dbbackup.settings.CONNECTORS", {}, clear=True)
     def test_get_connector_unmapped_engine_fallback(self):
         """Test that unmapped database engines use Django connector as fallback."""
         from unittest.mock import patch
@@ -68,15 +71,17 @@ class GetConnectorTest(TestCase):
         """Test that get_connector applies kwargs from DBBACKUP_CONNECTORS."""
         from dbbackup.db.sqlite import SqliteBackupConnector
 
+        configured = dict(dbbackup_settings.CONNECTORS)
         # Patch the mapping itself instead of reloading dbbackup.settings: connectors read
         # CONNECTORS at call time, and reloading the module leaks the override into every
         # test that runs afterwards in the same session.
-        with patch.dict(dbbackup_settings.CONNECTORS, {"default": {"RESTORE_SUFFIX": " --skip-ssl"}}):
+        with patch.dict(dbbackup_settings.CONNECTORS, {"default": {"RESTORE_SUFFIX": " --skip-ssl"}}, clear=True):
             connector = get_connector("default", connector_path="dbbackup.db.sqlite.SqliteBackupConnector")
 
         assert isinstance(connector, SqliteBackupConnector)
         assert connector.restore_suffix == " --skip-ssl"
-        assert dbbackup_settings.CONNECTORS == {}
+        # The mapping must be left untouched for the rest of the session.
+        assert dbbackup_settings.CONNECTORS == configured
 
 
 class BaseDBConnectorTest(TestCase):
