@@ -40,9 +40,16 @@ if settings.CUSTOM_CONNECTOR_MAPPING:
     CONNECTOR_MAPPING.update(settings.CUSTOM_CONNECTOR_MAPPING)
 
 
-def get_connector(database_name=None):
+def get_connector(database_name: str | None = None, *, connector_path: str | None = None):
     """
     Get a connector from its database key in settings.
+
+    :param database_name: Database alias from ``DATABASES``, defaults to Django's default alias.
+    :param connector_path: Dotted path to the connector class to instantiate, for when the
+        connector is already known (e.g. from a backup's metadata file). When omitted it is
+        resolved from ``DBBACKUP_CONNECTORS[database_name]["CONNECTOR"]``, falling back to the
+        engine mapping. Either way the connector is always instantiated with the
+        ``DBBACKUP_CONNECTORS[database_name]`` options applied.
     """
     from django.db import DEFAULT_DB_ALIAS, connections
 
@@ -53,7 +60,8 @@ def get_connector(database_name=None):
     connector_settings = settings.CONNECTORS.get(database_name, {})
 
     # Use Django connector as fallback for unmapped engines
-    connector_path = connector_settings.get("CONNECTOR", CONNECTOR_MAPPING.get(engine, DEFAULT_CONNECTOR))
+    if not connector_path:
+        connector_path = connector_settings.get("CONNECTOR", CONNECTOR_MAPPING.get(engine, DEFAULT_CONNECTOR))
 
     connector_module_path = ".".join(connector_path.split(".")[:-1])
     module = import_module(connector_module_path)
@@ -71,6 +79,12 @@ class BaseDBConnector:
     extension = "dump"
     exclude: ClassVar[list[Any]] = []
 
+    #: Attributes which either hold a mutable class default or are bound to the very
+    #: list/dict objects the user put in ``DBBACKUP_CONNECTORS``. They are copied per
+    #: instance so mutating one connector can neither leak into another connector nor
+    #: into the user's settings.
+    MUTABLE_ATTRIBUTES: ClassVar[tuple[str, ...]] = ("exclude", "schemas", "env", "dump_env", "restore_env")
+
     def __init__(self, database_name=None, **kwargs):
         from django.db import DEFAULT_DB_ALIAS, connections
 
@@ -78,6 +92,12 @@ class BaseDBConnector:
         self.connection = connections[self.database_name]
         for attr, value in kwargs.items():
             setattr(self, attr.lower(), value)
+        for attr in self.MUTABLE_ATTRIBUTES:
+            value = getattr(self, attr, None)
+            if isinstance(value, list):
+                setattr(self, attr, list(value))
+            elif isinstance(value, dict):
+                setattr(self, attr, dict(value))
 
     @property
     def settings(self):

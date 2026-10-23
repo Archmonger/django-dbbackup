@@ -8,6 +8,8 @@ from django.core.management.base import CommandError
 from django.test import TestCase
 from django.test.utils import override_settings
 
+from dbbackup import settings as dbbackup_settings
+from dbbackup.db.mysql import MysqlDumpConnector
 from dbbackup.management.commands import dbbackup
 from dbbackup.management.commands.dbrestore import Command as DbrestoreCommand
 
@@ -159,9 +161,8 @@ class DbrestoreConnectorOverrideTest(TestCase):
         # Mock _ask_confirmation
         self.command._ask_confirmation = Mock()
 
-    @patch("dbbackup.management.commands.dbrestore.get_connector")
-    @patch("dbbackup.management.commands.dbrestore.import_module")
-    def test_connector_override(self, mock_import_module, mock_get_connector):
+    @patch("dbbackup.db.base.import_module")
+    def test_connector_override(self, mock_import_module):
         # Setup metadata with a specific connector
         metadata = {"engine": settings.DATABASES["default"]["ENGINE"], "connector": "my.custom.Connector"}
         self.command.storage.read_file.return_value = Mock(read=lambda: json.dumps(metadata))
@@ -176,7 +177,8 @@ class DbrestoreConnectorOverrideTest(TestCase):
         mock_module.Connector = mock_connector_class
 
         # Run restore
-        self.command._restore_backup()
+        with patch.dict(dbbackup.settings.CONNECTORS, {}, clear=True):
+            self.command._restore_backup()
 
         # Verify import_module was called with "my.custom"
         mock_import_module.assert_called_with("my.custom")
@@ -187,8 +189,110 @@ class DbrestoreConnectorOverrideTest(TestCase):
         # Verify self.command.connector is the custom one
         assert self.command.connector == mock_connector_instance
 
-        # Verify get_connector was NOT called
-        mock_get_connector.assert_not_called()
+    @patch("dbbackup.db.base.import_module")
+    def test_connector_override_applies_connector_settings(self, mock_import_module):
+        """A connector restored from metadata must still get its DBBACKUP_CONNECTORS settings (#677)."""
+        metadata = {"engine": settings.DATABASES["default"]["ENGINE"], "connector": "my.custom.Connector"}
+        self.command.storage.read_file.return_value = Mock(read=lambda: json.dumps(metadata))
+
+        mock_module = Mock()
+        mock_connector_class = Mock()
+        mock_connector_instance = Mock()
+        mock_connector_class.return_value = mock_connector_instance
+
+        mock_import_module.return_value = mock_module
+        mock_module.Connector = mock_connector_class
+
+        # clear=True keeps the assertion below exact whatever DBBACKUP_CONNECTORS the
+        # environment (e.g. the CONNECTOR env var used by tests/settings.py) provides.
+        with patch.dict(dbbackup.settings.CONNECTORS, {"default": {"RESTORE_SUFFIX": " --skip-ssl"}}, clear=True):
+            self.command._restore_backup()
+
+        mock_connector_class.assert_called_with("default", RESTORE_SUFFIX=" --skip-ssl")
+        assert self.command.connector == mock_connector_instance
+
+    def test_connector_from_metadata_gets_connector_settings(self):
+        """
+        End-to-end regression test for #677.
+
+        Unlike the mocked variants above, this restores with a real connector class and
+        checks the command line actually handed to the database tool, so a connector
+        settings drop can no longer slip through unnoticed.
+        """
+        metadata = {
+            "engine": settings.DATABASES["default"]["ENGINE"],
+            "connector": "dbbackup.db.mysql.MysqlDumpConnector",
+        }
+        self.command.storage.read_file.return_value = Mock(read=lambda: json.dumps(metadata))
+
+        with (
+            patch.dict(
+                dbbackup_settings.CONNECTORS,
+                {"default": {"RESTORE_CMD": "/usr/local/bin/mysql", "RESTORE_SUFFIX": " --skip-ssl"}},
+                clear=True,
+            ),
+            patch("dbbackup.db.mysql.MysqlDumpConnector.run_command") as mock_run_command,
+        ):
+            mock_run_command.return_value = (Mock(), Mock())
+            self.command._restore_backup()
+
+        connector = self.command.connector
+        assert isinstance(connector, MysqlDumpConnector)
+        assert connector.restore_cmd == "/usr/local/bin/mysql"
+        assert connector.restore_suffix == " --skip-ssl"
+
+        mock_run_command.assert_called_once()
+        command = mock_run_command.call_args[0][0]
+        assert "/usr/local/bin/mysql" in command, command
+        assert command.endswith(" --skip-ssl"), command
+
+    def _restore_real_connector(self, connector_path, connector_settings, **command_options):
+        """Run a restore with a real connector class and capture the command line it builds."""
+        for option, value in command_options.items():
+            setattr(self.command, option, value)
+        metadata = {"engine": settings.DATABASES["default"]["ENGINE"], "connector": connector_path}
+        self.command.storage.read_file.return_value = Mock(read=lambda: json.dumps(metadata))
+
+        with (
+            patch.dict(dbbackup_settings.CONNECTORS, {"default": connector_settings}, clear=True),
+            patch(f"{connector_path}.run_command") as mock_run_command,
+        ):
+            mock_run_command.return_value = (Mock(), Mock())
+            self.command._restore_backup()
+
+        return mock_run_command.call_args[0][0]
+
+    def test_connector_settings_are_not_clobbered_by_option_defaults(self):
+        """Options configured in DBBACKUP_CONNECTORS must survive the restore."""
+        command = self._restore_real_connector(
+            "dbbackup.db.postgresql.PgDumpBinaryConnector",
+            {"DROP": False, "PG_OPTIONS": "--no-owner"},
+        )
+
+        assert self.command.connector.drop is False
+        assert self.command.connector.pg_options == "--no-owner"
+        assert "--no-owner" in command, command
+        assert "--clean" not in command, command
+
+    def test_command_flags_still_override_connector_settings(self):
+        """--no-drop and --pg-options must win over DBBACKUP_CONNECTORS."""
+        command = self._restore_real_connector(
+            "dbbackup.db.postgresql.PgDumpBinaryConnector",
+            {"DROP": True, "PG_OPTIONS": "--no-owner"},
+            no_drop=True,
+            pg_options="--if-exists",
+        )
+
+        assert self.command.connector.drop is False
+        assert self.command.connector.pg_options == "--if-exists"
+        assert "--if-exists" in command, command
+        assert "--no-owner" not in command, command
+
+    def test_default_restore_still_drops(self):
+        """Without any setting or flag the connector default (drop) is kept."""
+        command = self._restore_real_connector("dbbackup.db.postgresql.PgDumpBinaryConnector", {})
+
+        assert "--clean" in command, command
 
     @patch("dbbackup.management.commands.dbrestore.get_connector")
     def test_connector_fallback_on_import_error(self, mock_get_connector):
@@ -198,14 +302,15 @@ class DbrestoreConnectorOverrideTest(TestCase):
 
         # Mock default connector
         mock_default_connector = Mock()
-        mock_get_connector.return_value = mock_default_connector
+        # First call (metadata connector) fails, second call (configured connector) succeeds.
+        mock_get_connector.side_effect = [ImportError("No module named 'my.broken'"), mock_default_connector]
 
-        # We don't mock import_module, so it will raise ImportError (or we can mock it to raise)
-        with patch("dbbackup.management.commands.dbrestore.import_module", side_effect=ImportError):
-            self.command._restore_backup()
+        self.command._restore_backup()
 
-        # Verify get_connector WAS called
+        # Verify the metadata connector was attempted first, then the configured one
+        mock_get_connector.assert_any_call("default", connector_path="my.broken.Connector")
         mock_get_connector.assert_called_with("default")
+        self.command.logger.warning.assert_called()
 
         # Verify self.command.connector is the default one
         assert self.command.connector == mock_default_connector
@@ -220,15 +325,15 @@ class DbrestoreConnectorOverrideTest(TestCase):
 
         # Mock default connector
         mock_default_connector = Mock()
-        mock_get_connector.return_value = mock_default_connector
+        mock_get_connector.side_effect = [ImportError("No module named 'my.broken'"), mock_default_connector]
 
-        with patch("dbbackup.management.commands.dbrestore.import_module", side_effect=ImportError):
-            self.command._restore_backup()
+        self.command._restore_backup()
 
         # Verify input was called
         mock_input.assert_called()
         # Verify get_connector WAS called
         mock_get_connector.assert_called_with("default")
+        assert self.command.connector == mock_default_connector
 
     @patch("dbbackup.management.commands.dbrestore.get_connector")
     @patch("builtins.input", return_value="n")
@@ -238,13 +343,12 @@ class DbrestoreConnectorOverrideTest(TestCase):
         metadata = {"engine": settings.DATABASES["default"]["ENGINE"], "connector": "my.broken.Connector"}
         self.command.storage.read_file.return_value = Mock(read=lambda: json.dumps(metadata))
 
-        with (
-            patch("dbbackup.management.commands.dbrestore.import_module", side_effect=ImportError),
-            pytest.raises(SystemExit),
-        ):
+        mock_get_connector.side_effect = [ImportError("No module named 'my.broken'")]
+
+        with pytest.raises(SystemExit):
             self.command._restore_backup()
 
         # Verify input was called
         mock_input.assert_called()
-        # Verify get_connector was NOT called
-        mock_get_connector.assert_not_called()
+        # Verify the configured connector was never built, we quit before restoring
+        mock_get_connector.assert_called_once_with("default", connector_path="my.broken.Connector")

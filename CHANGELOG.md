@@ -14,7 +14,11 @@ Don't forget to remove deprecated code on each major release!
 
 ## [Unreleased]
 
-- Nothing (yet)!
+### Fixed
+
+- Pass configured `DBBACKUP_CONNECTORS` settings when instantiating connector from backup metadata in `dbrestore`.
+- `dbrestore` no longer discards the `DROP` and `PG_OPTIONS` values configured in `DBBACKUP_CONNECTORS`. `--no-drop` and `--pg-options` still take precedence when passed.
+- Connector options holding a list or a dict (`EXCLUDE`, `SCHEMAS`, `ENV`, `DUMP_ENV`, `RESTORE_ENV`) are now copied per connector. `dbbackup --exclude-tables` used to append to the class default, silently excluding those tables from every other database of the same run and from connectors created afterwards.
 
 ## [5.3.1] - 2026-09-10
 
