@@ -5,6 +5,7 @@ from unittest.mock import patch
 import pytest
 from django.test import TestCase
 
+from dbbackup import settings as dbbackup_settings
 from dbbackup.db import exceptions
 from dbbackup.db.base import BaseCommandDBConnector, BaseDBConnector, get_connector
 
@@ -14,6 +15,7 @@ class GetConnectorTest(TestCase):
         connector = get_connector()
         assert isinstance(connector, BaseDBConnector)
 
+    @patch.dict("dbbackup.settings.CONNECTORS", {}, clear=True)
     def test_get_connector_sqlite_uses_backup_connector(self):
         """Test that SQLite database uses SqliteBackupConnector as default."""
         from unittest.mock import patch
@@ -28,6 +30,7 @@ class GetConnectorTest(TestCase):
             connector = get_connector()
             assert isinstance(connector, SqliteBackupConnector)
 
+    @patch.dict("dbbackup.settings.CONNECTORS", {}, clear=True)
     def test_get_connector_oracle_fallback(self):
         """Test that Oracle database uses Django connector as fallback."""
         from unittest.mock import patch
@@ -42,6 +45,7 @@ class GetConnectorTest(TestCase):
             connector = get_connector()
             assert isinstance(connector, DjangoConnector)
 
+    @patch.dict("dbbackup.settings.CONNECTORS", {}, clear=True)
     def test_get_connector_unmapped_engine_fallback(self):
         """Test that unmapped database engines use Django connector as fallback."""
         from unittest.mock import patch
@@ -56,6 +60,29 @@ class GetConnectorTest(TestCase):
             connector = get_connector()
             assert isinstance(connector, DjangoConnector)
 
+    def test_get_connector_explicit_connector_path(self):
+        """Test get_connector with explicit connector_path parameter."""
+        from dbbackup.db.sqlite import SqliteBackupConnector
+
+        connector = get_connector("default", connector_path="dbbackup.db.sqlite.SqliteBackupConnector")
+        assert isinstance(connector, SqliteBackupConnector)
+
+    def test_get_connector_applies_connector_settings(self):
+        """Test that get_connector applies kwargs from DBBACKUP_CONNECTORS."""
+        from dbbackup.db.sqlite import SqliteBackupConnector
+
+        configured = dict(dbbackup_settings.CONNECTORS)
+        # Patch the mapping itself instead of reloading dbbackup.settings: connectors read
+        # CONNECTORS at call time, and reloading the module leaks the override into every
+        # test that runs afterwards in the same session.
+        with patch.dict(dbbackup_settings.CONNECTORS, {"default": {"RESTORE_SUFFIX": " --skip-ssl"}}, clear=True):
+            connector = get_connector("default", connector_path="dbbackup.db.sqlite.SqliteBackupConnector")
+
+        assert isinstance(connector, SqliteBackupConnector)
+        assert connector.restore_suffix == " --skip-ssl"
+        # The mapping must be left untouched for the rest of the session.
+        assert dbbackup_settings.CONNECTORS == configured
+
 
 class BaseDBConnectorTest(TestCase):
     def test_init(self):
@@ -68,6 +95,32 @@ class BaseDBConnectorTest(TestCase):
     def test_generate_filename(self):
         connector = BaseDBConnector()
         connector.generate_filename()
+
+    def test_exclude_is_not_shared_between_instances(self):
+        """Mutating exclude must not leak through the class attribute."""
+        first = BaseDBConnector()
+        second = BaseDBConnector()
+
+        # What `dbbackup --exclude-tables` does, once per database of a `-d a,b` run.
+        first.exclude.extend(["django_session", "temp_data"])
+
+        assert first.exclude == ["django_session", "temp_data"]
+        assert second.exclude == []
+        assert BaseDBConnector.exclude == []
+
+    def test_connector_settings_are_not_aliased(self):
+        """DBBACKUP_CONNECTORS values must be copied onto the connector, not bound."""
+        options = {"EXCLUDE": ["django_session"], "ENV": {"FOO": "bar"}}
+        with patch.dict("dbbackup.settings.CONNECTORS", {"default": options}, clear=True):
+            connector = get_connector("default", connector_path="dbbackup.db.mysql.MysqlDumpConnector")
+
+        connector.exclude.append("temp_data")
+        connector.env["BAZ"] = "qux"
+
+        assert options["EXCLUDE"] == ["django_session"]
+        assert options["ENV"] == {"FOO": "bar"}
+        assert connector.exclude == ["django_session", "temp_data"]
+        assert connector.env == {"FOO": "bar", "BAZ": "qux"}
 
 
 class BaseCommandDBConnectorTest(TestCase):
