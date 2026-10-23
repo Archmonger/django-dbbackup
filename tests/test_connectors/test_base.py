@@ -5,6 +5,7 @@ from unittest.mock import patch
 import pytest
 from django.test import TestCase
 
+from dbbackup import settings as dbbackup_settings
 from dbbackup.db import exceptions
 from dbbackup.db.base import BaseCommandDBConnector, BaseDBConnector, get_connector
 
@@ -65,17 +66,17 @@ class GetConnectorTest(TestCase):
 
     def test_get_connector_applies_connector_settings(self):
         """Test that get_connector applies kwargs from DBBACKUP_CONNECTORS."""
-        import importlib
+        from dbbackup.db.sqlite import SqliteBackupConnector
 
-        from django.test.utils import override_settings
-
-        from dbbackup import settings as dbbackup_settings
-
-        with override_settings(DBBACKUP_CONNECTORS={"default": {"RESTORE_SUFFIX": " --skip-ssl"}}):
-            importlib.reload(dbbackup_settings)
+        # Patch the mapping itself instead of reloading dbbackup.settings: connectors read
+        # CONNECTORS at call time, and reloading the module leaks the override into every
+        # test that runs afterwards in the same session.
+        with patch.dict(dbbackup_settings.CONNECTORS, {"default": {"RESTORE_SUFFIX": " --skip-ssl"}}):
             connector = get_connector("default", connector_path="dbbackup.db.sqlite.SqliteBackupConnector")
-            assert connector.restore_suffix == " --skip-ssl"
-            importlib.reload(dbbackup_settings)
+
+        assert isinstance(connector, SqliteBackupConnector)
+        assert connector.restore_suffix == " --skip-ssl"
+        assert dbbackup_settings.CONNECTORS == {}
 
 
 class BaseDBConnectorTest(TestCase):

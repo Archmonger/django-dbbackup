@@ -204,12 +204,10 @@ class DbrestoreConnectorOverrideTest(TestCase):
         mock_import_module.return_value = mock_module
         mock_module.Connector = mock_connector_class
 
-        with override_settings(DBBACKUP_CONNECTORS={"default": {"RESTORE_SUFFIX": " --skip-ssl"}}):
-            importlib.reload(dbbackup.settings)
+        with patch.dict(dbbackup.settings.CONNECTORS, {"default": {"RESTORE_SUFFIX": " --skip-ssl"}}):
             self.command._restore_backup()
 
         mock_connector_class.assert_called_with("default", RESTORE_SUFFIX=" --skip-ssl")
-        importlib.reload(dbbackup.settings)
 
     @patch("dbbackup.management.commands.dbrestore.get_connector")
     def test_connector_fallback_on_import_error(self, mock_get_connector):
