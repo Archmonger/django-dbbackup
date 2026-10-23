@@ -96,6 +96,32 @@ class BaseDBConnectorTest(TestCase):
         connector = BaseDBConnector()
         connector.generate_filename()
 
+    def test_exclude_is_not_shared_between_instances(self):
+        """Mutating exclude must not leak through the class attribute."""
+        first = BaseDBConnector()
+        second = BaseDBConnector()
+
+        # What `dbbackup --exclude-tables` does, once per database of a `-d a,b` run.
+        first.exclude.extend(["django_session", "temp_data"])
+
+        assert first.exclude == ["django_session", "temp_data"]
+        assert second.exclude == []
+        assert BaseDBConnector.exclude == []
+
+    def test_connector_settings_are_not_aliased(self):
+        """DBBACKUP_CONNECTORS values must be copied onto the connector, not bound."""
+        options = {"EXCLUDE": ["django_session"], "ENV": {"FOO": "bar"}}
+        with patch.dict("dbbackup.settings.CONNECTORS", {"default": options}, clear=True):
+            connector = get_connector("default", connector_path="dbbackup.db.mysql.MysqlDumpConnector")
+
+        connector.exclude.append("temp_data")
+        connector.env["BAZ"] = "qux"
+
+        assert options["EXCLUDE"] == ["django_session"]
+        assert options["ENV"] == {"FOO": "bar"}
+        assert connector.exclude == ["django_session", "temp_data"]
+        assert connector.env == {"FOO": "bar", "BAZ": "qux"}
+
 
 class BaseCommandDBConnectorTest(TestCase):
     def test_run_command(self):

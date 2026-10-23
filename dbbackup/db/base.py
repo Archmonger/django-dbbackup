@@ -79,6 +79,12 @@ class BaseDBConnector:
     extension = "dump"
     exclude: ClassVar[list[Any]] = []
 
+    #: Attributes which either hold a mutable class default or are bound to the very
+    #: list/dict objects the user put in ``DBBACKUP_CONNECTORS``. They are copied per
+    #: instance so mutating one connector can neither leak into another connector nor
+    #: into the user's settings.
+    MUTABLE_ATTRIBUTES: ClassVar[tuple[str, ...]] = ("exclude", "schemas", "env", "dump_env", "restore_env")
+
     def __init__(self, database_name=None, **kwargs):
         from django.db import DEFAULT_DB_ALIAS, connections
 
@@ -86,6 +92,12 @@ class BaseDBConnector:
         self.connection = connections[self.database_name]
         for attr, value in kwargs.items():
             setattr(self, attr.lower(), value)
+        for attr in self.MUTABLE_ATTRIBUTES:
+            value = getattr(self, attr, None)
+            if isinstance(value, list):
+                setattr(self, attr, list(value))
+            elif isinstance(value, dict):
+                setattr(self, attr, dict(value))
 
     @property
     def settings(self):
