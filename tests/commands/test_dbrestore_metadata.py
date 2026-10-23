@@ -8,6 +8,8 @@ from django.core.management.base import CommandError
 from django.test import TestCase
 from django.test.utils import override_settings
 
+from dbbackup import settings as dbbackup_settings
+from dbbackup.db.mysql import MysqlDumpConnector
 from dbbackup.management.commands import dbbackup
 from dbbackup.management.commands.dbrestore import Command as DbrestoreCommand
 
@@ -208,6 +210,41 @@ class DbrestoreConnectorOverrideTest(TestCase):
 
         mock_connector_class.assert_called_with("default", RESTORE_SUFFIX=" --skip-ssl")
         assert self.command.connector == mock_connector_instance
+
+    def test_connector_from_metadata_gets_connector_settings(self):
+        """
+        End-to-end regression test for #677.
+
+        Unlike the mocked variants above, this restores with a real connector class and
+        checks the command line actually handed to the database tool, so a connector
+        settings drop can no longer slip through unnoticed.
+        """
+        metadata = {
+            "engine": settings.DATABASES["default"]["ENGINE"],
+            "connector": "dbbackup.db.mysql.MysqlDumpConnector",
+        }
+        self.command.storage.read_file.return_value = Mock(read=lambda: json.dumps(metadata))
+
+        with (
+            patch.dict(
+                dbbackup_settings.CONNECTORS,
+                {"default": {"RESTORE_CMD": "/usr/local/bin/mysql", "RESTORE_SUFFIX": " --skip-ssl"}},
+                clear=True,
+            ),
+            patch("dbbackup.db.mysql.MysqlDumpConnector.run_command") as mock_run_command,
+        ):
+            mock_run_command.return_value = (Mock(), Mock())
+            self.command._restore_backup()
+
+        connector = self.command.connector
+        assert isinstance(connector, MysqlDumpConnector)
+        assert connector.restore_cmd == "/usr/local/bin/mysql"
+        assert connector.restore_suffix == " --skip-ssl"
+
+        mock_run_command.assert_called_once()
+        command = mock_run_command.call_args[0][0]
+        assert "/usr/local/bin/mysql" in command, command
+        assert command.endswith(" --skip-ssl"), command
 
     @patch("dbbackup.management.commands.dbrestore.get_connector")
     def test_connector_fallback_on_import_error(self, mock_get_connector):
