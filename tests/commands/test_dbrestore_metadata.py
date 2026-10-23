@@ -159,9 +159,8 @@ class DbrestoreConnectorOverrideTest(TestCase):
         # Mock _ask_confirmation
         self.command._ask_confirmation = Mock()
 
-    @patch("dbbackup.management.commands.dbrestore.get_connector")
-    @patch("dbbackup.management.commands.dbrestore.import_module")
-    def test_connector_override(self, mock_import_module, mock_get_connector):
+    @patch("dbbackup.db.base.import_module")
+    def test_connector_override(self, mock_import_module):
         # Setup metadata with a specific connector
         metadata = {"engine": settings.DATABASES["default"]["ENGINE"], "connector": "my.custom.Connector"}
         self.command.storage.read_file.return_value = Mock(read=lambda: json.dumps(metadata))
@@ -187,12 +186,9 @@ class DbrestoreConnectorOverrideTest(TestCase):
         # Verify self.command.connector is the custom one
         assert self.command.connector == mock_connector_instance
 
-        # Verify get_connector was NOT called
-        mock_get_connector.assert_not_called()
-
-    @patch("dbbackup.management.commands.dbrestore.get_connector")
-    @patch("dbbackup.management.commands.dbrestore.import_module")
-    def test_connector_override_applies_connector_settings(self, mock_import_module, mock_get_connector):
+    @patch("dbbackup.db.base.import_module")
+    def test_connector_override_applies_connector_settings(self, mock_import_module):
+        """A connector restored from metadata must still get its DBBACKUP_CONNECTORS settings (#677)."""
         metadata = {"engine": settings.DATABASES["default"]["ENGINE"], "connector": "my.custom.Connector"}
         self.command.storage.read_file.return_value = Mock(read=lambda: json.dumps(metadata))
 
@@ -208,6 +204,7 @@ class DbrestoreConnectorOverrideTest(TestCase):
             self.command._restore_backup()
 
         mock_connector_class.assert_called_with("default", RESTORE_SUFFIX=" --skip-ssl")
+        assert self.command.connector == mock_connector_instance
 
     @patch("dbbackup.management.commands.dbrestore.get_connector")
     def test_connector_fallback_on_import_error(self, mock_get_connector):
@@ -217,14 +214,15 @@ class DbrestoreConnectorOverrideTest(TestCase):
 
         # Mock default connector
         mock_default_connector = Mock()
-        mock_get_connector.return_value = mock_default_connector
+        # First call (metadata connector) fails, second call (configured connector) succeeds.
+        mock_get_connector.side_effect = [ImportError("No module named 'my.broken'"), mock_default_connector]
 
-        # We don't mock import_module, so it will raise ImportError (or we can mock it to raise)
-        with patch("dbbackup.management.commands.dbrestore.import_module", side_effect=ImportError):
-            self.command._restore_backup()
+        self.command._restore_backup()
 
-        # Verify get_connector WAS called
+        # Verify the metadata connector was attempted first, then the configured one
+        mock_get_connector.assert_any_call("default", connector_path="my.broken.Connector")
         mock_get_connector.assert_called_with("default")
+        self.command.logger.warning.assert_called()
 
         # Verify self.command.connector is the default one
         assert self.command.connector == mock_default_connector
@@ -239,15 +237,15 @@ class DbrestoreConnectorOverrideTest(TestCase):
 
         # Mock default connector
         mock_default_connector = Mock()
-        mock_get_connector.return_value = mock_default_connector
+        mock_get_connector.side_effect = [ImportError("No module named 'my.broken'"), mock_default_connector]
 
-        with patch("dbbackup.management.commands.dbrestore.import_module", side_effect=ImportError):
-            self.command._restore_backup()
+        self.command._restore_backup()
 
         # Verify input was called
         mock_input.assert_called()
         # Verify get_connector WAS called
         mock_get_connector.assert_called_with("default")
+        assert self.command.connector == mock_default_connector
 
     @patch("dbbackup.management.commands.dbrestore.get_connector")
     @patch("builtins.input", return_value="n")
@@ -257,13 +255,12 @@ class DbrestoreConnectorOverrideTest(TestCase):
         metadata = {"engine": settings.DATABASES["default"]["ENGINE"], "connector": "my.broken.Connector"}
         self.command.storage.read_file.return_value = Mock(read=lambda: json.dumps(metadata))
 
-        with (
-            patch("dbbackup.management.commands.dbrestore.import_module", side_effect=ImportError),
-            pytest.raises(SystemExit),
-        ):
+        mock_get_connector.side_effect = [ImportError("No module named 'my.broken'")]
+
+        with pytest.raises(SystemExit):
             self.command._restore_backup()
 
         # Verify input was called
         mock_input.assert_called()
-        # Verify get_connector was NOT called
-        mock_get_connector.assert_not_called()
+        # Verify the configured connector was never built, we quit before restoring
+        mock_get_connector.assert_called_once_with("default", connector_path="my.broken.Connector")
