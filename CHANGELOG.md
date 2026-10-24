@@ -14,7 +14,17 @@ Don't forget to remove deprecated code on each major release!
 
 ## [Unreleased]
 
-- Added client certificate support for PostgreSQL.
+### Added
+
+- PostgreSQL connectors now forward the `sslmode`, `sslrootcert`, `sslcert`, `sslkey`, `passfile` and `service` keys of the Django database `OPTIONS` setting to `pg_dump`, `psql` and `pg_restore` as their matching `libpq` environment variable, the same way Django forwards them to its own command line tools. Backups and restores now use the TLS and client certificate configuration of the ORM, including the PostGIS activation step.
+
+### Changed
+
+- A value set in the PostgreSQL `OPTIONS` setting now takes precedence over the same variable configured through `ENV`, `DUMP_ENV` or `RESTORE_ENV`, where the environment used to win.
+
+### Fixed
+
+- `ADMIN_PASSWORD` is now passed to the PostGIS activation step, it had no effect until now.
 
 ## [5.3.1] - 2026-09-10
 
