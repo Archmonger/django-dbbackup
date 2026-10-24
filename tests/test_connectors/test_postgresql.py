@@ -471,6 +471,46 @@ class PgDumpGisConnectorTest(TestCase):
         # Should escape the single quote properly
         assert "'admin'\"'\"'user'" in command
 
+    def test_enable_postgis_ssl_options(self, mock_dump_cmd):
+        """Test the administrative connection uses the same TLS settings as the restore"""
+        self.connector.settings["ADMIN_USER"] = "foo"
+        self.connector.settings["OPTIONS"] = {
+            "sslmode": "verify-full",
+            "sslrootcert": "/tmp/foo bar/ca.crt",
+            "sslcert": "C:\\Program Files\\pg\\admin.crt",
+            "sslkey": "/tmp/foo bar/admin.key",
+        }
+        self.connector._enable_postgis()
+        command = mock_dump_cmd.call_args[0][0]
+        env = mock_dump_cmd.call_args[1]["env"]
+        assert "?" not in command
+        assert "verify-full" not in command
+        assert env["PGSSLMODE"] == "verify-full"
+        assert env["PGSSLROOTCERT"] == "/tmp/foo bar/ca.crt"
+        assert env["PGSSLCERT"] == "C:\\Program Files\\pg\\admin.crt"
+        assert env["PGSSLKEY"] == "/tmp/foo bar/admin.key"
+
+    def test_enable_postgis_restore_env(self, mock_dump_cmd):
+        """Test RESTORE_ENV applies to the administrative connection, options winning"""
+        self.connector.settings["ADMIN_USER"] = "foo"
+        self.connector.restore_env = {"PGSSLMODE": "require", "PGSSLCERT": "/tmp/restore.crt"}
+        self.connector.settings["OPTIONS"] = {"sslcert": "/tmp/option.crt"}
+        self.connector._enable_postgis()
+        env = mock_dump_cmd.call_args[1]["env"]
+        assert env["PGSSLMODE"] == "require"
+        assert env["PGSSLCERT"] == "/tmp/option.crt"
+
+    def test_enable_postgis_ignores_user_password(self, mock_dump_cmd):
+        """Test the administrator connection does not reuse the database password"""
+        self.connector.settings["ADMIN_USER"] = "foo"
+        self.connector.settings["PASSWORD"] = "userpass"
+        self.connector._enable_postgis()
+        command = mock_dump_cmd.call_args[0][0]
+        env = mock_dump_cmd.call_args[1]["env"]
+        assert "userpass" not in command
+        assert "PGPASSWORD" not in env
+        assert "--no-password" in command
+
 
 @patch(
     "dbbackup.db.base.Popen",

@@ -157,7 +157,10 @@ class PgDumpGisConnector(PgDumpConnector):
         if self.settings.get("PORT"):
             cmd += f" --port={shlex.quote(str(self.settings['PORT']))}"
 
-        return self.run_command(cmd)
+        # This is a separate psql invocation: it needs the same TLS settings as
+        # the restore it precedes, otherwise it cannot authenticate with a
+        # client certificate and the PostGIS activation fails.
+        return self.run_command(cmd, env={**self.restore_env, **parse_postgres_options_env(self)})
 
     def _restore_dump(self, dump):
         if self.settings.get("ADMIN_USER"):
