@@ -160,7 +160,14 @@ class PgDumpGisConnector(PgDumpConnector):
         # This is a separate psql invocation: it needs the same TLS settings as
         # the restore it precedes, otherwise it cannot authenticate with a
         # client certificate and the PostGIS activation fails.
-        return self.run_command(cmd, env={**self.restore_env, **parse_postgres_options_env(self)})
+        env = {**self.restore_env, **parse_postgres_options_env(self)}
+        # "--no-password" only forbids the interactive prompt, libpq still
+        # reads PGPASSWORD, so the credentials of ADMIN_USER go there.
+        admin_password = self.settings.get("ADMIN_PASSWORD")
+        if admin_password:
+            env["PGPASSWORD"] = str(admin_password)
+
+        return self.run_command(cmd, env=env)
 
     def _restore_dump(self, dump):
         if self.settings.get("ADMIN_USER"):

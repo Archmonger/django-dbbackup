@@ -511,6 +511,17 @@ class PgDumpGisConnectorTest(TestCase):
         assert "PGPASSWORD" not in env
         assert "--no-password" in command
 
+    def test_enable_postgis_admin_password(self, mock_dump_cmd):
+        """Test ADMIN_PASSWORD is used for the administrative connection"""
+        self.connector.settings["ADMIN_USER"] = "foo"
+        self.connector.settings["ADMIN_PASSWORD"] = "secret"
+        self.connector._enable_postgis()
+        command = mock_dump_cmd.call_args[0][0]
+        env = mock_dump_cmd.call_args[1]["env"]
+        assert "secret" not in command
+        assert env["PGPASSWORD"] == "secret"
+        assert "--no-password" in command
+
 
 @patch(
     "dbbackup.db.base.Popen",
