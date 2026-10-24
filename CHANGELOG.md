@@ -14,8 +14,18 @@ Don't forget to remove deprecated code on each major release!
 
 ## [Unreleased]
 
+### Added
+
+- PostgreSQL connectors now forward the `sslmode`, `sslrootcert`, `sslcert`, `sslkey`, `passfile` and `service` keys of the Django database `OPTIONS` setting to `pg_dump`, `psql` and `pg_restore` as their matching `libpq` environment variable, the same way Django forwards them to its own command line tools. Backups and restores now use the TLS and client certificate configuration of the ORM, including the PostGIS activation step.
+
+### Changed
+
+- A value set in the PostgreSQL `OPTIONS` setting now takes precedence over the same variable configured through `ENV`, `DUMP_ENV` or `RESTORE_ENV`, where the environment used to win.
+
 ### Fixed
 
+- `ADMIN_PASSWORD` is now passed to the PostGIS activation step, it had no effect until now.
+- `PgDumpBinaryConnector` now applies `RESTORE_ENV` to `pg_restore`, which was receiving `DUMP_ENV` instead. `DUMP_ENV` no longer leaks into the restore phase, put in `RESTORE_ENV` the variables which were reaching `pg_restore` from it.
 - `DBBACKUP_GPG_ALWAYS_TRUST` setting is now respected instead of being enabled whenever `DBBACKUP_GPG_RECIPIENT` is set. Encrypting to a public key that GPG does not trust will now fail, as documented, unless the key is trusted or `DBBACKUP_GPG_ALWAYS_TRUST = True` is set.
 - Pass configured `DBBACKUP_CONNECTORS` settings when instantiating connector from backup metadata in `dbrestore`.
 - `dbrestore` no longer discards the `DROP` and `PG_OPTIONS` values configured in `DBBACKUP_CONNECTORS`. `--no-drop` and `--pg-options` still take precedence when passed.

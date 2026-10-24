@@ -78,6 +78,8 @@ DBBACKUP_CONNECTORS = {
 }
 ```
 
+For PostgreSQL, a variable set this way is overridden by the matching key of the `OPTIONS` setting of your Django database, see [PostgreSQL](#postgresql).
+
 ---
 
 ## Database Connectors
@@ -141,6 +143,25 @@ This is the default connector for MySQL databases.
 | SCHEMAS            | Limit dump to specific schemas (PostgreSQL connectors only). Overridden by `dbrestore --schema`.                                        | All non-system schemas |
 | PG_OPTIONS         | Extra `pg_restore` options appended to the restore command (binary connector only). Overridden by `dbrestore --pg-options`.             | None                   |
 
+The connection options of the `OPTIONS` setting of your Django database are forwarded to `pg_dump`, `psql` and `pg_restore` as the `libpq` environment variables Django itself uses for its command line tools: `sslmode`, `sslrootcert`, `sslcert`, `sslkey`, `passfile` and `service`. Backups and restores then connect with the same TLS and client certificate configuration as the ORM, without any additional setting:
+
+```python
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        # ...
+        'OPTIONS': {
+            'sslmode': 'verify-full',
+            'sslrootcert': '/etc/ssl/certs/ca.pem',
+            'sslcert': '/etc/ssl/certs/client.crt',
+            'sslkey': '/etc/ssl/certs/client.key',
+        },
+    }
+}
+```
+
+A value coming from `OPTIONS` takes precedence over the same variable set with `ENV`, `DUMP_ENV` or `RESTORE_ENV`, the same way `PASSWORD` takes precedence over a `PGPASSWORD` set there.
+
 #### PgDumpBinaryConnector
 
 The `dbbackup.db.postgresql.PgDumpBinaryConnector` is similar to PgDumpConnector, but it uses `pg_dump` in binary mode and restores using `pg_restore`.
@@ -158,6 +179,8 @@ It is recommended to use the binary connector for better performance.
 Set in `dbbackup.db.postgresql.PgDumpGisConnector`, it does the same as
 PostgreSQL but launches `CREATE EXTENSION IF NOT EXISTS postgis;` before
 restoring the database.
+
+That administrative statement is run as `ADMIN_USER`, with the `RESTORE_ENV` variables and the TLS settings of `OPTIONS` applied, and with `ADMIN_PASSWORD` as its password when one is set.
 
 ### MongoDB
 

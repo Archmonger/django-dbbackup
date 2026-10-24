@@ -9,12 +9,46 @@ from dbbackup.db.base import BaseCommandDBConnector
 
 logger = logging.getLogger("dbbackup.command")
 
+# Connection options understood by the PostgreSQL command line tools, mapped to
+# the ``libpq`` environment variable carrying each one. It mirrors
+# ``settings_to_cmd_args_env`` in ``django/db/backends/postgresql/client.py``,
+# so that ``pg_dump``, ``psql`` and ``pg_restore`` connect with the same TLS,
+# client certificate, password file and service settings as the ORM does.
+PG_OPTIONS_ENV_VARS: dict[str, str] = {
+    "sslmode": "PGSSLMODE",
+    "sslrootcert": "PGSSLROOTCERT",
+    "sslcert": "PGSSLCERT",
+    "sslkey": "PGSSLKEY",
+    "passfile": "PGPASSFILE",
+    "service": "PGSERVICE",
+}
+
 
 def _host_requires_uri_quoting(host: str) -> bool:
     # Match *nix paths (e.g. /run/postgres) and Windows paths (e.g. C:\path\to\socket)
     return host.startswith(("/", "@")) or (
         len(host) >= 3 and host[0].isalpha() and host[1] == ":" and host[2] in ("/", "\\")
     )
+
+
+def parse_postgres_options_env(connector: PgDumpBinaryConnector | PgDumpConnector) -> dict[str, str]:
+    """
+    Translate the ``OPTIONS`` setting of a Postgres connection into the ``libpq``
+    environment variables understood by the command line tools.
+
+    The options are passed through the environment rather than appended to the
+    connection URI because ``libpq`` expands ``%XX`` triplets only: a path
+    encoded with ``quote_plus`` semantics would reach the tools with its spaces
+    turned into ``+`` and would not be found.
+
+    Args:
+        connector: Database connector instance with settings
+
+    Returns:
+        dict: Environment variables to apply to the command
+    """
+    options = connector.settings.get("OPTIONS") or {}
+    return {env_var: str(options[option]) for option, env_var in PG_OPTIONS_ENV_VARS.items() if options.get(option)}
 
 
 def parse_postgres_settings(connector: PgDumpBinaryConnector | PgDumpConnector) -> tuple[str, dict[Any, Any]]:
@@ -41,7 +75,7 @@ def parse_postgres_settings(connector: PgDumpBinaryConnector | PgDumpConnector) 
         host = f"@{host}"
     port = f":{connector.settings.get('PORT')}" if connector.settings.get("PORT") else ""
     cmd_part = f"--dbname=postgresql://{user}{host}{port}/{cmd_part}"
-    env = {}
+    env = parse_postgres_options_env(connector)
     if password is None:
         cmd_part += " --no-password"
     elif password not in ("", -1):
@@ -123,7 +157,17 @@ class PgDumpGisConnector(PgDumpConnector):
         if self.settings.get("PORT"):
             cmd += f" --port={shlex.quote(str(self.settings['PORT']))}"
 
-        return self.run_command(cmd)
+        # This is a separate psql invocation: it needs the same TLS settings as
+        # the restore it precedes, otherwise it cannot authenticate with a
+        # client certificate and the PostGIS activation fails.
+        env = {**self.restore_env, **parse_postgres_options_env(self)}
+        # "--no-password" only forbids the interactive prompt, libpq still
+        # reads PGPASSWORD, so the credentials of ADMIN_USER go there.
+        admin_password = self.settings.get("ADMIN_PASSWORD")
+        if admin_password:
+            env["PGPASSWORD"] = str(admin_password)
+
+        return self.run_command(cmd, env=env)
 
     def _restore_dump(self, dump):
         if self.settings.get("ADMIN_USER"):
@@ -202,6 +246,6 @@ class PgDumpBinaryConnector(PgDumpConnector):
             cmd.extend(self.restore_suffix if isinstance(self.restore_suffix, list) else [self.restore_suffix])
 
         cmd_str = " ".join(cmd)
-        stdout, _ = self.run_command(cmd_str, stdin=dump, env={**self.dump_env, **pg_env})
+        stdout, _ = self.run_command(cmd_str, stdin=dump, env={**self.restore_env, **pg_env})
 
         return stdout
