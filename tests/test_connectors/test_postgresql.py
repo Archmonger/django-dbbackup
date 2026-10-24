@@ -758,23 +758,35 @@ class CreatePostgresDbNameAndEnvTest(TestCase):
 
     def test_function_with_pathlib_option_values(self):
         """Test pathlib values are accepted and stringified"""
+        # Relative paths, as libpq resolves certificate paths against the working
+        # directory, with a space which has to survive untouched.
+        cert = Path("my certs") / "cert.crt"
+        ca = Path("my certs") / "ca.crt"
         connector = Mock()
         connector.settings = {
             "HOST": "localhost",
             "NAME": "testdb",
             "USER": "testuser",
             "OPTIONS": {
-                "sslcert": Path("/tmp/foo bar/cert.crt"),
-                "sslrootcert": Path("/tmp/foo bar/ca.crt"),
+                "sslcert": cert,
+                "sslrootcert": ca,
+                "sslmode": Path("verify-full"),
             },
         }
 
         _cmd_part, env = parse_postgres_settings(connector)
 
+        # The expectation comes from the paths themselves: str() renders the
+        # separator of the platform running the backup, "\" on Windows.
         assert env == {
-            "PGSSLROOTCERT": "/tmp/foo bar/ca.crt",
-            "PGSSLCERT": "/tmp/foo bar/cert.crt",
+            "PGSSLCERT": str(cert),
+            "PGSSLROOTCERT": str(ca),
+            "PGSSLMODE": "verify-full",
         }
+        # An environment accepts strings only, a Path would be passed over as is
+        # by subprocess and rejected by any quoting.
+        assert all(isinstance(value, str) for value in env.values())
+        assert " " in env["PGSSLCERT"]
 
     def test_function_with_password_file_and_service(self):
         """Test the other options Django forwards to its own command line tools"""
