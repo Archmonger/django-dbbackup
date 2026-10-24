@@ -29,7 +29,7 @@ FILENAME_TEMPLATE = getattr(
 )
 MEDIA_FILENAME_TEMPLATE = getattr(settings, "DBBACKUP_MEDIA_FILENAME_TEMPLATE", "{servername}-{datetime}.{extension}")
 GPG_ALWAYS_TRUST = getattr(settings, "DBBACKUP_GPG_ALWAYS_TRUST", False)
-GPG_RECIPIENT = GPG_ALWAYS_TRUST = getattr(settings, "DBBACKUP_GPG_RECIPIENT", None)
+GPG_RECIPIENT = getattr(settings, "DBBACKUP_GPG_RECIPIENT", None)
 STORAGES_DBBACKUP_ALIAS = "dbbackup"
 DJANGO_STORAGES = getattr(settings, "STORAGES", {})
 storage: dict = DJANGO_STORAGES.get(STORAGES_DBBACKUP_ALIAS, {})

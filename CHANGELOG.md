@@ -16,6 +16,7 @@ Don't forget to remove deprecated code on each major release!
 
 ### Fixed
 
+- `DBBACKUP_GPG_ALWAYS_TRUST` setting is now respected instead of being enabled whenever `DBBACKUP_GPG_RECIPIENT` is set. Encrypting to a public key that GPG does not trust will now fail, as documented, unless the key is trusted or `DBBACKUP_GPG_ALWAYS_TRUST = True` is set.
 - Pass configured `DBBACKUP_CONNECTORS` settings when instantiating connector from backup metadata in `dbrestore`.
 - `dbrestore` no longer discards the `DROP` and `PG_OPTIONS` values configured in `DBBACKUP_CONNECTORS`. `--no-drop` and `--pg-options` still take precedence when passed.
 - Connector options holding a list or a dict (`EXCLUDE`, `SCHEMAS`, `ENV`, `DUMP_ENV`, `RESTORE_ENV`) are now copied per connector. `dbbackup --exclude-tables` used to append to the class default, silently excluding those tables from every other database of the same run and from connectors created afterwards.

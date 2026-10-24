@@ -10,7 +10,7 @@ from unittest.mock import patch
 import django
 import pytest
 from django.core import mail
-from django.test import TestCase
+from django.test import TestCase, override_settings
 
 from dbbackup import settings, utils
 from tests.utils import (
@@ -147,6 +147,65 @@ class EncryptFileTest(TestCase):
                 utils.encrypt_file(inputfile=text_file, filename="test.txt")
         finally:
             os.unlink(temp_path)
+
+    @override_settings(DBBACKUP_GPG_RECIPIENT="test@test", DBBACKUP_GPG_ALWAYS_TRUST=False)
+    def test_encrypt_file_untrusted_recipient(self):
+        """An untrusted key is refused unless DBBACKUP_GPG_ALWAYS_TRUST is enabled"""
+        import importlib
+
+        importlib.reload(settings)
+        self.addCleanup(importlib.reload, settings)
+
+        with (
+            open(self.path, mode="rb") as fd,
+            pytest.raises(utils.EncryptionError, match="invalid recipient"),
+        ):
+            utils.encrypt_file(inputfile=fd, filename="foo.txt")
+
+
+class EncryptFileAlwaysTrustTest(TestCase):
+    """``DBBACKUP_GPG_ALWAYS_TRUST`` must be forwarded to python-gnupg, no gpg binary needed."""
+
+    def _encrypt(self):
+        source = tempfile.NamedTemporaryFile(delete=False, suffix=".txt")
+        source.write(b"foo")
+        source.close()
+        self.addCleanup(os.unlink, source.name)
+
+        def fake_encrypt(inputfile, filepath, recipients, always_trust):
+            # gnupg writes the ciphertext encrypt_file reads back
+            with open(filepath, "wb") as fd:
+                fd.write(b"encrypted")
+            return True
+
+        with (
+            open(source.name, mode="rb") as fd,
+            patch("dbbackup.utils._gpg_encrypt_file", side_effect=fake_encrypt) as encrypt,
+        ):
+            utils.encrypt_file(inputfile=fd, filename="foo.txt")
+        return encrypt.call_args
+
+    @staticmethod
+    def _always_trust(call_args):
+        return call_args.kwargs.get("always_trust", call_args.args[3])
+
+    @override_settings(DBBACKUP_GPG_RECIPIENT="test@test", DBBACKUP_GPG_ALWAYS_TRUST=False)
+    def test_trust_check_kept(self):
+        import importlib
+
+        importlib.reload(settings)
+        self.addCleanup(importlib.reload, settings)
+
+        assert self._always_trust(self._encrypt()) is False
+
+    @override_settings(DBBACKUP_GPG_RECIPIENT="test@test", DBBACKUP_GPG_ALWAYS_TRUST=True)
+    def test_trust_check_bypassed(self):
+        import importlib
+
+        importlib.reload(settings)
+        self.addCleanup(importlib.reload, settings)
+
+        assert self._always_trust(self._encrypt()) is True
 
 
 @unittest.skipIf(not GPG_AVAILABLE, "gpg executable not available")
