@@ -25,6 +25,7 @@ Don't forget to remove deprecated code on each major release!
 ### Fixed
 
 - `ADMIN_PASSWORD` is now passed to the PostGIS activation step, it had no effect until now.
+- `PgDumpBinaryConnector` now applies `RESTORE_ENV` to `pg_restore`, which was receiving `DUMP_ENV` instead. `DUMP_ENV` no longer leaks into the restore phase, put in `RESTORE_ENV` the variables which were reaching `pg_restore` from it.
 
 ## [5.3.1] - 2026-09-10
 

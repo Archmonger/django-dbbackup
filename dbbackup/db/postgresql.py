@@ -246,6 +246,6 @@ class PgDumpBinaryConnector(PgDumpConnector):
             cmd.extend(self.restore_suffix if isinstance(self.restore_suffix, list) else [self.restore_suffix])
 
         cmd_str = " ".join(cmd)
-        stdout, _ = self.run_command(cmd_str, stdin=dump, env={**self.dump_env, **pg_env})
+        stdout, _ = self.run_command(cmd_str, stdin=dump, env={**self.restore_env, **pg_env})
 
         return stdout

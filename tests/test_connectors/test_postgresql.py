@@ -394,6 +394,26 @@ class PgDumpBinaryConnectorTest(TestCase):
         assert env["PGSSLMODE"] == "verify-full"
         assert env["PGSSLCERT"] == "C:\\Program Files\\pg\\cert.crt"
 
+    def test_restore_dump_uses_restore_env(self, mock_run_command):
+        """Test pg_restore gets RESTORE_ENV and not DUMP_ENV"""
+        self.connector.dump_env = {"PGSSLMODE": "require", "FROM_DUMP": "yes"}
+        self.connector.restore_env = {"PGSSLMODE": "disable", "FROM_RESTORE": "yes"}
+        dump = self.connector.create_dump()
+        self.connector.restore_dump(dump)
+        env = mock_run_command.call_args[1]["env"]
+        assert env["FROM_RESTORE"] == "yes"
+        assert env["PGSSLMODE"] == "disable"
+        assert "FROM_DUMP" not in env
+
+    def test_create_dump_still_uses_dump_env(self, mock_run_command):
+        """Test pg_dump keeps getting DUMP_ENV and not RESTORE_ENV"""
+        self.connector.dump_env = {"FROM_DUMP": "yes"}
+        self.connector.restore_env = {"FROM_RESTORE": "yes"}
+        self.connector.create_dump()
+        env = mock_run_command.call_args[1]["env"]
+        assert env["FROM_DUMP"] == "yes"
+        assert "FROM_RESTORE" not in env
+
 
 @patch(
     "dbbackup.db.postgresql.PgDumpGisConnector.run_command",
