@@ -3,11 +3,25 @@ from __future__ import annotations
 import logging
 import shlex
 from typing import Any, ClassVar
-from urllib.parse import quote, urlencode
+from urllib.parse import quote
 
 from dbbackup.db.base import BaseCommandDBConnector
 
 logger = logging.getLogger("dbbackup.command")
+
+# Connection options understood by the PostgreSQL command line tools, mapped to
+# the ``libpq`` environment variable carrying each one. It mirrors
+# ``settings_to_cmd_args_env`` in ``django/db/backends/postgresql/client.py``,
+# so that ``pg_dump``, ``psql`` and ``pg_restore`` connect with the same TLS,
+# client certificate, password file and service settings as the ORM does.
+PG_OPTIONS_ENV_VARS: dict[str, str] = {
+    "sslmode": "PGSSLMODE",
+    "sslrootcert": "PGSSLROOTCERT",
+    "sslcert": "PGSSLCERT",
+    "sslkey": "PGSSLKEY",
+    "passfile": "PGPASSFILE",
+    "service": "PGSERVICE",
+}
 
 
 def _host_requires_uri_quoting(host: str) -> bool:
@@ -15,6 +29,26 @@ def _host_requires_uri_quoting(host: str) -> bool:
     return host.startswith(("/", "@")) or (
         len(host) >= 3 and host[0].isalpha() and host[1] == ":" and host[2] in ("/", "\\")
     )
+
+
+def parse_postgres_options_env(connector: PgDumpBinaryConnector | PgDumpConnector) -> dict[str, str]:
+    """
+    Translate the ``OPTIONS`` setting of a Postgres connection into the ``libpq``
+    environment variables understood by the command line tools.
+
+    The options are passed through the environment rather than appended to the
+    connection URI because ``libpq`` expands ``%XX`` triplets only: a path
+    encoded with ``quote_plus`` semantics would reach the tools with its spaces
+    turned into ``+`` and would not be found.
+
+    Args:
+        connector: Database connector instance with settings
+
+    Returns:
+        dict: Environment variables to apply to the command
+    """
+    options = connector.settings.get("OPTIONS") or {}
+    return {env_var: str(options[option]) for option, env_var in PG_OPTIONS_ENV_VARS.items() if options.get(option)}
 
 
 def parse_postgres_settings(connector: PgDumpBinaryConnector | PgDumpConnector) -> tuple[str, dict[Any, Any]]:
@@ -40,26 +74,8 @@ def parse_postgres_settings(connector: PgDumpBinaryConnector | PgDumpConnector) 
     if user:
         host = f"@{host}"
     port = f":{connector.settings.get('PORT')}" if connector.settings.get("PORT") else ""
-    query_params = {}
-    # The SSL parameters are contained in the OPTION mapping.
-    # See settings_to_cmd_args_env in django/db/backends/postgresql/client.py
-    options = connector.settings.get("OPTIONS", {})
-    sslcert = options.get("sslcert", "")
-    sslkey = options.get("sslkey", "")
-    sslrootcert = options.get("sslrootcert", "")
-    sslmode = options.get("sslmode", "")
-    if sslcert:
-        query_params["sslcert"] = sslcert
-    if sslkey:
-        query_params["sslkey"] = sslkey
-    if sslrootcert:
-        query_params["sslrootcert"] = sslrootcert
-    if sslmode:
-        query_params["sslmode"] = sslmode
-    if len(query_params) > 0:
-        cmd_part += f"?{urlencode(query_params)}"
     cmd_part = f"--dbname=postgresql://{user}{host}{port}/{cmd_part}"
-    env = {}
+    env = parse_postgres_options_env(connector)
     if password is None:
         cmd_part += " --no-password"
     elif password not in ("", -1):

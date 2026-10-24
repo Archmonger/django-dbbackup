@@ -1,4 +1,5 @@
 from io import BytesIO
+from pathlib import Path
 from unittest.mock import Mock, patch
 
 from django.test import TestCase
@@ -171,6 +172,42 @@ class PgDumpConnectorTest(TestCase):
         self.connector.restore_dump(dump)
         assert "secret" not in mock_dump_cmd.call_args[0][0]
 
+    def test_create_dump_ssl_options(self, mock_dump_cmd):
+        """Test the SSL options reach pg_dump through the environment, not the command line"""
+        self.connector.settings["OPTIONS"] = {"sslmode": "verify-full", "sslcert": "/tmp/foo bar/cert.crt"}
+        self.connector.create_dump()
+        command = mock_dump_cmd.call_args[0][0]
+        env = mock_dump_cmd.call_args[1]["env"]
+        assert "?" not in command
+        assert "sslmode" not in command
+        assert "PGSSLMODE" not in command
+        assert env["PGSSLMODE"] == "verify-full"
+        assert env["PGSSLCERT"] == "/tmp/foo bar/cert.crt"
+
+    def test_restore_dump_ssl_options(self, mock_dump_cmd):
+        """Test the SSL options reach psql through the environment"""
+        self.connector.settings["OPTIONS"] = {"sslmode": "verify-full", "sslrootcert": "/tmp/foo bar/ca.crt"}
+        dump = self.connector.create_dump()
+        self.connector.restore_dump(dump)
+        command = mock_dump_cmd.call_args[0][0]
+        env = mock_dump_cmd.call_args[1]["env"]
+        assert "?" not in command
+        assert env["PGSSLMODE"] == "verify-full"
+        assert env["PGSSLROOTCERT"] == "/tmp/foo bar/ca.crt"
+
+    def test_ssl_options_precedence_over_dump_env(self, mock_dump_cmd):
+        """Test an option takes precedence over the same variable set in DUMP_ENV"""
+        self.connector.dump_env = {"PGSSLMODE": "require"}
+        self.connector.settings["OPTIONS"] = {"sslmode": "verify-full"}
+        self.connector.create_dump()
+        assert mock_dump_cmd.call_args[1]["env"]["PGSSLMODE"] == "verify-full"
+
+    def test_dump_env_without_options(self, mock_dump_cmd):
+        """Test DUMP_ENV keeps applying when no option is configured"""
+        self.connector.dump_env = {"PGSSLMODE": "require"}
+        self.connector.create_dump()
+        assert mock_dump_cmd.call_args[1]["env"]["PGSSLMODE"] == "require"
+
 
 @patch(
     "dbbackup.db.postgresql.PgDumpBinaryConnector.run_command",
@@ -342,6 +379,21 @@ class PgDumpBinaryConnectorTest(TestCase):
 
         assert "--dbname=postgresql://example@%2Frun%2Fpostgresql:5432/dbname" in mock_run_command.call_args[0][0]
 
+    def test_restore_dump_ssl_options(self, mock_run_command):
+        """Test the SSL options reach pg_restore through the environment"""
+        self.connector.settings["OPTIONS"] = {
+            "sslmode": "verify-full",
+            "sslcert": "C:\\Program Files\\pg\\cert.crt",
+        }
+        dump = self.connector.create_dump()
+        self.connector.restore_dump(dump)
+        command = mock_run_command.call_args[0][0]
+        env = mock_run_command.call_args[1]["env"]
+        assert "?" not in command
+        assert "Program" not in command
+        assert env["PGSSLMODE"] == "verify-full"
+        assert env["PGSSLCERT"] == "C:\\Program Files\\pg\\cert.crt"
+
 
 @patch(
     "dbbackup.db.postgresql.PgDumpGisConnector.run_command",
@@ -456,7 +508,7 @@ class PgDumpConnectorRunCommandTest(TestCase):
 
 
 class CreatePostgresDbNameAndEnvTest(TestCase):
-    """Test the create_postgres_dbname_and_env helper function"""
+    """Test the parse_postgres_settings helper function"""
 
     def test_function_with_normal_parameters(self):
         """Test function with normal parameters"""
@@ -579,7 +631,7 @@ class CreatePostgresDbNameAndEnvTest(TestCase):
         assert "--no-password" in cmd_part
 
     def test_function_with_client_certificate_authentication(self):
-        """Test function with client certificate authentication"""
+        """Test client certificate authentication is passed through the environment"""
         connector = Mock()
         connector.settings = {
             "HOST": "localhost",
@@ -591,11 +643,166 @@ class CreatePostgresDbNameAndEnvTest(TestCase):
                 "sslcert": "/tmp/foo/bar/cert.crt",
                 "sslkey": "/tmp/foo/bar/cert.key",
                 "sslrootcert": "/tmp/foo/bar/ca.crt",
-                "sslmode": "verify-full"
-            }
+                "sslmode": "verify-full",
+            },
         }
+
         cmd_part, env = parse_postgres_settings(connector)
-        assert "sslcert=%2Ftmp%2Ffoo%2Fbar%2Fcert.crt" in cmd_part
-        assert "sslkey=%2Ftmp%2Ffoo%2Fbar%2Fcert.key" in cmd_part
-        assert "sslrootcert=%2Ftmp%2Ffoo%2Fbar%2Fca.crt" in cmd_part
-        assert "sslmode=verify-full" in cmd_part
+
+        # No query string: libpq expands "%XX" triplets only, anything else
+        # would reach the command line tools corrupted.
+        assert cmd_part == "--dbname=postgresql://testuser@localhost:5432/testdb"
+        assert env == {
+            "PGSSLMODE": "verify-full",
+            "PGSSLROOTCERT": "/tmp/foo/bar/ca.crt",
+            "PGSSLCERT": "/tmp/foo/bar/cert.crt",
+            "PGSSLKEY": "/tmp/foo/bar/cert.key",
+        }
+
+    def test_function_with_paths_needing_no_encoding(self):
+        """Test certificate paths are transmitted verbatim, whatever they contain"""
+        connector = Mock()
+        connector.settings = {
+            "HOST": "localhost",
+            "PORT": 5432,
+            "NAME": "testdb",
+            "USER": "testuser",
+            "OPTIONS": {
+                "sslcert": "C:\\Program Files\\pg\\cert.crt",
+                "sslkey": "/home/user/my certs/client.key",
+                "sslrootcert": "/home/user/100% sure/ca.pem",
+                "sslmode": "verify-full",
+            },
+        }
+
+        cmd_part, env = parse_postgres_settings(connector)
+
+        assert "?" not in cmd_part
+        assert env == {
+            "PGSSLMODE": "verify-full",
+            "PGSSLROOTCERT": "/home/user/100% sure/ca.pem",
+            "PGSSLCERT": "C:\\Program Files\\pg\\cert.crt",
+            "PGSSLKEY": "/home/user/my certs/client.key",
+        }
+
+    def test_function_with_pathlib_option_values(self):
+        """Test pathlib values are accepted and stringified"""
+        connector = Mock()
+        connector.settings = {
+            "HOST": "localhost",
+            "NAME": "testdb",
+            "USER": "testuser",
+            "OPTIONS": {
+                "sslcert": Path("/tmp/foo bar/cert.crt"),
+                "sslrootcert": Path("/tmp/foo bar/ca.crt"),
+            },
+        }
+
+        _cmd_part, env = parse_postgres_settings(connector)
+
+        assert env == {
+            "PGSSLROOTCERT": "/tmp/foo bar/ca.crt",
+            "PGSSLCERT": "/tmp/foo bar/cert.crt",
+        }
+
+    def test_function_with_password_file_and_service(self):
+        """Test the other options Django forwards to its own command line tools"""
+        connector = Mock()
+        connector.settings = {
+            "HOST": "localhost",
+            "PORT": 5432,
+            "NAME": "testdb",
+            "USER": "testuser",
+            "OPTIONS": {
+                "passfile": "/home/user/.pgpass",
+                "service": "my_service",
+            },
+        }
+
+        cmd_part, env = parse_postgres_settings(connector)
+
+        assert cmd_part == "--dbname=postgresql://testuser@localhost:5432/testdb"
+        assert env == {"PGPASSFILE": "/home/user/.pgpass", "PGSERVICE": "my_service"}
+
+    def test_function_with_partial_ssl_options(self):
+        """Test a single option is forwarded on its own, and empty values are ignored"""
+        connector = Mock()
+        connector.settings = {
+            "HOST": "localhost",
+            "PORT": 5432,
+            "NAME": "testdb",
+            "USER": "testuser",
+            "OPTIONS": {"sslmode": "require"},
+        }
+
+        cmd_part, env = parse_postgres_settings(connector)
+
+        assert cmd_part == "--dbname=postgresql://testuser@localhost:5432/testdb"
+        assert env == {"PGSSLMODE": "require"}
+
+        connector.settings["OPTIONS"] = {"sslmode": "require", "sslcert": "", "sslkey": None}
+
+        _cmd_part, env = parse_postgres_settings(connector)
+
+        assert env == {"PGSSLMODE": "require"}
+
+    def test_function_ignores_unsupported_options(self):
+        """Test options which do not affect the command line tools are not forwarded"""
+        connector = Mock()
+        connector.settings = {
+            "HOST": "localhost",
+            "PORT": 5432,
+            "NAME": "testdb",
+            "USER": "testuser",
+            "OPTIONS": {
+                "application_name": "dbbackup",
+                "connect_timeout": 10,
+                "options": "-c statement_timeout=0",
+                "ssl": True,
+            },
+        }
+
+        _cmd_part, env = parse_postgres_settings(connector)
+
+        assert env == {}
+
+    def test_function_without_options(self):
+        """Test a missing or unset OPTIONS setting produces no extra environment"""
+        connector = Mock()
+        connector.settings = {
+            "HOST": "localhost",
+            "PORT": 5432,
+            "NAME": "testdb",
+            "USER": "testuser",
+        }
+
+        _cmd_part, env = parse_postgres_settings(connector)
+
+        assert env == {}
+
+        connector.settings["OPTIONS"] = None
+
+        _cmd_part, env = parse_postgres_settings(connector)
+
+        assert env == {}
+
+    def test_function_keeps_password_with_ssl_options(self):
+        """Test the password and the options end up together in the environment"""
+        connector = Mock()
+        connector.settings = {
+            "HOST": "localhost",
+            "PORT": 5432,
+            "NAME": "testdb",
+            "USER": "testuser",
+            "PASSWORD": "testpass",
+            "OPTIONS": {"sslmode": "verify-full", "sslrootcert": "/tmp/foo/bar/ca.crt"},
+        }
+
+        cmd_part, env = parse_postgres_settings(connector)
+
+        assert cmd_part == "--dbname=postgresql://testuser@localhost:5432/testdb"
+        assert env == {
+            "PGPASSWORD": "testpass",
+            "PGSSLMODE": "verify-full",
+            "PGSSLROOTCERT": "/tmp/foo/bar/ca.crt",
+        }
