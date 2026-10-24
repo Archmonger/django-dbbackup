@@ -134,13 +134,14 @@ This is the default connector for MySQL databases.
 | Setting            | Description                                                                                                                             | Default                |
 | ------------------ | --------------------------------------------------------------------------------------------------------------------------------------- | ---------------------- |
 | SINGLE_TRANSACTION | Wrap restore in a single transaction so errors cause full rollback (`--single-transaction` for `psql` / `pg_restore`).                  | `True`                 |
-| DROP               | Include / execute drop statements when restoring (`--clean` with `pg_dump` / `pg_restore`). In binary mode drops happen during restore. | `True`                 |
+| DROP               | Include / execute drop statements when restoring (`--clean` with `pg_dump` / `pg_restore`). In binary mode drops happen during restore. Overridden by `dbrestore --no-drop`. | `True`                 |
 | IF_EXISTS          | Add `IF EXISTS` to destructive statements in clean mode. Enabled by default, and when `DROP=True` to prevent identity column errors.    | `True`                 |
 | PSQL_CMD           | Path to `psql` used for admin tasks (extension creation, etc.).                                                                         | `psql`                 |
 | PASSWORD           | Sets `PGPASSWORD` if provided (prefer `.pgpass`). Set to `None` for `--no-password`                                                     | `""`                   |
 | ADMIN_USER         | Privileged user for administrative actions like enabling PostGIS.                                                                       | None                   |
 | ADMIN_PASSWORD     | Password for `ADMIN_USER` when needed.                                                                                                  | None                   |
-| SCHEMAS            | Limit dump to specific schemas (PostgreSQL connectors only).                                                                            | All non-system schemas |
+| SCHEMAS            | Limit dump to specific schemas (PostgreSQL connectors only). Overridden by `dbrestore --schema`.                                        | All non-system schemas |
+| PG_OPTIONS         | Extra `pg_restore` options appended to the restore command (binary connector only). Overridden by `dbrestore --pg-options`.             | None                   |
 
 The connection options of the `OPTIONS` setting of your Django database are forwarded to `pg_dump`, `psql` and `pg_restore` as the `libpq` environment variables Django itself uses for its command line tools: `sslmode`, `sslrootcert`, `sslcert`, `sslkey`, `passfile` and `service`. Backups and restores then connect with the same TLS and client certificate configuration as the ORM, without any additional setting:
 
@@ -188,7 +189,7 @@ That administrative statement is run as `ADMIN_USER`, with the `RESTORE_ENV` var
 | Setting      | Description                                         | Default |
 | ------------ | --------------------------------------------------- | ------- |
 | OBJECT_CHECK | Validate documents before inserting (`--objcheck`). | `True`  |
-| DROP         | Replace existing objects during restore (`--drop`). | `True`  |
+| DROP         | Replace existing objects during restore (`--drop`). Overridden by `dbrestore --no-drop`. | `True`  |
 
 #### MongoDumpConnector
 

@@ -8,7 +8,6 @@ import io
 import json
 import os
 import sys
-from importlib import import_module
 
 from django.conf import settings
 from django.core.management.base import CommandError
@@ -227,11 +226,7 @@ class Command(BaseDbBackupCommand):
         if metadata and "connector" in metadata:
             connector_path = metadata["connector"]
             try:
-                module_name = ".".join(connector_path.split(".")[:-1])
-                class_name = connector_path.split(".")[-1]
-                module = import_module(module_name)
-                connector_class = getattr(module, class_name)
-                self.connector = connector_class(self.database_name)
+                self.connector = get_connector(self.database_name, connector_path=connector_path)
                 self.logger.info("Using connector from metadata: '%s'", connector_path)
             except (ImportError, AttributeError):
                 self.logger.warning(
@@ -250,8 +245,13 @@ class Command(BaseDbBackupCommand):
 
         if self.schemas:
             self.connector.schemas = self.schemas
-        self.connector.drop = not self.no_drop
-        self.connector.pg_options = self.pg_options
+        # Only override connector attributes when the flag was actually passed, otherwise
+        # options configured through DBBACKUP_CONNECTORS (e.g. DROP or PG_OPTIONS) are
+        # silently discarded in favour of the option defaults.
+        if self.no_drop:
+            self.connector.drop = False
+        if self.pg_options:
+            self.connector.pg_options = self.pg_options
         self.connector.restore_dump(input_file)
 
         # Send post_restore signal

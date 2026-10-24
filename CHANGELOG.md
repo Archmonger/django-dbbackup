@@ -26,6 +26,10 @@ Don't forget to remove deprecated code on each major release!
 
 - `ADMIN_PASSWORD` is now passed to the PostGIS activation step, it had no effect until now.
 - `PgDumpBinaryConnector` now applies `RESTORE_ENV` to `pg_restore`, which was receiving `DUMP_ENV` instead. `DUMP_ENV` no longer leaks into the restore phase, put in `RESTORE_ENV` the variables which were reaching `pg_restore` from it.
+- `DBBACKUP_GPG_ALWAYS_TRUST` setting is now respected instead of being enabled whenever `DBBACKUP_GPG_RECIPIENT` is set. Encrypting to a public key that GPG does not trust will now fail, as documented, unless the key is trusted or `DBBACKUP_GPG_ALWAYS_TRUST = True` is set.
+- Pass configured `DBBACKUP_CONNECTORS` settings when instantiating connector from backup metadata in `dbrestore`.
+- `dbrestore` no longer discards the `DROP` and `PG_OPTIONS` values configured in `DBBACKUP_CONNECTORS`. `--no-drop` and `--pg-options` still take precedence when passed.
+- Connector options holding a list or a dict (`EXCLUDE`, `SCHEMAS`, `ENV`, `DUMP_ENV`, `RESTORE_ENV`) are now copied per connector. `dbbackup --exclude-tables` used to append to the class default, silently excluding those tables from every other database of the same run and from connectors created afterwards.
 
 ## [5.3.1] - 2026-09-10
 

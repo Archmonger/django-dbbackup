@@ -18,6 +18,49 @@ class SettingsTest(TestCase):
         # Check that ADMINS is set to DBBACKUP_ADMIN
         assert dbbackup.settings.ADMINS == ["admin@example.com"]
 
+    @override_settings(DBBACKUP_GPG_RECIPIENT="test@test", DBBACKUP_GPG_ALWAYS_TRUST=False)
+    def test_gpg_always_trust_setting(self):
+        """GPG_ALWAYS_TRUST is read from DBBACKUP_GPG_ALWAYS_TRUST"""
+        import importlib
+
+        import dbbackup.settings
+
+        self.addCleanup(importlib.reload, dbbackup.settings)
+        importlib.reload(dbbackup.settings)
+
+        assert dbbackup.settings.GPG_RECIPIENT == "test@test"
+        assert dbbackup.settings.GPG_ALWAYS_TRUST is False
+
+    @override_settings(DBBACKUP_GPG_RECIPIENT=None, DBBACKUP_GPG_ALWAYS_TRUST=True)
+    def test_gpg_always_trust_without_recipient(self):
+        """GPG_ALWAYS_TRUST is not overwritten when no recipient is configured"""
+        import importlib
+
+        import dbbackup.settings
+
+        self.addCleanup(importlib.reload, dbbackup.settings)
+        importlib.reload(dbbackup.settings)
+
+        assert dbbackup.settings.GPG_RECIPIENT is None
+        assert dbbackup.settings.GPG_ALWAYS_TRUST is True
+
+    @override_settings(DBBACKUP_GPG_RECIPIENT="test@test")
+    def test_gpg_always_trust_defaults_to_false(self):
+        """GPG_ALWAYS_TRUST defaults to False, even when a recipient is configured"""
+        import importlib
+
+        from django.conf import settings as django_settings
+
+        import dbbackup.settings
+
+        # Emulate a project that never set DBBACKUP_GPG_ALWAYS_TRUST
+        del django_settings._wrapped.DBBACKUP_GPG_ALWAYS_TRUST
+        self.addCleanup(importlib.reload, dbbackup.settings)
+        importlib.reload(dbbackup.settings)
+
+        assert dbbackup.settings.GPG_RECIPIENT == "test@test"
+        assert dbbackup.settings.GPG_ALWAYS_TRUST is False
+
     def test_deprecated_dbbackup_storage_raises(self):
         """Importing dbbackup.settings raises if DBBACKUP_STORAGE is set."""
         import importlib

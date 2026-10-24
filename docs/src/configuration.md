@@ -151,6 +151,10 @@ This mapping is similar to `DATABASES`. Lets you define different
 credentials / hosts exclusively for backup / restore operations
 (e.g. read from a replica). Keys correspond to database aliases.
 
+These options are applied whenever a connector is built, both by `dbbackup`
+and by `dbrestore` — including when `dbrestore` restores the connector recorded
+in the backup's metadata file, which only decides which class is used.
+
 See the [Databases](databases.md) section for details on how to configure
 connectors.
 
