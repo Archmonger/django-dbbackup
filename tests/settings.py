@@ -61,7 +61,7 @@ SERVER_EMAIL = "dbbackup@test.org"
 EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"
 
 DBBACKUP_GPG_RECIPIENT = "test@test"
-DBBACKUP_GPG_ALWAYS_TRUST = (True,)
+DBBACKUP_GPG_ALWAYS_TRUST = True
 
 STORAGES = {
     "default": {
