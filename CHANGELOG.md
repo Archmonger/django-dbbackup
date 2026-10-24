@@ -14,6 +14,10 @@ Don't forget to remove deprecated code on each major release!
 
 ## [Unreleased]
 
+- Nothing (yet)!
+
+## [5.4.0] - 2026-10-24
+
 ### Added
 
 - PostgreSQL connectors now forward the `sslmode`, `sslrootcert`, `sslcert`, `sslkey`, `passfile` and `service` keys of the Django database `OPTIONS` setting to `pg_dump`, `psql` and `pg_restore` as their matching `libpq` environment variable, the same way Django forwards them to its own command line tools. Backups and restores now use the TLS and client certificate configuration of the ORM, including the PostGIS activation step.
@@ -385,7 +389,8 @@ Don't forget to remove deprecated code on each major release!
 
 - Miscellaneous maintenance and minor bug fixes.
 
-[Unreleased]: https://github.com/Archmonger/django-dbbackup/compare/5.3.1...HEAD
+[Unreleased]: https://github.com/Archmonger/django-dbbackup/compare/5.4.0...HEAD
+[5.4.0]: https://github.com/Archmonger/django-dbbackup/compare/5.3.1...5.4.0
 [5.3.1]: https://github.com/Archmonger/django-dbbackup/compare/5.3.0...5.3.1
 [5.3.0]: https://github.com/Archmonger/django-dbbackup/compare/5.2.0...5.3.0
 [5.2.0]: https://github.com/Archmonger/django-dbbackup/compare/5.1.2...5.2.0
