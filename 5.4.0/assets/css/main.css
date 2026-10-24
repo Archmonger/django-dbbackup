@@ -1,0 +1,31 @@
+/* Font changes */
+.md-typeset h1 {
+    margin: 0;
+    font-size: 2.5em;
+}
+
+/* Reduce size of the outdated banner */
+.md-banner__inner {
+    margin: 0.45rem auto;
+}
+
+/* Footer styling */
+.md-footer {
+    border-top: 1px solid var(--md-footer-border-color);
+}
+
+.md-copyright {
+    width: 100%;
+}
+
+.md-copyright__highlight {
+    width: 100%;
+}
+
+.legal-footer-right {
+    float: right;
+}
+
+.md-copyright__highlight div {
+    display: inline;
+}
