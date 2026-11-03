@@ -14,7 +14,9 @@ Don't forget to remove deprecated code on each major release!
 
 ## [Unreleased]
 
-- Nothing (yet)!
+### Fixed
+
+- Failed `dbbackup` and `mediabackup` runs on Django 6.1 no longer end in `AttributeError: 'DbbackupAdminEmailHandler' object has no attribute 'connection'`, which hid the original error and stopped the failure email.
 
 ## [5.4.0] - 2026-10-24
 
