@@ -17,6 +17,7 @@ Don't forget to remove deprecated code on each major release!
 ### Fixed
 
 - Command line connectors no longer strip the backslashes from Windows paths, so `DUMP_CMD` and `RESTORE_CMD` can point to an executable such as `C:\pgsql\bin\pg_dump.exe`. It used to run as `C:pgsqlbinpg_dump.exe` and fail with "Database command not found".
+- Failed `dbbackup` and `mediabackup` runs on Django 6.1 no longer end in `AttributeError: 'DbbackupAdminEmailHandler' object has no attribute 'connection'`, which hid the original error and stopped the failure email.
 
 ## [5.4.0] - 2026-10-24
 
