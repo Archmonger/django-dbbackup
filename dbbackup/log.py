@@ -7,7 +7,8 @@ class DbbackupAdminEmailHandler(AdminEmailHandler):
     def send_mail(self, subject, message, *args, **kwargs):
         from dbbackup import utils
 
-        utils.mail_admins(subject, message, *args, connection=self.connection(), **kwargs)
+        kwargs["fail_silently"] = True
+        utils.mail_admins(subject, message, *args, **kwargs)
 
 
 class MailEnabledFilter(logging.Filter):

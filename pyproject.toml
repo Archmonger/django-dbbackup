@@ -27,6 +27,7 @@ classifiers = [
   "Framework :: Django :: 5.1",
   "Framework :: Django :: 5.2",
   "Framework :: Django :: 6.0",
+  "Framework :: Django :: 6.1",
   "Intended Audience :: Developers",
   "Intended Audience :: System Administrators",
   "License :: OSI Approved :: BSD License",
@@ -100,6 +101,11 @@ django = ["5.2"]
 python = ["3.12", "3.13", "3.14"]
 django = ["6.0"]
 
+# Django 6.1
+[[tool.hatch.envs.hatch-test.matrix]]
+python = ["3.12", "3.13", "3.14"]
+django = ["6.1"]
+
 [tool.hatch.envs.hatch-test.overrides]
 matrix.django.dependencies = [
   { if = [
@@ -114,6 +120,9 @@ matrix.django.dependencies = [
   { if = [
     "6.0",
   ], value = "django>=6.0,<6.1" },
+  { if = [
+    "6.1",
+  ], value = "django>=6.1,<6.2" },
 ]
 
 # >>> Documentation Scripts <<<

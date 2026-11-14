@@ -108,7 +108,7 @@ jobs:
             - name: Install dependencies
               run: python -m pip install --upgrade pip hatch uv
             - name: Setup postgres
-              uses: ikalnytskyi/action-setup-postgres@v7
+              uses: ikalnytskyi/action-setup-postgres@v9
             - run: psql postgresql://postgres:postgres@localhost:5432/postgres -c "SELECT 1"
             - run: psql service=postgres -c "SELECT 1"
             - run: psql -c "SELECT 1"
