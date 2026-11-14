@@ -14,6 +14,10 @@ Don't forget to remove deprecated code on each major release!
 
 ## [Unreleased]
 
+- Nothing (yet)!
+
+## [5.4.1] - 2026-11-14
+
 ### Fixed
 
 - PostgreSQL restores of a backup taken while a column used a serial default no longer fail with `column "…" of relation "…" is an identity column` when the target table now uses an identity column. The connectors drop the identity property before the dump's `DROP DEFAULT` statement, within a single transaction when `SINGLE_TRANSACTION` is enabled (the default) or `PG_OPTIONS` contains `--single-transaction`. The binary connector falls back to its previous behavior when `PG_OPTIONS` contains `--jobs`, `--dbname`, `--file`, or `--role` (or their short forms), which cannot be combined with SQL generation, and applies `--single-transaction` and section filters from `PG_OPTIONS`.
@@ -393,7 +397,8 @@ Don't forget to remove deprecated code on each major release!
 
 - Miscellaneous maintenance and minor bug fixes.
 
-[Unreleased]: https://github.com/Archmonger/django-dbbackup/compare/5.4.0...HEAD
+[Unreleased]: https://github.com/Archmonger/django-dbbackup/compare/5.4.1...HEAD
+[5.4.1]: https://github.com/Archmonger/django-dbbackup/compare/5.4.0...5.4.1
 [5.4.0]: https://github.com/Archmonger/django-dbbackup/compare/5.3.1...5.4.0
 [5.3.1]: https://github.com/Archmonger/django-dbbackup/compare/5.3.0...5.3.1
 [5.3.0]: https://github.com/Archmonger/django-dbbackup/compare/5.2.0...5.3.0
