@@ -16,6 +16,7 @@ Don't forget to remove deprecated code on each major release!
 
 ### Fixed
 
+- PostgreSQL restores of a backup taken while a column used a serial default no longer fail with `column "…" of relation "…" is an identity column` when the target table now uses an identity column. The connectors drop the identity property before the dump's `DROP DEFAULT` statement, within a single transaction when `SINGLE_TRANSACTION` is enabled (the default) or `PG_OPTIONS` contains `--single-transaction`. The binary connector falls back to its previous behavior when `PG_OPTIONS` contains `--jobs`, `--dbname`, `--file`, or `--role` (or their short forms), which cannot be combined with SQL generation, and applies `--single-transaction` and section filters from `PG_OPTIONS`.
 - Command line connectors no longer strip the backslashes from Windows paths, so `DUMP_CMD` and `RESTORE_CMD` can point to an executable such as `C:\pgsql\bin\pg_dump.exe`. It used to run as `C:pgsqlbinpg_dump.exe` and fail with "Database command not found".
 - Failed `dbbackup` and `mediabackup` runs on Django 6.1 no longer end in `AttributeError: 'DbbackupAdminEmailHandler' object has no attribute 'connection'`, which hid the original error and stopped the failure email.
 
