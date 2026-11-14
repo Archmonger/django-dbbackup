@@ -136,7 +136,7 @@ This is the default connector for MySQL databases.
 | SINGLE_TRANSACTION | Wrap restore in a single transaction so errors cause full rollback (`--single-transaction` for `psql` / `pg_restore`).                  | `True`                 |
 | DROP               | Include / execute drop statements when restoring (`--clean` with `pg_dump` / `pg_restore`). In binary mode drops happen during restore. Overridden by `dbrestore --no-drop`. | `True`                 |
 | IF_EXISTS          | Add `IF EXISTS` to destructive statements in clean mode. Enabled by default, and when `DROP=True`.                                      | `True`                 |
-| PSQL_CMD           | Path to `psql` used for admin tasks (extension creation, etc.).                                                                         | `psql`                 |
+| PSQL_CMD           | Path to `psql` used for administrative tasks and the identity-column restore.                                                           | `psql`                 |
 | PASSWORD           | Sets `PGPASSWORD` if provided (prefer `.pgpass`). Set to `None` for `--no-password`                                                     | `""`                   |
 | ADMIN_USER         | Privileged user for administrative actions like enabling PostGIS.                                                                       | None                   |
 | ADMIN_PASSWORD     | Password for `ADMIN_USER` when needed.                                                                                                  | None                   |
@@ -162,7 +162,7 @@ DATABASES = {
 
 A value coming from `OPTIONS` takes precedence over the same variable set with `ENV`, `DUMP_ENV` or `RESTORE_ENV`, the same way `PASSWORD` takes precedence over a `PGPASSWORD` set there.
 
-A backup taken while a column used a sequence-backed (`serial`) default can be restored over a table where that column is now an identity column. When the restore runs the dump's drop statements and the target database contains identity columns, the connectors drop the identity property before running the dump's `DROP DEFAULT` statement, inside the same transaction as the restore. The binary connector generates the dump's SQL with `pg_restore` to do this, so the workaround is skipped when `PG_OPTIONS` contains `--jobs` or `--dbname`, which cannot be combined with `--file`.
+A backup taken while a column used a sequence-backed (`serial`) default can be restored over a table where that column is now an identity column. When the restore runs the dump's drop statements and the target database contains identity columns, the connectors drop the identity property before running the dump's `DROP DEFAULT` statement, inside the same transaction as the restore. The binary connector generates the dump's SQL with `pg_restore` to do this. It skips the workaround when `PG_OPTIONS` contains `--jobs` or `--dbname` (which cannot be combined with `--file`) or selects only the data or post-data section, where no serial defaults are dropped. A `--single-transaction` in `PG_OPTIONS` is applied to the `psql` restore so that the prelude and the dump share one transaction.
 
 #### PgDumpBinaryConnector
 

@@ -577,6 +577,8 @@ class IdentityColumnRestoreTest(TestCase):
 
         connector.restore_dump(dump)
 
+        pre_data_cmd = mock_run_command.call_args_list[0][0][0]
+        assert pre_data_cmd.startswith("sudo pg_restore ")
         psql_cmd = mock_run_command.call_args_list[2][0][0]
         assert psql_cmd.startswith("sudo psql ")
         assert psql_cmd.endswith(" --quiet")
@@ -712,6 +714,89 @@ class IdentityColumnRestoreTest(TestCase):
         for options in (None, "", "--no-owner", "-n public"):
             connector.pg_options = options
             assert connector._pg_options_allow_sql_generation() is True
+
+    def test_pg_options_select_pre_data(self):
+        connector = self._binary_connector()
+        for options in (
+            None,
+            "",
+            "--no-owner",
+            "--section=pre-data",
+            "--section pre-data",
+            "--section=pre-data --section=data",
+        ):
+            connector.pg_options = options
+            assert connector._pg_options_select_pre_data() is True
+        for options in (
+            "--data-only",
+            "-a",
+            "--section=data",
+            "--section=post-data",
+            "--section data",
+        ):
+            connector.pg_options = options
+            assert connector._pg_options_select_pre_data() is False
+
+    def test_pg_options_single_transaction(self):
+        connector = self._binary_connector()
+        for options in ("-1", "--single-transaction", "--no-owner --single-transaction"):
+            connector.pg_options = options
+            assert connector._pg_options_single_transaction() is True
+        for options in (None, "", "--no-owner"):
+            connector.pg_options = options
+            assert connector._pg_options_single_transaction() is False
+
+    def test_build_pg_restore_sql_cmd_strips_single_transaction(self):
+        connector = self._binary_connector()
+        connector.pg_options = ["--single-transaction", "--no-owner"]
+
+        command = connector._build_pg_restore_sql_cmd()
+
+        assert "--single-transaction" not in command
+        assert "--no-owner" in command
+
+    @patch("dbbackup.db.postgresql.PgDumpBinaryConnector.run_command")
+    def test_restore_binary_dump_skips_identity_path_for_data_section(
+        self, mock_run_command
+    ):
+        mock_run_command.return_value = (BytesIO(), BytesIO())
+        connector = self._binary_connector()
+        connector._target_has_identity_columns = Mock(return_value=True)
+        connector.pg_options = "--section=data"
+        dump = BytesIO(b"archive")
+
+        connector.restore_dump(dump)
+
+        assert mock_run_command.call_count == 1
+        assert "--section=data" in mock_run_command.call_args[0][0]
+
+    @patch("dbbackup.db.postgresql._identity_prelude_file")
+    @patch("dbbackup.db.postgresql.PgDumpBinaryConnector.run_command")
+    def test_restore_binary_dump_honors_pg_options_single_transaction(
+        self, mock_run_command, mock_prelude_file
+    ):
+        mock_run_command.side_effect = [
+            (
+                BytesIO(
+                    b"ALTER TABLE IF EXISTS public.t ALTER COLUMN id DROP DEFAULT;\n"
+                ),
+                BytesIO(),
+            ),
+            (BytesIO(b"CREATE TABLE public.t (id bigint NOT NULL);\n"), BytesIO()),
+            (BytesIO(), BytesIO()),
+        ]
+        mock_prelude_file.return_value.__enter__.return_value = "/tmp/prelude.sql"
+        connector = self._binary_connector()
+        connector._target_has_identity_columns = Mock(return_value=True)
+        connector.pg_options = "--single-transaction"
+        connector.single_transaction = False
+        dump = BytesIO(b"archive")
+
+        connector.restore_dump(dump)
+
+        for call in mock_run_command.call_args_list[:2]:
+            assert "--single-transaction" not in call[0][0]
+        assert "--single-transaction" in mock_run_command.call_args_list[2][0][0]
 
 
 @patch(

@@ -343,9 +343,51 @@ class PgDumpBinaryConnector(PgDumpConnector):
 
         return True
 
+    def _pg_options_tokens(self) -> list[str]:
+        """Return ``pg_options`` as a list of command line arguments."""
+        options = self.pg_options or []
+        if isinstance(options, str):
+            return shlex.split(options)
+        return list(options)
+
+    def _pg_options_select_pre_data(self) -> bool:
+        """
+        Return whether ``pg_options`` restores the pre-data section.
+
+        Only the pre-data section contains the clean statements which drop
+        serial defaults, so the identity-column workaround is unnecessary when
+        the caller restores data or post-data only.
+        """
+        options = self._pg_options_tokens()
+        if "-a" in options or "--data-only" in options:
+            return False
+
+        sections = []
+        for index, option in enumerate(options):
+            if option == "--section":
+                if index + 1 < len(options):
+                    sections.append(options[index + 1])
+            elif option.startswith("--section="):
+                sections.append(option.split("=", 1)[1])
+
+        return not sections or "pre-data" in sections
+
+    def _pg_options_single_transaction(self) -> bool:
+        """Return whether ``pg_options`` asks for a single transaction."""
+        return any(
+            option in ("-1", "--single-transaction")
+            for option in self._pg_options_tokens()
+        )
+
     def _build_pg_restore_sql_cmd(self, pre_data: bool = False) -> str:
         """Build a ``pg_restore`` command which writes SQL to standard output."""
         cmd = []
+        if self.restore_prefix:
+            cmd.extend(
+                self.restore_prefix
+                if isinstance(self.restore_prefix, list)
+                else [self.restore_prefix]
+            )
         if self.restore_cmd:
             cmd.extend(
                 self.restore_cmd
@@ -353,11 +395,16 @@ class PgDumpBinaryConnector(PgDumpConnector):
                 else [self.restore_cmd]
             )
         if self.pg_options:
-            cmd.extend(
-                self.pg_options
-                if isinstance(self.pg_options, list)
-                else [self.pg_options]
-            )
+            # ``--single-transaction`` only wraps the generated SQL in
+            # BEGIN/COMMIT. The prelude has to run in the same transaction as
+            # the dump, so the psql invocation owns transaction handling.
+            options = [
+                option
+                for option in self._pg_options_tokens()
+                if option not in ("-1", "--single-transaction")
+            ]
+            if options:
+                cmd.append(" ".join(shlex.quote(option) for option in options))
 
         cmd.extend(["-f", "-"])
 
@@ -402,7 +449,7 @@ class PgDumpBinaryConnector(PgDumpConnector):
             cmd.append(self.psql_cmd)
             cmd.append(cmd_part)
             cmd.extend(["--set", "ON_ERROR_STOP=on"])
-            if self.single_transaction:
+            if self.single_transaction or self._pg_options_single_transaction():
                 cmd.append("--single-transaction")
             cmd.extend(["-f", shlex.quote(prelude_path), "-f", "-"])
             if self.restore_suffix:
@@ -433,6 +480,7 @@ class PgDumpBinaryConnector(PgDumpConnector):
             self.drop
             and self._target_has_identity_columns()
             and self._pg_options_allow_sql_generation()
+            and self._pg_options_select_pre_data()
         ):
             prelude = self._identity_prelude_from_archive(dump, pg_env)
             if prelude:
