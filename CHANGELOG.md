@@ -14,7 +14,9 @@ Don't forget to remove deprecated code on each major release!
 
 ## [Unreleased]
 
-- Nothing (yet)!
+### Fixed
+
+- PostgreSQL restores of a backup taken while a column used a serial default no longer fail with `column "…" of relation "…" is an identity column` when the target table now uses an identity column. The connectors drop the identity property before the dump's `DROP DEFAULT` statement, within the same transaction as the restore. The binary connector falls back to its previous behavior when `PG_OPTIONS` contains `--jobs` or `--dbname`, which cannot be combined with SQL generation.
 
 ## [5.4.0] - 2026-10-24
 

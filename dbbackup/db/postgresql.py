@@ -1,13 +1,78 @@
 from __future__ import annotations
 
 import logging
+import os
 import shlex
+import tempfile
+from contextlib import contextmanager
 from typing import Any, ClassVar
 from urllib.parse import quote
 
+from dbbackup import settings
 from dbbackup.db.base import BaseCommandDBConnector
 
 logger = logging.getLogger("dbbackup.command")
+
+# ``pg_dump`` emits a DROP DEFAULT statement in the clean section of a dump for
+# every serial-backed column. When the target table now uses an identity column,
+# PostgreSQL rejects that statement, so the identity property has to be removed
+# first. The replacement is a no-op on columns which are not identity columns,
+# which keeps serial-to-serial restores working.
+_DROP_DEFAULT_SUFFIX = b" DROP DEFAULT;"
+_DROP_IDENTITY_SUFFIX = b" DROP IDENTITY IF EXISTS;"
+
+
+def _identity_prelude_from_sql(sql: bytes) -> bytes:
+    """Build DROP IDENTITY statements for the DROP DEFAULT statements in *sql*."""
+    prelude = []
+    for line in sql.splitlines(keepends=True):
+        stripped = line.strip()
+        if (
+            stripped.startswith(b"ALTER TABLE ")
+            and b" ALTER COLUMN " in stripped
+            and stripped.endswith(_DROP_DEFAULT_SUFFIX)
+        ):
+            prelude.append(
+                stripped[: -len(_DROP_DEFAULT_SUFFIX)] + _DROP_IDENTITY_SUFFIX + b"\n"
+            )
+    return b"".join(prelude)
+
+
+def _identity_prelude_from_text_dump(dump) -> bytes:
+    """Build DROP IDENTITY statements from the clean section of a text dump."""
+    prelude = []
+    for line in dump:
+        stripped = line.strip()
+        # The clean section precedes the objects it drops. Once the first object
+        # is created (or data is copied) there is nothing left to fix.
+        if stripped.startswith((b"CREATE ", b"COPY ", b"INSERT INTO ")):
+            break
+        if (
+            stripped.startswith(b"ALTER TABLE ")
+            and b" ALTER COLUMN " in stripped
+            and stripped.endswith(_DROP_DEFAULT_SUFFIX)
+        ):
+            prelude.append(
+                stripped[: -len(_DROP_DEFAULT_SUFFIX)] + _DROP_IDENTITY_SUFFIX + b"\n"
+            )
+    return b"".join(prelude)
+
+
+@contextmanager
+def _identity_prelude_file(prelude: bytes):
+    """Write *prelude* to a temporary SQL file and yield its path."""
+    fd, path = tempfile.mkstemp(
+        prefix="dbbackup_identity_", suffix=".sql", dir=settings.TMP_DIR
+    )
+    try:
+        with os.fdopen(fd, "wb") as prelude_file:
+            prelude_file.write(prelude)
+        yield path
+    finally:
+        try:
+            os.unlink(path)
+        except OSError:
+            pass
 
 # Connection options understood by the PostgreSQL command line tools, mapped to
 # the ``libpq`` environment variable carrying each one. It mirrors
@@ -119,6 +184,35 @@ class PgDumpConnector(BaseCommandDBConnector):
         stdout, _stderr = self.run_command(cmd, env={**self.dump_env, **pg_env})
         return stdout
 
+    def _target_has_identity_columns(self) -> bool:
+        """
+        Return whether the target database contains identity columns.
+
+        A dump created from serial columns only fails when it is restored over a
+        table which now uses an identity column, so the extra restore work is
+        skipped for databases without identity columns.
+        """
+        if self.connection.vendor != "postgresql":
+            return False
+
+        try:
+            with self.connection.cursor() as cursor:
+                cursor.execute(
+                    "SELECT EXISTS ("
+                    "SELECT 1 FROM pg_catalog.pg_attribute "
+                    "WHERE attidentity IN ('a', 'd') AND NOT attisdropped"
+                    ")"
+                )
+                row = cursor.fetchone()
+            return bool(row and row[0])
+        except Exception:
+            logger.warning(
+                "Could not check the target database for identity columns; "
+                "using the standard restore command.",
+                exc_info=True,
+            )
+            return False
+
     def _restore_dump(self, dump):
         cmd_part, pg_env = parse_postgres_settings(self)
         cmd = f"{self.restore_cmd} {cmd_part}"
@@ -132,10 +226,31 @@ class PgDumpConnector(BaseCommandDBConnector):
         if self.single_transaction:
             cmd += " --single-transaction"
 
-        cmd += f" {self.settings['NAME']}"
-        cmd = f"{self.restore_prefix} {cmd} {self.restore_suffix}"
-        stdout, stderr = self.run_command(cmd, stdin=dump, env={**self.restore_env, **pg_env})
-        return stdout, stderr
+        prelude = b""
+        if self._target_has_identity_columns():
+            # Text dumps carry their clean statements inside the file, so they
+            # must be handled even when the restore is told not to drop objects.
+            prelude = _identity_prelude_from_text_dump(dump)
+            dump.seek(0)
+
+        if not prelude:
+            cmd += f" {self.settings['NAME']}"
+            cmd = f"{self.restore_prefix} {cmd} {self.restore_suffix}"
+            stdout, stderr = self.run_command(
+                cmd, stdin=dump, env={**self.restore_env, **pg_env}
+            )
+            return stdout, stderr
+
+        # Run the generated statements and the dump in a single psql session, so
+        # the identity properties are dropped inside the same transaction as the
+        # restore and rolled back if the restore fails.
+        with _identity_prelude_file(prelude) as prelude_path:
+            cmd += f" -f {shlex.quote(prelude_path)} -f - {self.settings['NAME']}"
+            cmd = f"{self.restore_prefix} {cmd} {self.restore_suffix}"
+            stdout, stderr = self.run_command(
+                cmd, stdin=dump, env={**self.restore_env, **pg_env}
+            )
+            return stdout, stderr
 
 
 class PgDumpGisConnector(PgDumpConnector):
@@ -184,6 +299,7 @@ class PgDumpBinaryConnector(PgDumpConnector):
     extension = "psql.bin"
     dump_cmd = "pg_dump"
     restore_cmd = "pg_restore"
+    psql_cmd = "psql"
     single_transaction = True
     drop = True
     if_exists = True
@@ -204,6 +320,103 @@ class PgDumpBinaryConnector(PgDumpConnector):
         stdout, _ = self.run_command(cmd, env={**self.dump_env, **pg_env})
         return stdout
 
+    def _pg_options_allow_sql_generation(self) -> bool:
+        """
+        Return whether ``pg_options`` can be combined with ``pg_restore -f``.
+
+        ``--jobs`` and ``--dbname`` are incompatible with writing the archive to
+        standard output, which the identity-column restore requires.
+        """
+        options = self.pg_options or []
+        if isinstance(options, str):
+            options = shlex.split(options)
+
+        for option in options:
+            if option in ("-j", "--jobs", "-d", "--dbname"):
+                return False
+            if option.startswith(("--jobs=", "--dbname=")):
+                return False
+            if option.startswith("-j") and not option.startswith("--"):
+                return False
+            if option.startswith("-d") and not option.startswith("--"):
+                return False
+
+        return True
+
+    def _build_pg_restore_sql_cmd(self, pre_data: bool = False) -> str:
+        """Build a ``pg_restore`` command which writes SQL to standard output."""
+        cmd = []
+        if self.restore_cmd:
+            cmd.extend(
+                self.restore_cmd
+                if isinstance(self.restore_cmd, list)
+                else [self.restore_cmd]
+            )
+        if self.pg_options:
+            cmd.extend(
+                self.pg_options
+                if isinstance(self.pg_options, list)
+                else [self.pg_options]
+            )
+
+        cmd.extend(["-f", "-"])
+
+        if self.drop:
+            cmd.append("--clean")
+
+        if self.schemas:
+            for schema in self.schemas:
+                cmd.extend(["-n", schema])
+
+        if self.if_exists or self.drop:
+            cmd.append("--if-exists")
+
+        if pre_data:
+            cmd.append("--section=pre-data")
+
+        return " ".join(cmd)
+
+    def _identity_prelude_from_archive(self, dump, pg_env) -> bytes:
+        """Return the DROP IDENTITY statements needed by the archive in *dump*."""
+        cmd = self._build_pg_restore_sql_cmd(pre_data=True)
+        stdout, _ = self.run_command(cmd, stdin=dump, env={**self.restore_env, **pg_env})
+        dump.seek(0)
+        return _identity_prelude_from_sql(stdout.read())
+
+    def _restore_dump_with_identity_prelude(self, dump, prelude, cmd_part, pg_env):
+        """Generate the dump's SQL and restore it together with the prelude."""
+        full_sql, _ = self.run_command(
+            self._build_pg_restore_sql_cmd(),
+            stdin=dump,
+            env={**self.restore_env, **pg_env},
+        )
+
+        with _identity_prelude_file(prelude) as prelude_path:
+            cmd = []
+            if self.restore_prefix:
+                cmd.extend(
+                    self.restore_prefix
+                    if isinstance(self.restore_prefix, list)
+                    else [self.restore_prefix]
+                )
+            cmd.append(self.psql_cmd)
+            cmd.append(cmd_part)
+            cmd.extend(["--set", "ON_ERROR_STOP=on"])
+            if self.single_transaction:
+                cmd.append("--single-transaction")
+            cmd.extend(["-f", prelude_path, "-f", "-"])
+            if self.restore_suffix:
+                cmd.extend(
+                    self.restore_suffix
+                    if isinstance(self.restore_suffix, list)
+                    else [self.restore_suffix]
+                )
+
+            stdout, _ = self.run_command(
+                " ".join(cmd), stdin=full_sql, env={**self.restore_env, **pg_env}
+            )
+            return stdout
+
     def _restore_dump(self, dump: str):
         """
         Restore a PostgreSQL dump using subprocess with argument list.
@@ -215,6 +428,18 @@ class PgDumpBinaryConnector(PgDumpConnector):
         """
 
         cmd_part, pg_env = parse_postgres_settings(self)
+
+        if (
+            self.drop
+            and self._target_has_identity_columns()
+            and self._pg_options_allow_sql_generation()
+        ):
+            prelude = self._identity_prelude_from_archive(dump, pg_env)
+            if prelude:
+                return self._restore_dump_with_identity_prelude(
+                    dump, prelude, cmd_part, pg_env
+                )
+
         cmd = []
 
         # Flatten optional values
