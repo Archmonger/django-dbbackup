@@ -404,7 +404,7 @@ class PgDumpBinaryConnector(PgDumpConnector):
             cmd.extend(["--set", "ON_ERROR_STOP=on"])
             if self.single_transaction:
                 cmd.append("--single-transaction")
-            cmd.extend(["-f", prelude_path, "-f", "-"])
+            cmd.extend(["-f", shlex.quote(prelude_path), "-f", "-"])
             if self.restore_suffix:
                 cmd.extend(
                     self.restore_suffix
