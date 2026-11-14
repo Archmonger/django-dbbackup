@@ -10,6 +10,7 @@ from dbbackup.db.postgresql import (
     PgDumpGisConnector,
     _identity_prelude_from_sql,
     _identity_prelude_from_text_dump,
+    _identity_prelude_file,
     parse_postgres_settings,
 )
 
@@ -517,6 +518,71 @@ class IdentityColumnRestoreTest(TestCase):
         assert "-f /tmp/prelude.sql -f - dbname" in command
 
     @patch("dbbackup.db.postgresql._identity_prelude_file")
+    @patch("dbbackup.db.postgresql.PgDumpConnector.run_command")
+    def test_restore_text_dump_over_identity_columns_without_single_transaction(
+        self, mock_run_command, mock_prelude_file
+    ):
+        mock_run_command.return_value = (BytesIO(), BytesIO())
+        mock_prelude_file.return_value.__enter__.return_value = "/tmp/prelude.sql"
+        self.connector._target_has_identity_columns = Mock(return_value=True)
+        self.connector.single_transaction = False
+        dump = BytesIO(
+            b"ALTER TABLE IF EXISTS public.t ALTER COLUMN id DROP DEFAULT;\n"
+        )
+
+        self.connector.restore_dump(dump)
+
+        command = mock_run_command.call_args[0][0]
+        assert "-f /tmp/prelude.sql -f - dbname" in command
+        assert "--single-transaction" not in command
+
+    def test_build_pg_restore_sql_cmd_without_drop(self):
+        connector = self._binary_connector()
+        connector.pg_options = ["--no-owner"]
+        connector.schemas = ["public"]
+        connector.drop = False
+        connector.if_exists = False
+
+        command = connector._build_pg_restore_sql_cmd(pre_data=True)
+
+        assert "--no-owner" in command
+        assert "-f -" in command
+        assert "--clean" not in command
+        assert "--if-exists" not in command
+        assert "-n public" in command
+        assert "--section=pre-data" in command
+
+    @patch("dbbackup.db.postgresql._identity_prelude_file")
+    @patch("dbbackup.db.postgresql.PgDumpBinaryConnector.run_command")
+    def test_restore_binary_dump_over_identity_columns_with_prefix_and_suffix(
+        self, mock_run_command, mock_prelude_file
+    ):
+        mock_run_command.side_effect = [
+            (
+                BytesIO(
+                    b"ALTER TABLE IF EXISTS public.t ALTER COLUMN id DROP DEFAULT;\n"
+                ),
+                BytesIO(),
+            ),
+            (BytesIO(b"CREATE TABLE public.t (id bigint NOT NULL);\n"), BytesIO()),
+            (BytesIO(), BytesIO()),
+        ]
+        mock_prelude_file.return_value.__enter__.return_value = "/tmp/prelude.sql"
+        connector = self._binary_connector()
+        connector._target_has_identity_columns = Mock(return_value=True)
+        connector.restore_prefix = "sudo"
+        connector.restore_suffix = "--quiet"
+        connector.single_transaction = False
+        dump = BytesIO(b"archive")
+
+        connector.restore_dump(dump)
+
+        psql_cmd = mock_run_command.call_args_list[2][0][0]
+        assert psql_cmd.startswith("sudo psql ")
+        assert psql_cmd.endswith(" --quiet")
+        assert "--single-transaction" not in psql_cmd
+
+    @patch("dbbackup.db.postgresql._identity_prelude_file")
     @patch("dbbackup.db.postgresql.PgDumpBinaryConnector.run_command")
     def test_restore_binary_dump_over_identity_columns(
         self, mock_run_command, mock_prelude_file
@@ -593,12 +659,54 @@ class IdentityColumnRestoreTest(TestCase):
         assert mock_run_command.call_count == 1
         assert "--jobs=2" in mock_run_command.call_args[0][0]
 
+    def test_identity_prelude_from_text_dump_without_create(self):
+        dump = BytesIO(
+            b"ALTER TABLE IF EXISTS public.t ALTER COLUMN id DROP DEFAULT;\n"
+            b"DROP SEQUENCE IF EXISTS public.t_id_seq;\n"
+        )
+        assert _identity_prelude_from_text_dump(dump) == (
+            b"ALTER TABLE IF EXISTS public.t ALTER COLUMN id DROP IDENTITY IF EXISTS;\n"
+        )
+
+    def test_identity_prelude_file_is_written_and_removed(self):
+        with _identity_prelude_file(b"SELECT 1;\n") as path:
+            assert Path(path).read_bytes() == b"SELECT 1;\n"
+        assert not Path(path).exists()
+
+    def test_target_has_identity_columns_true(self):
+        cursor = Mock()
+        cursor.__enter__ = Mock(return_value=cursor)
+        cursor.__exit__ = Mock(return_value=False)
+        cursor.fetchone.return_value = (True,)
+        self.connector.connection = Mock(
+            vendor="postgresql", cursor=Mock(return_value=cursor)
+        )
+        assert self.connector._target_has_identity_columns() is True
+
+    def test_target_has_identity_columns_false_when_query_fails(self):
+        cursor = Mock()
+        cursor.__enter__ = Mock(return_value=cursor)
+        cursor.__exit__ = Mock(return_value=False)
+        cursor.execute.side_effect = RuntimeError("connection lost")
+        self.connector.connection = Mock(
+            vendor="postgresql", cursor=Mock(return_value=cursor)
+        )
+        with self.assertLogs("dbbackup.command", level="WARNING"):
+            assert self.connector._target_has_identity_columns() is False
+
     def test_target_has_identity_columns_false_for_non_postgres(self):
         assert self.connector._target_has_identity_columns() is False
 
     def test_pg_options_allow_sql_generation(self):
         connector = PgDumpBinaryConnector()
-        for options in ("-j 2", "--jobs=2", "-d dbname", "--dbname=dbname", "-j2"):
+        for options in (
+            "-j 2",
+            "--jobs=2",
+            "-d dbname",
+            "--dbname=dbname",
+            "-j2",
+            "-dname",
+        ):
             connector.pg_options = options
             assert connector._pg_options_allow_sql_generation() is False
         for options in (None, "", "--no-owner", "-n public"):
