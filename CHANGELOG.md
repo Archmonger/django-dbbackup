@@ -17,6 +17,7 @@ Don't forget to remove deprecated code on each major release!
 ### Fixed
 
 - PostgreSQL restores of a backup taken while a column used a serial default no longer fail with `column "…" of relation "…" is an identity column` when the target table now uses an identity column. The connectors drop the identity property before the dump's `DROP DEFAULT` statement, within the same transaction as the restore. The binary connector falls back to its previous behavior when `PG_OPTIONS` contains `--jobs` or `--dbname`, which cannot be combined with SQL generation.
+- Failed `dbbackup` and `mediabackup` runs on Django 6.1 no longer end in `AttributeError: 'DbbackupAdminEmailHandler' object has no attribute 'connection'`, which hid the original error and stopped the failure email.
 
 ## [5.4.0] - 2026-10-24
 
