@@ -8,8 +8,11 @@ from contextlib import contextmanager
 from typing import Any, ClassVar
 from urllib.parse import quote
 
+from django.db import Error as DjangoDBError
+
 from dbbackup import settings
-from dbbackup.db.base import BaseCommandDBConnector
+from dbbackup.db.base import BaseCommandDBConnector, _split_command
+from dbbackup.db.exceptions import CommandConnectorError
 
 logger = logging.getLogger("dbbackup.command")
 
@@ -72,7 +75,9 @@ def _identity_prelude_file(prelude: bytes):
         try:
             os.unlink(path)
         except OSError:
-            pass
+            logger.debug(
+                "Could not remove the identity prelude file %s", path, exc_info=True
+            )
 
 # Connection options understood by the PostgreSQL command line tools, mapped to
 # the ``libpq`` environment variable carrying each one. It mirrors
@@ -205,7 +210,7 @@ class PgDumpConnector(BaseCommandDBConnector):
                 )
                 row = cursor.fetchone()
             return bool(row and row[0])
-        except Exception:
+        except DjangoDBError:
             logger.warning(
                 "Could not check the target database for identity columns; "
                 "using the standard restore command.",
@@ -324,21 +329,28 @@ class PgDumpBinaryConnector(PgDumpConnector):
         """
         Return whether ``pg_options`` can be combined with ``pg_restore -f``.
 
-        ``--jobs`` and ``--dbname`` are incompatible with writing the archive to
-        standard output, which the identity-column restore requires.
+        ``--jobs``, ``--dbname``, ``--file`` and ``--role`` are incompatible with
+        writing the archive to standard output, which the identity-column restore
+        requires.  ``--role`` would be silently ignored by ``pg_restore -f``.
         """
-        options = self.pg_options or []
-        if isinstance(options, str):
-            options = shlex.split(options)
-
-        for option in options:
-            if option in ("-j", "--jobs", "-d", "--dbname"):
+        for option in self._pg_options_tokens():
+            if option in (
+                "-j",
+                "--jobs",
+                "-d",
+                "--dbname",
+                "-f",
+                "--file",
+                "--role",
+            ):
                 return False
-            if option.startswith(("--jobs=", "--dbname=")):
+            if option.startswith(("--jobs=", "--dbname=", "--file=", "--role=")):
                 return False
             if option.startswith("-j") and not option.startswith("--"):
                 return False
             if option.startswith("-d") and not option.startswith("--"):
+                return False
+            if option.startswith("-f") and not option.startswith("--"):
                 return False
 
         return True
@@ -347,7 +359,7 @@ class PgDumpBinaryConnector(PgDumpConnector):
         """Return ``pg_options`` as a list of command line arguments."""
         options = self.pg_options or []
         if isinstance(options, str):
-            return shlex.split(options)
+            return _split_command(options)
         return list(options)
 
     def _pg_options_select_pre_data(self) -> bool:
@@ -413,13 +425,20 @@ class PgDumpBinaryConnector(PgDumpConnector):
 
         if self.schemas:
             for schema in self.schemas:
-                cmd.extend(["-n", schema])
+                cmd.extend(["-n", shlex.quote(schema)])
 
         if self.if_exists or self.drop:
             cmd.append("--if-exists")
 
         if pre_data:
             cmd.append("--section=pre-data")
+
+        if self.restore_suffix:
+            cmd.extend(
+                self.restore_suffix
+                if isinstance(self.restore_suffix, list)
+                else [self.restore_suffix]
+            )
 
         return " ".join(cmd)
 
@@ -430,14 +449,8 @@ class PgDumpBinaryConnector(PgDumpConnector):
         dump.seek(0)
         return _identity_prelude_from_sql(stdout.read())
 
-    def _restore_dump_with_identity_prelude(self, dump, prelude, cmd_part, pg_env):
-        """Generate the dump's SQL and restore it together with the prelude."""
-        full_sql, _ = self.run_command(
-            self._build_pg_restore_sql_cmd(),
-            stdin=dump,
-            env={**self.restore_env, **pg_env},
-        )
-
+    def _restore_dump_with_identity_prelude(self, prelude, full_sql, cmd_part, pg_env):
+        """Restore the generated SQL together with the identity prelude."""
         with _identity_prelude_file(prelude) as prelude_path:
             cmd = []
             if self.restore_prefix:
@@ -451,13 +464,13 @@ class PgDumpBinaryConnector(PgDumpConnector):
             cmd.extend(["--set", "ON_ERROR_STOP=on"])
             if self.single_transaction or self._pg_options_single_transaction():
                 cmd.append("--single-transaction")
-            cmd.extend(["-f", shlex.quote(prelude_path), "-f", "-"])
-            if self.restore_suffix:
-                cmd.extend(
-                    self.restore_suffix
-                    if isinstance(self.restore_suffix, list)
-                    else [self.restore_suffix]
+            else:
+                logger.warning(
+                    "Restoring a serial-backed dump over identity columns without "
+                    "a single transaction; a failed restore may leave the identity "
+                    "property dropped."
                 )
+            cmd.extend(["-f", shlex.quote(prelude_path), "-f", "-"])
 
             stdout, _ = self.run_command(
                 " ".join(cmd), stdin=full_sql, env={**self.restore_env, **pg_env}
@@ -482,11 +495,35 @@ class PgDumpBinaryConnector(PgDumpConnector):
             and self._pg_options_allow_sql_generation()
             and self._pg_options_select_pre_data()
         ):
-            prelude = self._identity_prelude_from_archive(dump, pg_env)
-            if prelude:
-                return self._restore_dump_with_identity_prelude(
-                    dump, prelude, cmd_part, pg_env
+            try:
+                prelude = self._identity_prelude_from_archive(dump, pg_env)
+            except CommandConnectorError:
+                logger.warning(
+                    "Could not generate SQL from the dump to prepare the "
+                    "identity-column restore; using the standard restore command.",
+                    exc_info=True,
                 )
+                dump.seek(0)
+            else:
+                if prelude:
+                    try:
+                        full_sql, _ = self.run_command(
+                            self._build_pg_restore_sql_cmd(),
+                            stdin=dump,
+                            env={**self.restore_env, **pg_env},
+                        )
+                    except CommandConnectorError:
+                        logger.warning(
+                            "Could not generate the dump's SQL for the "
+                            "identity-column restore; using the standard restore "
+                            "command.",
+                            exc_info=True,
+                        )
+                        dump.seek(0)
+                    else:
+                        return self._restore_dump_with_identity_prelude(
+                            prelude, full_sql, cmd_part, pg_env
+                        )
 
         cmd = []
 
@@ -510,7 +547,7 @@ class PgDumpBinaryConnector(PgDumpConnector):
 
         if self.schemas:
             for schema in self.schemas:
-                cmd.extend(["-n", schema])
+                cmd.extend(["-n", shlex.quote(schema)])
 
         if self.if_exists or self.drop:
             cmd.extend(["--if-exists"])

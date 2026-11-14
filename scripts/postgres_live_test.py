@@ -374,6 +374,19 @@ class PostgreSQLLiveTest:
                 msg = f"Restored rows for {table} are unexpected: {rows}"
                 raise AssertionError(msg)
 
+            cursor.execute(
+                "SELECT attidentity FROM pg_attribute "
+                "WHERE attrelid = %s::regclass AND attname = 'id'",
+                [table],
+            )
+            identity = cursor.fetchone()[0]
+            if identity != "":
+                msg = (
+                    f"Column {table}.id was restored as an identity column, "
+                    "not a serial column"
+                )
+                raise AssertionError(msg)
+
             cursor.execute(f"SELECT pg_get_serial_sequence('{table}', 'id')")
             sequence = cursor.fetchone()[0]
             if sequence is None:

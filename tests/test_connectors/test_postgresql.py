@@ -2,8 +2,10 @@ from io import BytesIO
 from pathlib import Path
 from unittest.mock import Mock, patch
 
+from django.db import DatabaseError
 from django.test import TestCase
 
+from dbbackup.db.exceptions import CommandConnectorError
 from dbbackup.db.postgresql import (
     PgDumpBinaryConnector,
     PgDumpConnector,
@@ -539,7 +541,7 @@ class IdentityColumnRestoreTest(TestCase):
     def test_build_pg_restore_sql_cmd_without_drop(self):
         connector = self._binary_connector()
         connector.pg_options = ["--no-owner"]
-        connector.schemas = ["public"]
+        connector.schemas = ["public", "my schema"]
         connector.drop = False
         connector.if_exists = False
 
@@ -550,6 +552,7 @@ class IdentityColumnRestoreTest(TestCase):
         assert "--clean" not in command
         assert "--if-exists" not in command
         assert "-n public" in command
+        assert "-n 'my schema'" in command
         assert "--section=pre-data" in command
 
     @patch("dbbackup.db.postgresql._identity_prelude_file")
@@ -575,14 +578,62 @@ class IdentityColumnRestoreTest(TestCase):
         connector.single_transaction = False
         dump = BytesIO(b"archive")
 
-        connector.restore_dump(dump)
+        with self.assertLogs("dbbackup.command", level="WARNING") as logs:
+            connector.restore_dump(dump)
 
         pre_data_cmd = mock_run_command.call_args_list[0][0][0]
         assert pre_data_cmd.startswith("sudo pg_restore ")
+        assert pre_data_cmd.endswith(" --quiet")
+        full_sql_cmd = mock_run_command.call_args_list[1][0][0]
+        assert full_sql_cmd.startswith("sudo pg_restore ")
+        assert full_sql_cmd.endswith(" --quiet")
         psql_cmd = mock_run_command.call_args_list[2][0][0]
         assert psql_cmd.startswith("sudo psql ")
-        assert psql_cmd.endswith(" --quiet")
+        assert "--quiet" not in psql_cmd
         assert "--single-transaction" not in psql_cmd
+        assert "without a single transaction" in logs.output[0]
+
+    @patch("dbbackup.db.postgresql.PgDumpBinaryConnector.run_command")
+    def test_restore_binary_dump_falls_back_when_sql_generation_fails(
+        self, mock_run_command
+    ):
+        mock_run_command.side_effect = [
+            CommandConnectorError("pg_restore failed"),
+            (BytesIO(), BytesIO()),
+        ]
+        connector = self._binary_connector()
+        connector._target_has_identity_columns = Mock(return_value=True)
+        dump = BytesIO(b"archive")
+
+        with self.assertLogs("dbbackup.command", level="WARNING"):
+            connector.restore_dump(dump)
+
+        assert mock_run_command.call_count == 2
+        assert "pg_restore" in mock_run_command.call_args_list[1][0][0]
+
+    @patch("dbbackup.db.postgresql.PgDumpBinaryConnector.run_command")
+    def test_restore_binary_dump_falls_back_when_full_sql_generation_fails(
+        self, mock_run_command
+    ):
+        mock_run_command.side_effect = [
+            (
+                BytesIO(
+                    b"ALTER TABLE IF EXISTS public.t ALTER COLUMN id DROP DEFAULT;\n"
+                ),
+                BytesIO(),
+            ),
+            CommandConnectorError("pg_restore failed"),
+            (BytesIO(), BytesIO()),
+        ]
+        connector = self._binary_connector()
+        connector._target_has_identity_columns = Mock(return_value=True)
+        dump = BytesIO(b"archive")
+
+        with self.assertLogs("dbbackup.command", level="WARNING"):
+            connector.restore_dump(dump)
+
+        assert mock_run_command.call_count == 3
+        assert "pg_restore" in mock_run_command.call_args_list[2][0][0]
 
     @patch("dbbackup.db.postgresql._identity_prelude_file")
     @patch("dbbackup.db.postgresql.PgDumpBinaryConnector.run_command")
@@ -689,7 +740,7 @@ class IdentityColumnRestoreTest(TestCase):
         cursor = Mock()
         cursor.__enter__ = Mock(return_value=cursor)
         cursor.__exit__ = Mock(return_value=False)
-        cursor.execute.side_effect = RuntimeError("connection lost")
+        cursor.execute.side_effect = DatabaseError("connection lost")
         self.connector.connection = Mock(
             vendor="postgresql", cursor=Mock(return_value=cursor)
         )
@@ -708,6 +759,11 @@ class IdentityColumnRestoreTest(TestCase):
             "--dbname=dbname",
             "-j2",
             "-dname",
+            "-f file",
+            "--file=file",
+            "--role role",
+            "--role=role",
+            "-f/tmp/file",
         ):
             connector.pg_options = options
             assert connector._pg_options_allow_sql_generation() is False
