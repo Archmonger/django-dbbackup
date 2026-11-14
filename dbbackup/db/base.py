@@ -138,6 +138,22 @@ class BaseDBConnector:
         raise NotImplementedError(msg)
 
 
+def _split_command(command):
+    r"""
+    Split a command line into arguments like :func:`shlex.split`.
+
+    On Windows a backslash is the path separator, not an escape character, so
+    it is kept. Otherwise a ``DUMP_CMD`` such as ``C:\pgsql\bin\pg_dump.exe``
+    would be run as ``C:pgsqlbinpg_dump.exe``.
+    """
+    lexer = shlex.shlex(command, posix=True)
+    lexer.whitespace_split = True
+    lexer.commenters = ""
+    if os.name == "nt":
+        lexer.escape = ""
+    return list(lexer)
+
+
 class BaseCommandDBConnector(BaseDBConnector):
     """
     Base class for create database connector based on command line tools.
@@ -168,7 +184,7 @@ class BaseCommandDBConnector(BaseDBConnector):
         """
         logger.debug(command)
         original_command = command
-        cmd = shlex.split(command)
+        cmd = _split_command(command)
         stdout = SpooledTemporaryFile(max_size=settings.TMP_FILE_MAX_SIZE, dir=settings.TMP_DIR)
         stderr = SpooledTemporaryFile(max_size=settings.TMP_FILE_MAX_SIZE, dir=settings.TMP_DIR)
         full_env = os.environ.copy() if self.use_parent_env else {}
@@ -209,7 +225,7 @@ class BaseCommandDBConnector(BaseDBConnector):
         except OSError as err:
             # Check if this is a "command not found" error (errno 2)
             if err.errno == 2:  # No such file or directory
-                cmd_name = shlex.split(command)[0] if command else "command"
+                cmd_name = _split_command(command)[0] if command else "command"
                 error_msg = (
                     f"Database command '{cmd_name}' not found. "
                     f"Please ensure the required database client tools are installed.\n\n"

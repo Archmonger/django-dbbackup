@@ -1,4 +1,6 @@
 import os
+import shlex
+import sys
 from tempfile import SpooledTemporaryFile
 from unittest.mock import patch
 
@@ -7,7 +9,7 @@ from django.test import TestCase
 
 from dbbackup import settings as dbbackup_settings
 from dbbackup.db import exceptions
-from dbbackup.db.base import BaseCommandDBConnector, BaseDBConnector, get_connector
+from dbbackup.db.base import BaseCommandDBConnector, BaseDBConnector, _split_command, get_connector
 
 
 class GetConnectorTest(TestCase):
@@ -171,6 +173,28 @@ class BaseCommandDBConnectorTest(TestCase):
             # Should NOT contain the helpful database installation message
             assert "Database command" not in error_message
             assert "client tools are installed" not in error_message
+
+    @patch("dbbackup.db.base.os.name", "nt")
+    def test_split_command_keeps_backslashes_on_windows(self):
+        command = r'"C:\Program Files\PostgreSQL\bin\psql.exe" C:\pgsql\bin\pg_dump.exe ' + shlex.quote("p w")
+        assert _split_command(command) == [
+            r"C:\Program Files\PostgreSQL\bin\psql.exe",
+            r"C:\pgsql\bin\pg_dump.exe",
+            "p w",
+        ]
+
+    @patch("dbbackup.db.base.os.name", "posix")
+    def test_split_command_posix(self):
+        command = r"pg_dump a\ b 'c d' \"e\""
+        assert _split_command(command) == shlex.split(command)
+
+    @pytest.mark.skipif(os.name != "nt", reason="Windows command line")
+    def test_run_command_windows_path(self):
+        connector = BaseCommandDBConnector()
+        stdout, _stderr = connector.run_command(
+            rf'"{sys.executable}" -c "import sys; print(sys.argv[1])" C:\dumps\db.psql'
+        )
+        assert stdout.read().strip() == rb"C:\dumps\db.psql"
 
     def test_run_command_stdin(self):
         connector = BaseCommandDBConnector()
