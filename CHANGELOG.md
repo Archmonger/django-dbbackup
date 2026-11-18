@@ -14,7 +14,9 @@ Don't forget to remove deprecated code on each major release!
 
 ## [Unreleased]
 
-- Nothing (yet)!
+### Fixed
+
+- Failure emails no longer go to the second character of each address when `ADMINS` lists plain email address strings, the format Django 6.0 documents.
 
 ## [5.4.1] - 2026-11-14
 

@@ -98,7 +98,7 @@ def mail_admins(subject, message, fail_silently=False, connection=None, html_mes
         f"{settings.EMAIL_SUBJECT_PREFIX}{subject}",
         message,
         settings.SERVER_EMAIL,
-        [a[1] for a in settings.ADMINS],
+        [a[1] if isinstance(a, (list, tuple)) and len(a) == 2 else a for a in settings.ADMINS],
         connection=connection,
     )
 
