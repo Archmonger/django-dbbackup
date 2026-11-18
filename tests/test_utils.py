@@ -69,6 +69,11 @@ class MailAdminsTest(TestCase):
         assert utils.mail_admins(subject, msg) is None
         assert len(mail.outbox) == 0
 
+    @patch("dbbackup.settings.ADMINS", ["foo@bar"])
+    def test_admins_as_strings(self):
+        utils.mail_admins("foo subject", "bar message")
+        assert mail.outbox[0].to == ["foo@bar"]
+
 
 class EmailUncaughtExceptionTest(TestCase):
     def test_success(self):
