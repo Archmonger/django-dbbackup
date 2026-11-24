@@ -2,11 +2,13 @@
 Utils for handle files.
 """
 
+import contextlib
 import logging
+from datetime import datetime, timezone
 
 from django.core.exceptions import ImproperlyConfigured
 
-from . import settings, utils
+from dbbackup import settings, utils
 
 
 def get_storage(path=None, options=None):
@@ -27,15 +29,12 @@ def get_storage(path=None, options=None):
     path = path or settings.STORAGE
     options = options or settings.STORAGE_OPTIONS
     if not path:
-        raise ImproperlyConfigured('You must specify a storage class using settings.STORAGES["dbbackup"] settings.')
+        msg = 'You must specify a storage class using settings.STORAGES["dbbackup"] settings.'
+        raise ImproperlyConfigured(msg)
     return Storage(path, **options)
 
 
 class StorageError(Exception):
-    pass
-
-
-class FileNotFound(StorageError):
     pass
 
 
@@ -77,7 +76,7 @@ class Storage:
         self.storage.delete(name=filepath)
 
     def list_directory(self, path=""):
-        return self.storage.listdir(path)[1]
+        return [self._normalize_listed_name(name) for name in self.storage.listdir(path)[1]]
 
     def write_file(self, filehandle, filename):
         self.logger.debug("Writing file %s", filename)
@@ -124,10 +123,12 @@ class Storage:
         :rtype: ``list`` of ``str``
         """
         if content_type not in ("db", "media", None):
-            msg = "Bad content_type %s, must be 'db', 'media', or None" % (content_type)
+            msg = f"Bad content_type {content_type}, must be 'db', 'media', or None"
             raise TypeError(msg)
         # TODO: Make better filter for include only backups
         files = [f for f in self.list_directory() if utils.filename_to_datestring(f)]
+        # Exclude metadata files
+        files = [f for f in files if not f.endswith(".metadata")]
         if encrypted is not None:
             files = [f for f in files if (".gpg" in f) == encrypted]
         if compressed is not None:
@@ -183,8 +184,9 @@ class Storage:
             servername=servername,
         )
         if not files:
-            raise FileNotFound("There's no backup file available.")
-        return max(files, key=utils.filename_to_date)
+            msg = "There's no backup file available."
+            raise StorageError(msg)
+        return max(files, key=self._filename_to_date_or_min)
 
     def get_older_backup(
         self,
@@ -227,8 +229,9 @@ class Storage:
             servername=servername,
         )
         if not files:
-            raise FileNotFound("There's no backup file available.")
-        return min(files, key=utils.filename_to_date)
+            msg = "There's no backup file available."
+            raise StorageError(msg)
+        return min(files, key=self._filename_to_date_or_min)
 
     def clean_old_backups(
         self,
@@ -272,12 +275,37 @@ class Storage:
             database=database,
             servername=servername,
         )
-        files = sorted(files, key=utils.filename_to_date, reverse=True)
+        files = sorted(files, key=self._filename_to_date_or_min, reverse=True)
         files_to_delete = [fi for i, fi in enumerate(files) if i >= keep_number]
         for filename in files_to_delete:
             if keep_filter(filename):
                 continue
             self.delete_file(filename)
+
+            metadata_filename = f"{filename}.metadata"
+            if self.storage.exists(metadata_filename):
+                self.delete_file(metadata_filename)
+
+    @staticmethod
+    def _filename_to_date_or_min(filename: str) -> datetime:
+        file_date = utils.filename_to_date(filename)
+        if file_date is None:
+            return datetime.min.replace(tzinfo=timezone.utc)
+        if file_date.tzinfo is None:
+            return file_date.replace(tzinfo=timezone.utc)
+        return file_date
+
+    def _normalize_listed_name(self, name: str) -> str:
+        location = getattr(self.storage, "location", "") or ""
+        if not location:
+            return name
+
+        normalized_location = location.replace("\\", "/").strip("/")
+        normalized_name = name.replace("\\", "/")
+        prefix = f"{normalized_location}/"
+        if normalized_location and normalized_name.startswith(prefix):
+            return normalized_name[len(prefix) :]
+        return name
 
 
 def get_storage_class(path=None):
@@ -297,11 +325,11 @@ def get_storage_class(path=None):
         # this is a workaround to keep compatibility with Django >= 5.1 (django.core.files.storage.get_storage_class is removed)
         return import_string(path)
 
-    try:
+    with contextlib.suppress(Exception):
         from django.core.files.storage import DefaultStorage
 
         return DefaultStorage
-    except Exception:
-        from django.core.files.storage import get_storage_class
 
-        return get_storage_class()
+    from django.core.files.storage import get_storage_class
+
+    return get_storage_class()

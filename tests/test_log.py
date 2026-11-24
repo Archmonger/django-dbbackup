@@ -1,7 +1,6 @@
 import logging
 from unittest.mock import patch
 
-import django
 from django.core import mail
 from django.test import TestCase
 from testfixtures import log_capture
@@ -98,25 +97,25 @@ class DbbackupAdminEmailHandlerTest(TestCase):
         # Test mail error
         msg = "Super msg"
         self.logger.error(msg)
-        self.assertEqual(mail.outbox[0].subject, "[dbbackup] ERROR: Super msg")
+        assert mail.outbox[0].subject == "[dbbackup] ERROR: Super msg"
         # Test don't mail below
         self.logger.warning(msg)
-        self.assertEqual(len(mail.outbox), 1)
+        assert len(mail.outbox) == 1
 
     @patch("dbbackup.settings.SEND_EMAIL", False)
     def test_send_mail_is_false(self):
         msg = "Super msg"
         self.logger.error(msg)
-        self.assertEqual(len(mail.outbox), 0)
+        assert len(mail.outbox) == 0
 
 
 class MailEnabledFilterTest(TestCase):
     @patch("dbbackup.settings.SEND_EMAIL", True)
     def test_filter_is_true(self):
         filter_ = log.MailEnabledFilter()
-        self.assertTrue(filter_.filter("foo"))
+        assert filter_.filter("foo")
 
     @patch("dbbackup.settings.SEND_EMAIL", False)
     def test_filter_is_false(self):
         filter_ = log.MailEnabledFilter()
-        self.assertFalse(filter_.filter("foo"))
+        assert not filter_.filter("foo")

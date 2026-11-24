@@ -18,34 +18,35 @@ keywords = [
 ]
 license = "BSD-3-Clause"
 authors = [{ name = "Mark Bakhit", email = "archiethemonger@gmail.com" }]
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 classifiers = [
   "Development Status :: 5 - Production/Stable",
   "Environment :: Web Environment",
   "Environment :: Console",
-  "Framework :: Django :: 4.2",
   "Framework :: Django :: 5.0",
   "Framework :: Django :: 5.1",
   "Framework :: Django :: 5.2",
+  "Framework :: Django :: 6.0",
+  "Framework :: Django :: 6.1",
   "Intended Audience :: Developers",
   "Intended Audience :: System Administrators",
   "License :: OSI Approved :: BSD License",
   "Natural Language :: English",
   "Operating System :: OS Independent",
   "Programming Language :: Python",
-  "Programming Language :: Python :: 3.9",
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
   "Topic :: Database",
   "Topic :: System :: Archiving",
   "Topic :: System :: Archiving :: Backup",
   "Topic :: System :: Archiving :: Compression",
 ]
-dependencies = ["django>=4.2"]
+dependencies = ["django>=5.0"]
 dynamic = ["version"]
-urls.Changelog = "https://archmonger.github.io/django-dbbackup /latest/changelog/"
+urls.Changelog = "https://archmonger.github.io/django-dbbackup/latest/changelog/"
 urls.Documentation = "https://archmonger.github.io/django-dbbackup"
 urls.Source = "https://github.com/Archmonger/django-dbbackup"
 
@@ -80,11 +81,6 @@ matrix-name-format = "{variable}-{value}"
 [tool.hatch.envs.hatch-test.env-vars]
 DJANGO_SETTINGS_MODULE = "tests.settings"
 
-# Django 4.2
-[[tool.hatch.envs.hatch-test.matrix]]
-python = ["3.9", "3.10", "3.11", "3.12"]
-django = ["4.2"]
-
 # Django 5.0
 [[tool.hatch.envs.hatch-test.matrix]]
 python = ["3.10", "3.11", "3.12"]
@@ -100,11 +96,18 @@ django = ["5.1"]
 python = ["3.10", "3.11", "3.12", "3.13"]
 django = ["5.2"]
 
+# Django 6.0
+[[tool.hatch.envs.hatch-test.matrix]]
+python = ["3.12", "3.13", "3.14"]
+django = ["6.0"]
+
+# Django 6.1
+[[tool.hatch.envs.hatch-test.matrix]]
+python = ["3.12", "3.13", "3.14"]
+django = ["6.1"]
+
 [tool.hatch.envs.hatch-test.overrides]
 matrix.django.dependencies = [
-  { if = [
-    "4.2",
-  ], value = "django>=4.2,<4.3" },
   { if = [
     "5.0",
   ], value = "django>=5.0,<5.1" },
@@ -114,11 +117,19 @@ matrix.django.dependencies = [
   { if = [
     "5.2",
   ], value = "django>=5.2,<5.3" },
+  { if = [
+    "6.0",
+  ], value = "django>=6.0,<6.1" },
+  { if = [
+    "6.1",
+  ], value = "django>=6.1,<6.2" },
 ]
 
 # >>> Documentation Scripts <<<
 
 [tool.hatch.envs.docs]
+installer = "uv"
+python = "3.11" # `editdistpy` (v0.1.6) is a dependency of `mkdocs-spellcheck[all]`, and is incompatible with Python 3.12+.
 template = "docs"
 detached = true
 dependencies = [
@@ -131,6 +142,7 @@ dependencies = [
   "mkdocs-git-authors-plugin",
   "mkdocs-minify-plugin",
   "mike",
+  "click==8.2.1", # Newer versions of click do not work with mkdocs<2.0
 ]
 
 [tool.hatch.envs.docs.scripts]
@@ -154,15 +166,6 @@ dependencies = ["pre-commit>=3,<4"]
 [tool.hatch.envs.precommit.scripts]
 check = ["pre-commit run --all-files"]
 update = ["pre-commit autoupdate"]
-
-# >>> Lint Environment <<<
-
-[tool.hatch.envs.lint]
-extra-dependencies = ["ruff", "pylint"]
-
-[tool.hatch.envs.lint.scripts]
-check = ["ruff check dbbackup", "pylint dbbackup --rcfile=.pylintrc"]
-format = ["ruff format dbbackup"]
 
 # >>> CLI workflow tests <<<
 
@@ -200,10 +203,28 @@ mysql = ["python scripts/mysql_live_test.py {args}"]
 
 [tool.ruff]
 line-length = 120
-target-version = "py39"
 extend-exclude = [".eggs/*", ".tox/*", ".venv/*", "build/*", "*/migrations/*"]
 format.preview = true
-lint.extend-ignore = []
+lint.extend-ignore = [
+  "B028",    # No explicit `stacklevel` keyword argument found in warning function call
+  "DTZ005",  # `datetime.datetime.now()` called without a `tz` argument
+  "DTZ007",  # Naive datetime constructed using `datetime.datetime.strptime()` without %z
+  "ARG001",  # Unused function argument
+  "ARG002",  # Unused method argument
+  "ARG005",  # Unused lambda argument
+  "PLR2004", # Magic value used in comparison
+  "PLW2901", # Variable is being overwritten within a `for` loop
+  "S608",    # Possible SQL injection vector through string-based query construction
+  "FBT001",  # Boolean-typed positional argument in function definitio
+  "FBT002",  # Boolean default positional argument in function definition
+  "SLF001",  # Private member accessed
+  "E402",    # Module import not at top of file
+  "S101",    # Use of assert detected.
+  "S105",    # Use of hardcoded password
+  "PLC0415", # Import should be at top-level of a file
+  "SIM115",  # Use a context manager to open files
+  "BLE001",  # Do not catch generic `Exception`
+]
 
 [tool.pytest.ini_options]
 addopts = ["--strict-config", "--strict-markers"]

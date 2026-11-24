@@ -2,12 +2,16 @@
 
 One of the most helpful features of django-dbbackup is the ability to store
 and retrieve backups from local or remote storage. This functionality is
-mainly based on the Django Storage API and extends its possibilities.
+mainly based on the Django Storage API.
+
+A few common third party backends (provided by `django-storages`) are documented on this page for convenience.
+
+---
+
+## Quick Start
 
 Configure backup storage via the `STORAGES` setting using the key `'dbbackup'`.
-`BACKEND` is a dotted path to a Django storage class. For example use
-`'django.core.files.storage.FileSystemStorage'` for the local filesystem. A
-few common third party backends (via `django-storages`) are [documented below](#file-system-storage).
+`BACKEND` is a dotted path to a Django storage class. The following example uses the local filesystem.
 
 ```python
 STORAGES = {
@@ -37,19 +41,30 @@ STORAGES = {
 ```
 
 !!! warning
-Do not configure backup storage with the same configuration as your media
-files as you'll risk sharing backups inside public directories.
 
-If no explicit `STORAGES['dbbackup']` is provided the default File System Storage
-is used (pointing at your project media root). Consider isolating backups in a
-dedicated directory with restricted permissions. Browse additional providers
-at [Django Packages](https://djangopackages.org/grids/g/storage-backends/).
+    Do not configure backup storage with the same configuration as your media
+    files as you'll risk sharing backups inside public directories.
+
+    If no explicit `STORAGES['dbbackup']` is provided the default File System Storage
+    is used (pointing at your project media root). Consider isolating backups in a
+    dedicated directory with restricted permissions. Browse additional providers
+    at [Django Packages](https://djangopackages.org/grids/g/storage-backends/).
 
 !!! note
-Storing backups to local disk may also be useful for Dropbox if you
-already have the official Dropbox client installed on your system.
 
-## File system storage
+    Storing backups to local disk may also be useful for Dropbox if you
+    already have the official Dropbox client installed on your system.
+
+!!! note
+
+    When a storage backend exposes a `location` or key prefix, django-dbbackup
+    treats backup names as relative to that location. This keeps
+    `listbackups`, `dbrestore`, and explicit `--input-filename` usage aligned
+    even if the backend returns prefixed names internally.
+
+---
+
+## File System Storage
 
 ### Setup
 
@@ -83,7 +98,9 @@ The file system permissions that the directory will receive when it is saved.
 
 See [FileSystemStorage's documentation](https://docs.djangoproject.com/en/stable/ref/files/storage/#the-filesystemstorage-class) for a full list of available settings.
 
-## Google cloud storage
+---
+
+## Google Cloud Storage
 
 Our backend for Google cloud storage uses django-storages.
 
@@ -95,8 +112,7 @@ Create a Google Cloud project and bucket, then install:
 pip install django-storages[google]
 ```
 
-Add the following to settings (only `bucket_name` is strictly required). See
-the [django-storages docs](https://django-storages.readthedocs.io/en/latest/backends/gcloud.html) for advanced options.
+Add this snippet to settings:
 
 ```python
 STORAGES = {
@@ -110,6 +126,13 @@ STORAGES = {
     },
 }
 ```
+
+### Settings
+
+Add the following to settings (only `bucket_name` is strictly required). See
+the [django-storages docs](https://django-storages.readthedocs.io/en/latest/backends/gcloud.html) for advanced options.
+
+---
 
 ## Amazon S3
 
@@ -142,7 +165,8 @@ STORAGES = {
 ### Settings
 
 !!! note
-See the [Django Storage S3 storage official documentation](https://django-storages.readthedocs.io/en/latest/backends/amazon-S3.html) for all options.
+
+    See the [Django Storage S3 storage official documentation](https://django-storages.readthedocs.io/en/latest/backends/amazon-S3.html) for all options.
 
     The options listed here are a selection of dictionary keys returned by
     `get_default_settings` in django-storages' [`storages/backends/s3boto3.py`](https://github.com/jschneier/django-storages/blob/master/storages/backends/s3boto3.py#L293-L324),
@@ -184,6 +208,8 @@ See their [CHANGELOG](https://github.com/jschneier/django-storages/blob/master/C
 Prefix inside the bucket; include trailing slash. Example:
 `location: 'backups/prod/'`.
 
+---
+
 ## Dropbox
 
 Create a Dropbox app and obtain an access token, then configure the backend.
@@ -224,7 +250,8 @@ STORAGES = {
 ### Settings
 
 !!! note
-See [django-storages dropbox official documentation](https://django-storages.readthedocs.io/en/latest/backends/dropbox.html) for more details.
+
+    See [django-storages dropbox official documentation](https://django-storages.readthedocs.io/en/latest/backends/dropbox.html) for more details.
 
 **`oauth2_access_token`** - Required
 
@@ -233,6 +260,8 @@ OAuth 2 access token generated for the app.
 **`root_path`**
 
 Restrict storage operations to this folder prefix.
+
+---
 
 ## FTP
 
@@ -246,8 +275,9 @@ pip install django-storages
 ```
 
 !!! warning
-This storage doesn't use a private connection for communication, so don't use it
-if you're not certain about the security of the link between the client and the server.
+
+    This storage doesn't use a private connection for communication, so don't use it
+    if you're not certain about the security of the link between the client and the server.
 
 ```python
 STORAGES = {
@@ -266,6 +296,8 @@ STORAGES = {
 
 FTP URI including optional credentials and port. Example:
 `ftp://user:pass@ftp.example.com:21`.
+
+---
 
 ## SFTP
 

@@ -31,6 +31,7 @@ jobs:
             - name: Checkout code
               uses: actions/checkout@v4
             - name: Install MySQL
-              uses: kayqueGovetri/setup-mysql@v0.0.4
+              uses: shogo82148/actions-setup-mysql@v1
               with:
-                  mysql_root_password: "mysql"
+                  mysql-version: "8.4"
+                  root-password: "mysql"

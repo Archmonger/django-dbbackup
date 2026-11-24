@@ -2,17 +2,22 @@
 Restore database.
 """
 
+from __future__ import annotations
+
 import io
+import json
+import os
+import sys
 
 from django.conf import settings
 from django.core.management.base import CommandError
 from django.db import connection
 
-from ... import utils
-from ...db.base import get_connector
-from ...signals import post_restore, pre_restore
-from ...storage import StorageError, get_storage
-from ._base import BaseDbBackupCommand, make_option
+from dbbackup import utils
+from dbbackup.db.base import get_connector
+from dbbackup.management.commands._base import BaseDbBackupCommand, make_option
+from dbbackup.signals import post_restore, pre_restore
+from dbbackup.storage import StorageError, get_storage
 
 
 class Command(BaseDbBackupCommand):
@@ -24,7 +29,8 @@ class Command(BaseDbBackupCommand):
     database_name = None
     database = None
 
-    option_list = BaseDbBackupCommand.option_list + (
+    option_list = (
+        *BaseDbBackupCommand.option_list,
         make_option("-d", "--database", help="Database to restore"),
         make_option("-i", "--input-filename", help="Specify filename to backup from"),
         make_option("-I", "--input-path", help="Specify path on local filesystem to backup from"),
@@ -33,20 +39,10 @@ class Command(BaseDbBackupCommand):
             "--servername",
             help="If backup file is not specified, filter the existing ones with the given servername",
         ),
-        make_option(
-            "-c",
-            "--decrypt",
-            default=False,
-            action="store_true",
-            help="Decrypt data before restoring",
-        ),
+        make_option("-c", "--decrypt", default=False, action="store_true", help="Decrypt data before restoring"),
         make_option("-p", "--passphrase", help="Passphrase for decrypt file", default=None),
         make_option(
-            "-z",
-            "--uncompress",
-            action="store_true",
-            default=False,
-            help="Uncompress gzip data before restoring",
+            "-z", "--uncompress", action="store_true", default=False, help="Uncompress gzip data before restoring"
         ),
         make_option(
             "-n",
@@ -72,7 +68,7 @@ class Command(BaseDbBackupCommand):
 
     def handle(self, *args, **options):
         """Django command handler."""
-        self.verbosity = int(options.get("verbosity"))
+        self.verbosity = int(options.get("verbosity", "1"))
         self.quiet = options.get("quiet")
         self._set_logger_level()
 
@@ -95,16 +91,76 @@ class Command(BaseDbBackupCommand):
         except StorageError as err:
             raise CommandError(err) from err
 
-    def _get_database(self, database_name: str):
+    def _get_database(self, database_name: str | None):
         """Get the database to restore."""
         if not database_name:
             if len(settings.DATABASES) > 1:
                 errmsg = "Because this project contains more than one database, you must specify the --database option."
                 raise CommandError(errmsg)
-            database_name = list(settings.DATABASES.keys())[0]
+            database_name = next(iter(settings.DATABASES.keys()))
         if database_name not in settings.DATABASES:
-            raise CommandError(f"Database {database_name} does not exist.")
+            msg = f"Database {database_name} does not exist."
+            raise CommandError(msg)
         return database_name, settings.DATABASES[database_name]
+
+    def _check_metadata(self, filename):
+        """
+        Check if the backup file has metadata and if it matches the current database.
+        """
+        metadata_filename = f"{filename}.metadata"
+        metadata = None
+
+        if self.path:
+            # Local file
+            # self.path is the full path to the backup file
+            metadata_path = f"{self.path}.metadata"
+            if os.path.exists(metadata_path):
+                with open(metadata_path) as fd:
+                    metadata = json.load(fd)
+        else:
+            # Storage file
+            try:
+                # Check if metadata file exists in storage
+                # list_directory returns a list of filenames
+                # We can't easily check existence without listing or trying to open
+                # But read_file might fail if not exists depending on storage
+                # Let's try to read it
+                metadata_file = self.storage.read_file(metadata_filename)
+            except Exception:
+                self.logger.debug("No metadata file found for '%s'", filename)
+                return None
+
+            # Read and parse metadata
+            try:
+                metadata = json.load(metadata_file)
+            except Exception:
+                self.logger.warning(
+                    "Malformatted metadata file for '%s'! Dbbackup will ignore this metadata.", filename
+                )
+                return None
+
+        if not metadata:
+            return None
+
+        backup_engine = metadata.get("engine")
+        current_engine = settings.DATABASES[self.database_name]["ENGINE"]
+        backup_connector = metadata.get("connector")
+
+        if backup_engine != current_engine and backup_connector != "dbbackup.db.django.DjangoConnector":
+            msg = (
+                f"Backup file '{filename}' was created with database engine '{backup_engine}', "
+                f"but you are restoring to a database using '{current_engine}'. "
+                "Restoring to a different database engine is not supported."
+            )
+            raise CommandError(msg)
+
+        # Check if we custom metadata validation is configured
+        user_metadata_valid = utils.validate_user_metadata(metadata)
+        if not user_metadata_valid:
+            msg = f"Custom metadata validation failed for backup file '{filename}'."
+            raise CommandError(msg)
+
+        return metadata
 
     def _restore_backup(self):
         """Restore the specified database."""
@@ -119,9 +175,11 @@ class Command(BaseDbBackupCommand):
         )
 
         if self.schemas:
-            self.logger.info(f"Restoring schemas: {self.schemas}")
+            self.logger.info(f"Restoring schemas: {self.schemas}")  # noqa: G004
 
-        self.logger.info(f"Restoring: {input_filename}")
+        self.logger.info(f"Restoring: {input_filename}")  # noqa: G004
+
+        metadata = self._check_metadata(input_filename)
 
         # Send pre_restore signal
         pre_restore.send(
@@ -162,11 +220,38 @@ class Command(BaseDbBackupCommand):
             self._ask_confirmation()
 
         input_file.seek(0)
-        self.connector = get_connector(self.database_name)
+
+        # Try to use connector from metadata if available
+        self.connector = None
+        if metadata and "connector" in metadata:
+            connector_path = metadata["connector"]
+            try:
+                self.connector = get_connector(self.database_name, connector_path=connector_path)
+                self.logger.info("Using connector from metadata: '%s'", connector_path)
+            except (ImportError, AttributeError):
+                self.logger.warning(
+                    "Connector '%s' from metadata not found!!! Falling back to the connector in your Django settings.",
+                    connector_path,
+                )
+                if self.interactive:
+                    answer = input("Do you want to continue with the connector defined in your Django settings? [Y/n] ")
+                    if not answer.lower().startswith("y"):
+                        self.logger.info("Quitting")
+                        sys.exit(0)
+
+        # Fallback to a connector from Django settings and/or our default connector map.
+        if not self.connector:
+            self.connector = get_connector(self.database_name)
+
         if self.schemas:
             self.connector.schemas = self.schemas
-        self.connector.drop = not self.no_drop
-        self.connector.pg_options = self.pg_options
+        # Only override connector attributes when the flag was actually passed, otherwise
+        # options configured through DBBACKUP_CONNECTORS (e.g. DROP or PG_OPTIONS) are
+        # silently discarded in favour of the option defaults.
+        if self.no_drop:
+            self.connector.drop = False
+        if self.pg_options:
+            self.connector.pg_options = self.pg_options
         self.connector.restore_dump(input_file)
 
         # Send post_restore signal

@@ -65,7 +65,7 @@ jobs:
             fail-fast: false
             matrix:
                 os: [ubuntu-latest, windows-latest]
-                python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
+                python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
         steps:
             - uses: actions/checkout@v4
             - uses: actions/setup-python@v5
@@ -108,13 +108,12 @@ jobs:
             - name: Install dependencies
               run: python -m pip install --upgrade pip hatch uv
             - name: Setup MySQL
-              if: matrix.os == 'ubuntu-latest'
-              uses: kayqueGovetri/setup-mysql@v0.0.4
+              uses: shogo82148/actions-setup-mysql@v1
               with:
-                  mysql_root_password: "mysql"
-                  mysql_port: 3306
+                  mysql-version: "8.4"
+                  root-password: "mysql"
             - name: Setup postgres
-              uses: ikalnytskyi/action-setup-postgres@v7
+              uses: ikalnytskyi/action-setup-postgres@v9
             - run: psql postgresql://postgres:postgres@localhost:5432/postgres -c "SELECT 1"
             - run: psql service=postgres -c "SELECT 1"
             - run: psql -c "SELECT 1"
@@ -246,7 +245,6 @@ jobs:
               run: |
                   echo "Version: ${{ steps.query-release-info.outputs.version }}"
                   echo "Date: ${{ steps.query-release-info.outputs.release-date }}"
-                  echo "${{ steps.query-release-info.outputs.release-notes }}"
             - uses: ncipollo/release-action@v1
               with:
                   artifacts: "dist/*.tar.gz,dist/*.whl"

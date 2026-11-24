@@ -82,7 +82,7 @@ class MySQLTestRunner:
         """Run a command and optionally check for errors."""
         self._log(f"Running: {' '.join(cmd)}")
 
-        result = subprocess.run(cmd, capture_output=capture_output, text=True, **kwargs)
+        result = subprocess.run(cmd, capture_output=capture_output, text=True, check=False, **kwargs)
         if check and result.returncode != 0:
             error_msg = f"Command failed with exit code {result.returncode}: {' '.join(cmd)}"
             if capture_output:
@@ -144,6 +144,8 @@ class MySQLTestRunner:
                 self._run_command(
                     cmd_parts + ["-e", f"CREATE DATABASE IF NOT EXISTS {self.test_db_name};"], capture_output=True
                 )
+                self.mysql_base_cmd = cmd_parts  # keep for cleanup
+                self.db_created = True
                 # Create user (both '%' and 'localhost' host patterns)
                 pw_clause = f" IDENTIFIED BY '{self.password}'" if self.password else ""
                 create_user_sql = (
@@ -153,10 +155,8 @@ class MySQLTestRunner:
                     f"GRANT ALL PRIVILEGES ON {self.test_db_name}.* TO '{self.user}'@'localhost';"
                     "FLUSH PRIVILEGES;"
                 )
-                self._run_command(cmd_parts + ["-e", create_user_sql], capture_output=True, check=False)
+                self._run_command(cmd_parts + ["-e", create_user_sql], capture_output=True)
                 self.user_created = True
-                self.mysql_base_cmd = cmd_parts  # keep for cleanup
-                self.db_created = True
                 self._log("Successfully connected to MySQL and created database & user over TCP")
                 return
             except RuntimeError as exc:

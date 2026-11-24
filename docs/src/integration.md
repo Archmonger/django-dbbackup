@@ -1,8 +1,9 @@
 # Integration tutorials
 
 !!! note
-If you have a custom and/or interesting way of using DBBackup, do not
-hesitate to make a pull request.
+
+    If you have a custom and/or interesting way of using DBBackup, do not
+    hesitate to make a pull request.
 
 ## Django-Cron
 
@@ -130,13 +131,4 @@ Make sure your Celery worker and beat scheduler are running:
 ```bash
 celery -A myproject worker --loglevel=info
 celery -A myproject beat --loglevel=info
-```
-
-## Periodic Verification
-
-Consider scheduling a periodic restore test (e.g. weekly) into a throw-away
-database to ensure your backup or filesystem remains valid:
-
-```bash
-python manage.py dbrestore --database test_restore --noinput --verbosity 1
 ```

@@ -5,14 +5,15 @@ from django.utils.log import AdminEmailHandler
 
 class DbbackupAdminEmailHandler(AdminEmailHandler):
     def send_mail(self, subject, message, *args, **kwargs):
-        from . import utils
+        from dbbackup import utils
 
-        utils.mail_admins(subject, message, *args, connection=self.connection(), **kwargs)
+        kwargs["fail_silently"] = True
+        utils.mail_admins(subject, message, *args, **kwargs)
 
 
 class MailEnabledFilter(logging.Filter):
     def filter(self, record):
-        from .settings import SEND_EMAIL
+        from dbbackup.settings import SEND_EMAIL
 
         return SEND_EMAIL
 

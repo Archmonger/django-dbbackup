@@ -46,3 +46,7 @@ datasets
 mysql
 postgis
 postgresql
+gzip
+tarfile
+validator
+no-op

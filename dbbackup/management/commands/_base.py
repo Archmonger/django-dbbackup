@@ -2,13 +2,19 @@
 Abstract Command.
 """
 
+from __future__ import annotations
+
 import logging
 import sys
 from shutil import copyfileobj
+from typing import TYPE_CHECKING
 
 from django.core.management.base import BaseCommand, CommandError
 
-from ...storage import StorageError
+from dbbackup.storage import StorageError
+
+if TYPE_CHECKING:
+    from dbbackup.storage import Storage
 
 USELESS_ARGS = ("callback", "callback_args", "callback_kwargs", "metavar")
 TYPES = {
@@ -20,7 +26,7 @@ TYPES = {
     "choice": list,
 }
 LOGGING_VERBOSITY = {
-    0: logging.WARN,
+    0: logging.WARNING,
     1: logging.INFO,
     2: logging.DEBUG,
     3: logging.DEBUG,
@@ -57,6 +63,14 @@ class BaseDbBackupCommand(BaseCommand):
     verbosity = 1
     quiet = False
     logger = logging.getLogger("dbbackup.command")
+    storage: Storage
+    path: str | None = None
+    filename: str | None = None
+    decrypt = False
+    uncompress = False
+    encrypt = False
+    compress = False
+    content_type = ""
 
     def __init__(self, *args, **kwargs):
         self.option_list = self.base_option_list + self.option_list
@@ -70,6 +84,19 @@ class BaseDbBackupCommand(BaseCommand):
     def _set_logger_level(self):
         level = 60 if self.quiet else LOGGING_VERBOSITY[int(self.verbosity)]
         self.logger.setLevel(level)
+
+        # Find or create a StreamHandler for console output so that
+        # --verbosity works regardless of the user's Django LOGGING
+        # configuration. Only add one handler to avoid duplicates.
+        for handler in self.logger.handlers:
+            if isinstance(handler, logging.StreamHandler):
+                handler.setLevel(level)
+                break
+        else:
+            handler = logging.StreamHandler(sys.stderr)
+            handler.setLevel(level)
+            handler.setFormatter(logging.Formatter("%(levelname)s %(message)s"))
+            self.logger.addHandler(handler)
 
     def _ask_confirmation(self):
         answer = input("Are you sure you want to continue? [Y/n] ")

@@ -16,6 +16,105 @@ Don't forget to remove deprecated code on each major release!
 
 ### Added
 
+- The `DBBACKUP_ADMIN` setting is now accepted as an alias for `DBBACKUP_ADMINS` due to previously conflicting spelling in the documentation versus the source code.
+
+### Deprecated
+
+- Admin recipients configured as `(name, address)` pairs now emit Django's `RemovedInDjango2028Warning` on Django 6.0 and later. Use a list of email address strings instead.
+
+### Fixed
+
+- Failure emails no longer go to the second character of each address when `ADMINS` lists plain email address strings, the format Django 6.0 documents.
+- Invalid `ADMINS` or `DBBACKUP_ADMINS` values now raise `ImproperlyConfigured` instead of silently sending failure emails to mangled recipients.
+
+## [5.4.1] - 2026-11-14
+
+### Fixed
+
+- PostgreSQL restores of a backup taken while a column used a serial default no longer fail with `column "…" of relation "…" is an identity column` when the target table now uses an identity column. The connectors drop the identity property before the dump's `DROP DEFAULT` statement, within a single transaction when `SINGLE_TRANSACTION` is enabled (the default) or `PG_OPTIONS` contains `--single-transaction`. The binary connector falls back to its previous behavior when `PG_OPTIONS` contains `--jobs`, `--dbname`, `--file`, or `--role` (or their short forms), which cannot be combined with SQL generation, and applies `--single-transaction` and section filters from `PG_OPTIONS`.
+- Command line connectors no longer strip the backslashes from Windows paths, so `DUMP_CMD` and `RESTORE_CMD` can point to an executable such as `C:\pgsql\bin\pg_dump.exe`. It used to run as `C:pgsqlbinpg_dump.exe` and fail with "Database command not found".
+- Failed `dbbackup` and `mediabackup` runs on Django 6.1 no longer end in `AttributeError: 'DbbackupAdminEmailHandler' object has no attribute 'connection'`, which hid the original error and stopped the failure email.
+
+## [5.4.0] - 2026-10-24
+
+### Added
+
+- PostgreSQL connectors now forward the `sslmode`, `sslrootcert`, `sslcert`, `sslkey`, `passfile` and `service` keys of the Django database `OPTIONS` setting to `pg_dump`, `psql` and `pg_restore` as their matching `libpq` environment variable, the same way Django forwards them to its own command line tools. Backups and restores now use the TLS and client certificate configuration of the ORM, including the PostGIS activation step.
+
+### Changed
+
+- A value set in the PostgreSQL `OPTIONS` setting now takes precedence over the same variable configured through `ENV`, `DUMP_ENV` or `RESTORE_ENV`, where the environment used to win.
+
+### Fixed
+
+- `ADMIN_PASSWORD` is now passed to the PostGIS activation step, it had no effect until now.
+- `PgDumpBinaryConnector` now applies `RESTORE_ENV` to `pg_restore`, which was receiving `DUMP_ENV` instead. `DUMP_ENV` no longer leaks into the restore phase, put in `RESTORE_ENV` the variables which were reaching `pg_restore` from it.
+- `DBBACKUP_GPG_ALWAYS_TRUST` setting is now respected instead of being enabled whenever `DBBACKUP_GPG_RECIPIENT` is set. Encrypting to a public key that GPG does not trust will now fail, as documented, unless the key is trusted or `DBBACKUP_GPG_ALWAYS_TRUST = True` is set.
+- Pass configured `DBBACKUP_CONNECTORS` settings when instantiating connector from backup metadata in `dbrestore`.
+- `dbrestore` no longer discards the `DROP` and `PG_OPTIONS` values configured in `DBBACKUP_CONNECTORS`. `--no-drop` and `--pg-options` still take precedence when passed.
+- Connector options holding a list or a dict (`EXCLUDE`, `SCHEMAS`, `ENV`, `DUMP_ENV`, `RESTORE_ENV`) are now copied per connector. `dbbackup --exclude-tables` used to append to the class default, silently excluding those tables from every other database of the same run and from connectors created afterwards.
+
+## [5.3.1] - 2026-09-10
+
+### Changed
+
+- PostgreSQL `HOST` that are Unix/Windows socket paths will now be automatically URI-encoded to uphold `pg_restore` command line requirements.
+
+### Fixed
+
+- `--verbosity` parameter now correctly outputs log messages to the console instead of suppressing all output regardless of verbosity level.
+
+## [5.3.0] - 2026-04-09
+
+### Fixed
+
+- Fix compression when using `DjangoConnector`.
+- Fix an issue with paramiko `os.stat` sizes were larger on the target compared to the source.
+- Fix issue with `dbrestore` not finding backups when `location` is set in storage options.
+
+## [5.2.0] - 2026-02-10
+
+### Added
+
+- Added support for custom metadata writing and validation during operations via `DBBACKUP_BACKUP_METADATA_SETTER` and `DBBACKUP_RESTORE_METADATA_VALIDATOR` settings.
+
+## [5.1.2] - 2026-01-14
+
+### Fixed
+
+- Fixed a bug where metadata files were not being removed during clean-up.
+
+## [5.1.1] - 2026-01-07
+
+### Fixed
+
+- Ensure `dbbackup` metadata file is always written as bytes to support storage backends that enforce bytes content (e.g. Google Cloud Storage).
+
+## [5.1.0] - 2025-12-17
+
+### Fixed
+
+- Prevent restoring a backup from a different database connector (e.g. Postgres backup to SQLite) by adding an additional metadata file to all new backups.
+- Fixed compressed media backup restoration by using `gzip.GzipFile` instead of `tarfile`'s gzip decompression algorithm.
+
+## [5.0.1] - 2025-11-07
+
+### Security
+
+- To prevent accidental media exports, this package will now generate an exception if utilizing the legacy `DBBACKUP_STORAGE` or `DBBACKUP_STORAGE_OPTIONS` settings. These settings have been removed in favor of using Django's built-in `STORAGES` setting. Please refer to the documentation for more information on how to migrate your configuration.
+
+## [5.0.0] - 2025-08-30
+
+!!! warning "Breaking Changes"
+
+    This release contains several breaking changes. Prior to upgrading, follow this upgrade guide:
+
+    1. **Migrate Storage Settings**: Remove `DBBACKUP_STORAGE` and `DBBACKUP_STORAGE_OPTIONS` from your settings. Instead, configure your storage backend using Django's `STORAGES` setting with the alias `'dbbackup'`. Refer to the [Django documentation](https://docs.djangoproject.com/en/stable/ref/settings/#storages) for guidance.
+    2. **Update Admin Settings**: Replace any usage of the deprecated `DBBACKUP_FAILURE_RECIPIENTS` setting with `DBBACKUP_ADMINS` to specify email recipients for failure notifications.
+    3. **Review Connector Changes**: The default SQLite connector has changed to `SqliteBackupConnector` to adhere to best practices. If you were previously using the default connector (`SqliteConnector`), either take this into account within your backup workflow or manually set the connector back to `SqliteConnector` in your settings.
+
+### Added
+
 - Implement new `SqliteBackupConnector` to backup SQLite3 databases using the `.backup` command (safe to execute on databases with active connections).
 - Verified full Windows compatibility via new CI workflows.
 - Add Django Signals support for backup and restore operations. New signals include `pre_backup`, `post_backup`, `pre_restore`, `post_restore`, `pre_media_backup`, `post_media_backup`, `pre_media_restore`, and `post_media_restore`.
@@ -25,6 +124,9 @@ Don't forget to remove deprecated code on each major release!
 
 - This repository has been transferred out of Jazzband due to logistical concerns.
 - Improve error message for missing database tools (`pg_dump`, `mysqldump`, etc.) to provide guidance instead of generic "No such file or directory" errors.
+- Changed default SQLite connector from `SqliteConnector` to `SqliteBackupConnector` to adhere to best practices.
+- Set default `IF_EXISTS` to `True` for PostgreSQL connectors (`PgDumpConnector` and `PgDumpBinaryConnector`) to reduce restore errors when objects are absent.
+- If `PASSWORD` is set to `None` for PostgreSQL connectors, the `--no-password` flag is now automatically used.
 
 ### Removed
 
@@ -131,26 +233,10 @@ Don't forget to remove deprecated code on each major release!
 
 ### Added
 
-- Enable functional tests in CI.
-
-### Changed
-
-- As of this version, dbbackup is now within Jazzband! This version tests our Jazzband release CI, and adds miscellaneous refactoring/cleanup.
-- Update `settings.py` comment.
-- Jazzband transfer tasks.
-- Refactoring and tooling.
-
-### Fixed
-
-- Fix GitHub Actions configuration.
-
-## [4.0.0b0] - 2021-12-19
-
-### Added
-
 - Add authentication database support for MongoDB.
 - Explicitly support Python 3.6+.
 - Add support for exclude tables data in the command interface.
+- Enable functional tests in CI.
 
 ### Changed
 
@@ -158,6 +244,10 @@ Don't forget to remove deprecated code on each major release!
 - Changed logging settings from `settings.py` to late init.
 - Use `exclude-table-data` instead of `exclude-table`.
 - Move author and version information into `setup.py` to allow building package in isolated environment (e.g. with the `build` package).
+- As of this version, dbbackup is now within Jazzband! This version tests our Jazzband release CI, and adds miscellaneous refactoring/cleanup.
+- Update `settings.py` comment.
+- Jazzband transfer tasks.
+- Refactoring and tooling.
 
 ### Removed
 
@@ -169,6 +259,7 @@ Don't forget to remove deprecated code on each major release!
 - Fix `RemovedInDjango41Warning` related to `default_app_config`.
 - Fix authentication error when postgres is password protected.
 - Documentation fixes.
+- Fix GitHub Actions configuration.
 
 ## [3.3.0] - 2020-04-14
 
@@ -317,14 +408,23 @@ Don't forget to remove deprecated code on each major release!
 
 - Miscellaneous maintenance and minor bug fixes.
 
-[Unreleased]: https://github.com/Archmonger/django-dbbackup/compare/4.3.0...HEAD
+[Unreleased]: https://github.com/Archmonger/django-dbbackup/compare/5.4.1...HEAD
+[5.4.1]: https://github.com/Archmonger/django-dbbackup/compare/5.4.0...5.4.1
+[5.4.0]: https://github.com/Archmonger/django-dbbackup/compare/5.3.1...5.4.0
+[5.3.1]: https://github.com/Archmonger/django-dbbackup/compare/5.3.0...5.3.1
+[5.3.0]: https://github.com/Archmonger/django-dbbackup/compare/5.2.0...5.3.0
+[5.2.0]: https://github.com/Archmonger/django-dbbackup/compare/5.1.2...5.2.0
+[5.1.2]: https://github.com/Archmonger/django-dbbackup/compare/5.1.1...5.1.2
+[5.1.1]: https://github.com/Archmonger/django-dbbackup/compare/5.1.0...5.1.1
+[5.1.0]: https://github.com/Archmonger/django-dbbackup/compare/5.0.1...5.1.0
+[5.0.1]: https://github.com/Archmonger/django-dbbackup/compare/5.0.0...5.0.1
+[5.0.0]: https://github.com/Archmonger/django-dbbackup/compare/4.3.0...5.0.0
 [4.3.0]: https://github.com/Archmonger/django-dbbackup/compare/4.2.1...4.3.0
 [4.2.1]: https://github.com/Archmonger/django-dbbackup/compare/4.2.0...4.2.1
 [4.2.0]: https://github.com/Archmonger/django-dbbackup/compare/4.1.0...4.2.0
 [4.1.0]: https://github.com/Archmonger/django-dbbackup/compare/4.0.2...4.1.0
 [4.0.2]: https://github.com/Archmonger/django-dbbackup/compare/4.0.1...4.0.2
-[4.0.1]: https://github.com/Archmonger/django-dbbackup/compare/4.0.0b0...4.0.1
-[4.0.0b0]: https://github.com/Archmonger/django-dbbackup/compare/3.3.0...4.0.0b0
+[4.0.1]: https://github.com/Archmonger/django-dbbackup/compare/3.3.0...4.0.1
 [3.3.0]: https://github.com/Archmonger/django-dbbackup/compare/3.2.0...3.3.0
 [3.2.0]: https://github.com/Archmonger/django-dbbackup/compare/3.1.3...3.2.0
 [3.1.3]: https://github.com/Archmonger/django-dbbackup/compare/3.1.2...3.1.3

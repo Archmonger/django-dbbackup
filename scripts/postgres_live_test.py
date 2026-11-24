@@ -1,3 +1,4 @@
+# ruff: noqa: TRY301, TRY300
 """PostgreSQL Live Functional Test Script for django-dbbackup
 
 Usage:
@@ -29,6 +30,12 @@ SYMBOL_FAIL = _SYMS["FAIL"]
 SYMBOL_SUMMARY = _SYMS["SUMMARY"]
 SYMBOL_PG = _SYMS["PG"]
 SYMBOL_TEST = _SYMS["TEST"]
+SYMBOL_SKIP = _SYMS["SKIP"]
+
+
+class SkippedTestError(Exception):
+    """Exception raised when a test should be skipped."""
+
 
 # Available PostgreSQL connectors
 POSTGRES_CONNECTORS = [
@@ -36,6 +43,13 @@ POSTGRES_CONNECTORS = [
     "PgDumpBinaryConnector",
     "PgDumpGisConnector",
 ]
+
+# File extension produced by each connector, used by the identity-column test.
+CONNECTOR_EXTENSIONS = {
+    "PgDumpConnector": "psql",
+    "PgDumpBinaryConnector": "psql.bin",
+    "PgDumpGisConnector": "psql",
+}
 
 # Add parent directory to path to import Django modules
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -73,19 +87,14 @@ class PostgreSQLTestRunner:
             env = kwargs.get("env", os.environ.copy())
             env.update({"PGHOST": "localhost", "PGPORT": "5432", "PGUSER": "postgres", "PGPASSWORD": "postgres"})
             kwargs["env"] = env
-        else:
-            # For local development, use sudo if not explicitly disabled
-            if use_sudo is None:
-                use_sudo = os.name == "posix"
+        elif use_sudo is None:
+            use_sudo = os.name == "posix"
 
         if use_sudo:
-            if isinstance(cmd, list):
-                cmd = ["sudo", "-u", self.superuser] + cmd
-            else:
-                cmd = f"sudo -u {self.superuser} {cmd}"
+            cmd = ["sudo", "-u", self.superuser, *cmd] if isinstance(cmd, list) else f"sudo -u {self.superuser} {cmd}"
 
         self._log(f"Running: {' '.join(cmd) if isinstance(cmd, list) else cmd}")
-        result = subprocess.run(cmd, shell=isinstance(cmd, str), **kwargs)
+        result = subprocess.run(cmd, shell=isinstance(cmd, str), **kwargs, check=False)
         if check and result.returncode != 0:
             # Collect stdout and stderr for better error reporting
             stdout = getattr(result, "stdout", b"")
@@ -118,7 +127,8 @@ class PostgreSQLTestRunner:
                     "\nInstall PostgreSQL from https://www.postgresql.org/download/windows/ "
                     "and ensure pg_dump and psql are in your PATH."
                 )
-            raise RuntimeError(f"PostgreSQL client tools (pg_dump, psql, etc) are not installed!{install_instructions}")
+            msg = f"PostgreSQL client tools (pg_dump, psql, etc) are not installed!{install_instructions}"
+            raise SkippedTestError(msg)
 
         self._log("Setting up test database...")
         self.temp_dir = tempfile.mkdtemp(prefix="dbbackup_postgres_")
@@ -133,7 +143,8 @@ class PostgreSQLTestRunner:
 
         except Exception as e:
             self.cleanup()
-            raise RuntimeError(f"Failed to set up PostgreSQL: {e}") from e
+            msg = f"Failed to set up PostgreSQL: {e}"
+            raise RuntimeError(msg) from e
 
     def _create_test_database(self):
         """Create the test database."""
@@ -177,10 +188,12 @@ class PostgreSQLTestRunner:
                         self._log(f"User {self.user} already exists, continuing...")
                     else:
                         # User doesn't exist and creation failed, this is a real error
-                        raise RuntimeError(f"Failed to create user {self.user} and user does not exist: {e}") from e
+                        msg = f"Failed to create user {self.user} and user does not exist: {e}"
+                        raise RuntimeError(msg) from e
                 except Exception as check_error:
                     self._log(f"Failed to check if user exists: {check_error}")
-                    raise RuntimeError(f"User creation and verification both failed: {e}") from e
+                    msg = f"User creation and verification both failed: {e}"
+                    raise RuntimeError(msg) from e
 
             # Create database owned by the test user
             create_db_sql = f"CREATE DATABASE {self.test_db_name} OWNER {self.user};"
@@ -300,24 +313,95 @@ class PostgreSQLLiveTest:
         self._log(f"Found {text_objs.count()} TextModel objects")
 
         if char_objs.count() != 1 or text_objs.count() != 1:
-            raise AssertionError(
-                f"Expected 1 of each model, found {char_objs.count()} CharModel and {text_objs.count()} TextModel"
-            )
+            msg = f"Expected 1 of each model, found {char_objs.count()} CharModel and {text_objs.count()} TextModel"
+            raise AssertionError(msg)
 
         char_obj = char_objs.first()
         text_obj = text_objs.first()
 
         if char_obj.field != expected_char_obj.field:
-            raise AssertionError(
-                f"CharModel field mismatch: expected '{expected_char_obj.field}', got '{char_obj.field}'"
-            )
+            msg = f"CharModel field mismatch: expected '{expected_char_obj.field}', got '{char_obj.field}'"
+            raise AssertionError(msg)
 
         if text_obj.field != expected_text_obj.field:
-            raise AssertionError(
-                f"TextModel field mismatch: expected '{expected_text_obj.field}', got '{text_obj.field}'"
-            )
+            msg = f"TextModel field mismatch: expected '{expected_text_obj.field}', got '{text_obj.field}'"
+            raise AssertionError(msg)
 
         self._log("Test data verification passed")
+
+    def _verify_serial_backup_over_identity_columns(self):
+        """Restore a backup of a serial column over a table using an identity column."""
+        from django.db import connection
+
+        table = "dbbackup_identity_test"
+        backup_name = (
+            f"identity_restore_test.{CONNECTOR_EXTENSIONS[self.connector_name]}"
+        )
+        self._log(
+            "Testing serial-backed backup restored over an identity column "
+            f"({backup_name})"
+        )
+
+        with connection.cursor() as cursor:
+            cursor.execute(f"DROP TABLE IF EXISTS {table}")
+            cursor.execute(
+                f"CREATE TABLE {table} (id bigserial PRIMARY KEY, name text)"
+            )
+            cursor.execute(f"INSERT INTO {table} (name) VALUES ('before')")
+
+        execute_from_command_line(
+            ["", "dbbackup", "--noinput", "--output-filename", backup_name]
+        )
+
+        # Recreate the table with an identity column. The clean section of the
+        # dump contains ALTER COLUMN ... DROP DEFAULT, which PostgreSQL rejects
+        # for identity columns unless DROP IDENTITY runs first.
+        with connection.cursor() as cursor:
+            cursor.execute(f"DROP TABLE {table}")
+            cursor.execute(
+                f"CREATE TABLE {table} "
+                "(id bigint GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY, name text)"
+            )
+
+        execute_from_command_line(
+            ["", "dbrestore", "--noinput", "--input-filename", backup_name]
+        )
+
+        with connection.cursor() as cursor:
+            cursor.execute(f"SELECT id, name FROM {table} ORDER BY id")
+            rows = cursor.fetchall()
+            if rows != [(1, "before")]:
+                msg = f"Restored rows for {table} are unexpected: {rows}"
+                raise AssertionError(msg)
+
+            cursor.execute(
+                "SELECT attidentity FROM pg_attribute "
+                "WHERE attrelid = %s::regclass AND attname = 'id'",
+                [table],
+            )
+            identity = cursor.fetchone()[0]
+            if identity != "":
+                msg = (
+                    f"Column {table}.id was restored as an identity column, "
+                    "not a serial column"
+                )
+                raise AssertionError(msg)
+
+            cursor.execute(f"SELECT pg_get_serial_sequence('{table}', 'id')")
+            sequence = cursor.fetchone()[0]
+            if sequence is None:
+                msg = f"Column {table}.id was not restored as a serial column"
+                raise AssertionError(msg)
+
+            cursor.execute(
+                f"INSERT INTO {table} (name) VALUES ('after') RETURNING id"
+            )
+            new_id = cursor.fetchone()[0]
+            if new_id != 2:
+                msg = f"Sequence for {table}.id was not restored correctly: next id was {new_id}"
+                raise AssertionError(msg)
+
+        self._log(f"{SYMBOL_PASS} Serial backup restored over an identity column")
 
     def run_backup_restore_test(self):
         """Run a complete backup and restore test cycle."""
@@ -346,7 +430,8 @@ class PostgreSQLLiveTest:
 
             # Verify data is cleared
             if CharModel.objects.exists() or TextModel.objects.exists():
-                raise AssertionError("Test data was not properly cleared")
+                msg = "Test data was not properly cleared"
+                raise AssertionError(msg)
             self._log("Test data cleared successfully")
 
             # Run restore
@@ -356,12 +441,19 @@ class PostgreSQLLiveTest:
             # Verify restored data
             self._verify_test_data(char_obj, text_obj)
 
+            # Verify a serial-backed backup restores over an identity column
+            self._verify_serial_backup_over_identity_columns()
+
             self._log(f"{SYMBOL_PASS} {self.connector_name} backup/restore test PASSED")
-            return True
+            return 0
+
+        except SkippedTestError as e:
+            self._log(f"{SYMBOL_SKIP} {self.connector_name} backup/restore test SKIPPED: {e}")
+            return 77
 
         except Exception as e:
             self._log(f"{SYMBOL_FAIL} {self.connector_name} backup/restore test FAILED: {e}")
-            return False
+            return 1
 
         finally:
             self.postgres_runner.cleanup()
@@ -374,9 +466,8 @@ def _connector_test_entry(connector_name: str, verbose: bool):  # pragma: no cov
     (the 'spawn' start method). Exits with status code 1 if the test fails.
     """
     test_runner = PostgreSQLLiveTest(connector_name, verbose)
-    success = test_runner.run_backup_restore_test()
-    if not success:
-        sys.exit(1)
+    exit_code = test_runner.run_backup_restore_test()
+    sys.exit(exit_code)
 
 
 def run_single_connector_test(connector_name, verbose=False):
@@ -399,12 +490,12 @@ def run_single_connector_test(connector_name, verbose=False):
     try:
         process = _run_subprocess()
         if process.exitcode is None:
-            return False
-        if process.exitcode != 0 and os.name == "nt":  # Fallback path on Windows
+            return 1
+        if process.exitcode not in {0, 77} and os.name == "nt":  # Fallback path on Windows
             # Retry in-process so at least we capture a meaningful failure message
             test_runner = PostgreSQLLiveTest(connector_name, verbose)
             return test_runner.run_backup_restore_test()
-        return process.exitcode == 0
+        return process.exitcode
     except AttributeError as exc:  # Defensive: pickling or spawn related
         if os.name == "nt":
             print(f"{SYMBOL_FAIL} Multiprocessing issue on Windows ({exc}); running in-process instead.")
@@ -437,16 +528,26 @@ def main():
     for connector in connectors_to_test:
         print(f"\n{SYMBOL_TEST} Testing {connector}...")
         results[connector] = run_single_connector_test(connector, verbose=args.verbose)
-        passed = results[connector]
-        status = f"{SYMBOL_PASS} PASSED" if passed else f"{SYMBOL_FAIL} FAILED"
+        exit_code = results[connector]
+        if exit_code == 0:
+            status = f"{SYMBOL_PASS} PASSED"
+        elif exit_code == 77:
+            status = f"{SYMBOL_SKIP} SKIPPED"
+        else:
+            status = f"{SYMBOL_FAIL} FAILED"
         print(f"  {connector}: {status}")
 
     # Summary
     print(f"\n{SYMBOL_SUMMARY} PostgreSQL Connector Test Summary")
     overall_success = True
-    for connector, passed in results.items():
-        overall_success &= passed
-        symbol = SYMBOL_PASS if passed else SYMBOL_FAIL
+    for connector, exit_code in results.items():
+        if exit_code == 0:
+            symbol = SYMBOL_PASS
+        elif exit_code == 77:
+            symbol = SYMBOL_SKIP
+        else:
+            symbol = SYMBOL_FAIL
+            overall_success = False
         print(f"  {symbol} {connector}")
 
     # Exit with error code if any tests failed

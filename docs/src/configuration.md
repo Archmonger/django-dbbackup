@@ -1,6 +1,8 @@
 # Configuration
 
-## General settings
+---
+
+## General
 
 ### DBBACKUP_DATABASES
 
@@ -79,6 +81,16 @@ Use a custom function if you need hierarchical prefixes (e.g. `year/month/`),
 or naming compatible with automatic life cycle / expiration rules of your
 object storage provider. `{datetime}` is rendered using `DBBACKUP_DATE_FORMAT`.
 
+Note on cleanup (--clean): the cleanup logic matches backup files to a
+database using the `{databasename}` value (the database alias/key from
+`settings.DATABASES` or `DBBACKUP_CONNECTORS`). If you rely on the
+`--clean` option to remove older database backups, ensure your
+`DBBACKUP_FILENAME_TEMPLATE` includes `{databasename}` so files can be
+correctly identified and filtered for deletion. When backing up a single
+database using the default `databasename` (often `default`) this may not be
+necessary, but it is required when you manage more than one database or use
+custom connector keys.
+
 ### DBBACKUP_MEDIA_FILENAME_TEMPLATE
 
 Same as `DBBACKUP_FILENAME_TEMPLATE`, but used for media backups.
@@ -92,7 +104,9 @@ default this is `settings.MEDIA_ROOT`.
 
 Default: `settings.MEDIA_ROOT`
 
-## Encrypting your backups
+---
+
+## Encryption
 
 Backups may contain personal or otherwise sensitive data. When storing them
 outside trusted infrastructure you should encrypt them. Keep your private
@@ -132,9 +146,14 @@ when using `--encrypt` and for automatic decryption with `--decrypt`.
 
 ### DBBACKUP_CONNECTORS
 
-Optional per database override mapping similar to `DATABASES`. Lets you define
-different credentials / hosts exclusively for backup / restore operations
+Allows for overriding the connector used for specific Django database(s).
+This mapping is similar to `DATABASES`. Lets you define different
+credentials / hosts exclusively for backup / restore operations
 (e.g. read from a replica). Keys correspond to database aliases.
+
+These options are applied whenever a connector is built, both by `dbbackup`
+and by `dbrestore` — including when `dbrestore` restores the connector recorded
+in the backup's metadata file, which only decides which class is used.
 
 See the [Databases](databases.md) section for details on how to configure
 connectors.
@@ -144,16 +163,18 @@ Default: `{}`
 ### DBBACKUP_CONNECTOR_MAPPING
 
 Map custom database engine names (e.g. from wrappers like `transaction_hooks`
-or third party observability packages) to an existing DBBackup connector class path.
-Useful when a third party backend subclasses a supported Django backend but
-uses a different engine string.
+or third party observability packages) to a DBBackup connector class.
+Useful when you are using a third party backend that subclasses a supported
+Django database backend.
 
 See the [Databases](databases.md) section for details on how to configure the
 connector mapping.
 
 Default: `{}`
 
-## Email configuration
+---
+
+## Email
 
 ### DBBACKUP_SEND_EMAIL
 
@@ -173,7 +194,8 @@ Default: `django.conf.settings.SERVER_EMAIL`
 
 A list of recipients that receive error emails when `DEBUG=False` and an
 unhandled exception occurs in a DBBackup command. Follows Django's standard
-`ADMINS` tuple-of-tuples structure: `(('Full Name', 'email@example.com'), ...)`.
+`ADMINS` structure: `['email@example.com', ...]`, or the older
+`(('Full Name', 'email@example.com'), ...)` pairs.
 
 Default: `django.conf.settings.ADMINS`
 
@@ -183,13 +205,69 @@ Subject-line prefix for email messages sent by DBBackup.
 
 Default: `'[dbbackup] '`
 
-## Database configuration
+---
+
+## Metadata
+
+### DBBACKUP_BACKUP_METADATA_SETTER
+
+Function or dotted path (string) to a callable that returns a dictionary of extra metadata.
+
+The function must accept a single argument: a metadata dictionary containing information about the current backup operation. If a dictionary is returned, it will be merged into the current backup's metadata file. If `None` is returned, it is treated as an empty dictionary.
+
+Default: `None`
+
+```python
+def metadata_set(metadata):
+    last_backup_time = datetime.now().isoformat()
+    if metadata and metadata.get('engine') == 'my.custom.Engine':
+        region = os.environ.get('AWS_REGION')
+        return {'environment': 'AWS', 'region': region, 'backup_time': last_backup_time}
+    else:
+        return {'backup_time': last_backup_time}
+
+DBBACKUP_BACKUP_METADATA_SETTER = metadata_set
+```
+
+### DBBACKUP_RESTORE_METADATA_VALIDATOR
+
+Function or dotted path (string) to a callable that performs additional validation on the backup's metadata during restore operations. This validator runs **after** the built-in validation (e.g. database engine checks).
+
+The callable should accept a single argument: the metadata dictionary loaded from the current restore operation's metadata file. If this function returns `True`, the metadata is valid, `False` means the restore operation will be aborted. `None` can be returned to do nothing and allow `dbbackup` to decide. It may raise a `CommandError` with a descriptive message if validation fails.
+
+Default: `None`
+
+```python
+import os
+
+def validate_restore(metadata):
+    region = os.environ.get('AWS_REGION')
+    if not metadata.get('region') == region:
+        raise CommandError(f"Backup region does not match current region {region}; cross region restores are not allowed due to SMP-0123.")
+
+    last_backup_time = metadata.get('backup_time')
+    if datetime.now() - datetime.fromisoformat(last_backup_time) > timedelta(days=120):
+        return False # Skip restore since it is stale (>120 days)
+
+    if os.environ.get('AWS_REGION') == None:
+        return None # Do nothing if performing a backup outside AWS_REGION
+
+    return True
+
+DBBACKUP_RESTORE_METADATA_VALIDATOR = validate_restore
+```
+
+---
+
+## Database
 
 By default DBBackup uses values from `settings.DATABASES`. Use
 `DBBACKUP_CONNECTORS` (documented above) for backup specific overrides. See
 [Database settings](databases.md) for backend specific options.
 
-## Storage configuration
+---
+
+## Storage
 
 You must configure a storage backend (`STORAGES['dbbackup']`) to persist
 backups. See [Storage settings](storage.md) for supported options.

@@ -8,7 +8,7 @@ from tempfile import NamedTemporaryFile, SpooledTemporaryFile
 
 from django.db import IntegrityError, OperationalError
 
-from .base import BaseDBConnector
+from dbbackup.db.base import BaseDBConnector
 
 DUMP_TABLES = """
 SELECT "name", "type", "sql"
@@ -55,7 +55,7 @@ class SqliteConnector(BaseDBConnector):
 
         # Dump indexes, triggers, and views after all tables are created
         cursor.execute(DUMP_ETC)
-        for name, _, sql in cursor.fetchall():
+        for _name, _, sql in cursor.fetchall():
             if sql.startswith("CREATE INDEX"):
                 sql = sql.replace("CREATE INDEX", "CREATE INDEX IF NOT EXISTS", 1)
             elif sql.startswith("CREATE TRIGGER"):
@@ -129,9 +129,7 @@ class SqliteConnector(BaseDBConnector):
 
     @staticmethod
     def _should_suppress_error(msg: str):
-        return (msg.startswith("index") or msg.startswith("trigger") or msg.startswith("view")) and msg.endswith(
-            "already exists"
-        )
+        return (msg.startswith(("index", "trigger", "view"))) and msg.endswith("already exists")
 
 
 class SqliteCPConnector(BaseDBConnector):

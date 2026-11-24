@@ -7,10 +7,10 @@ import tarfile
 
 from django.core.management.base import CommandError
 
-from ... import utils
-from ...signals import pre_media_backup, post_media_backup
-from ...storage import StorageError, get_storage, get_storage_class
-from ._base import BaseDbBackupCommand, make_option
+from dbbackup import utils
+from dbbackup.management.commands._base import BaseDbBackupCommand, make_option
+from dbbackup.signals import post_media_backup, pre_media_backup
+from dbbackup.storage import StorageError, get_storage, get_storage_class
 
 
 class Command(BaseDbBackupCommand):
@@ -18,33 +18,12 @@ class Command(BaseDbBackupCommand):
     compress."""
     content_type = "media"
 
-    option_list = BaseDbBackupCommand.option_list + (
-        make_option(
-            "-c",
-            "--clean",
-            help="Clean up old backup files",
-            action="store_true",
-            default=False,
-        ),
-        make_option(
-            "-s",
-            "--servername",
-            help="Specify server name to include in backup filename",
-        ),
-        make_option(
-            "-z",
-            "--compress",
-            help="Compress the archive",
-            action="store_true",
-            default=False,
-        ),
-        make_option(
-            "-e",
-            "--encrypt",
-            help="Encrypt the backup files",
-            action="store_true",
-            default=False,
-        ),
+    option_list = (
+        *BaseDbBackupCommand.option_list,
+        make_option("-c", "--clean", help="Clean up old backup files", action="store_true", default=False),
+        make_option("-s", "--servername", help="Specify server name to include in backup filename"),
+        make_option("-z", "--compress", help="Compress the archive", action="store_true", default=False),
+        make_option("-e", "--encrypt", help="Encrypt the backup files", action="store_true", default=False),
         make_option("-o", "--output-filename", default=None, help="Specify filename on storage"),
         make_option(
             "-O",

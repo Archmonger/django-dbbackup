@@ -1,16 +1,12 @@
 # Django Signals Support
 
-Django-dbbackup now supports Django signals that allow you to hook into backup and restore operations to perform custom actions.
-
-## Available Signals
+Django-dbbackup supports Django signals that allow you to hook into backup and restore operations to perform custom actions.
 
 The following signals are available. Each provide different arguments depending on the operation.
 
 ---
 
-### Database Backup Signals
-
----
+## Database Backup Signals
 
 **pre_backup** (`dbbackup.signals.pre_backup`)
 
@@ -22,8 +18,6 @@ Sent before a database backup starts.
 | `database`   | Database configuration dict           |
 | `connector`  | Database connector instance           |
 | `servername` | Server name for the backup            |
-
----
 
 **post_backup** (`dbbackup.signals.post_backup`)
 
@@ -40,9 +34,7 @@ Sent after a database backup completes.
 
 ---
 
-### Database Restore Signals
-
----
+## Database Restore Signals
 
 **pre_restore** (`dbbackup.signals.pre_restore`)
 
@@ -56,8 +48,6 @@ Sent before a database restore starts.
 | `filename`      | Backup filename being restored         |
 | `servername`    | Server name                            |
 | `storage`       | Storage backend instance               |
-
----
 
 **post_restore** (`dbbackup.signals.post_restore`)
 
@@ -75,9 +65,7 @@ Sent after a database restore completes.
 
 ---
 
-### Media Backup Signals
-
----
+## Media Backup Signals
 
 **pre_media_backup** (`dbbackup.signals.pre_media_backup`)
 
@@ -104,9 +92,7 @@ Sent after a media backup completes.
 
 ---
 
-### Media Restore Signals
-
----
+## Media Restore Signals
 
 **pre_media_restore** (`dbbackup.signals.pre_media_restore`)
 
@@ -118,8 +104,6 @@ Sent before a media restore starts.
 | `filename`   | Backup filename being restored            |
 | `servername` | Server name                               |
 | `storage`    | Storage backend instance                  |
-
----
 
 **post_media_restore** (`dbbackup.signals.post_media_restore`)
 

@@ -33,6 +33,11 @@ cd django-dbbackup
 | `hatch test -k test_backup_filter`    | Run only a specific test                                        |
 | `hatch run functional:sqlite --all`   | Run end-to-end SQLite backup and restore tests                  |
 | `hatch run functional:postgres --all` | Run end-to-end PostgreSQL tests using all compatible connectors |
+| `hatch run functional:mysql --all`    | Run end-to-end MySQL tests using all compatible connectors      |
+
+!!! note
+
+    The MySQL functional tests require a running MySQL server. If no server is available, they are skipped locally. On Linux, `mysqlclient` also requires MySQL client development headers (for example, `default-libmysqlclient-dev` on Debian/Ubuntu) so the functional environment can be created.
 
 ??? question "What other arguments are available to me?"
 
@@ -42,17 +47,16 @@ cd django-dbbackup
 
 ### Linting and Formatting
 
-| Command                       | Description                                                                                |
-| ----------------------------- | ------------------------------------------------------------------------------------------ |
-| `hatch run lint:format`       | Run formatters to fix code style                                                           |
-| `hatch run lint:format-check` | Check code formatting without making changes                                               |
-| `hatch run lint:check`        | Run all linters                                                                            |
-| `hatch run precommit:check`   | Run all [`pre-commit`](https://pre-commit.com/) checks configured within this repository   |
-| `hatch run precommit:update`  | Update the [`pre-commit`](https://pre-commit.com/) hooks configured within this repository |
+| Command                      | Description                                                                                |
+| ---------------------------- | ------------------------------------------------------------------------------------------ |
+| `hatch fmt`                  | Run formatters to fix code style                                                           |
+| `hatch fmt --check`          | Check code formatting without making changes                                               |
+| `hatch run precommit:check`  | Run all [`pre-commit`](https://pre-commit.com/) checks configured within this repository   |
+| `hatch run precommit:update` | Update the [`pre-commit`](https://pre-commit.com/) hooks configured within this repository |
 
 ??? tip "Configure your IDE for linting"
 
-    This repository uses `ruff` and `pylint` for linting and formatting.
+    This repository uses `ruff` for linting and formatting.
 
     You can install `ruff` as a plugin to your preferred code editor to create a similar environment.
 
@@ -95,16 +99,17 @@ all code changes. To streamline review:
 
 1. Fork the project and make a new branch
 2. Make your changes with tests if possible and documentation if needed
-3. Run `hatch test` and `hatch run functional:test` to verify your changes
-4. Run `hatch run lint:check` to ensure code quality
+3. Run `hatch test` and `hatch run functional:all` to verify your changes
+4. Run `hatch fmt` to ensure code quality
 5. Push changes to your fork repository and test it with GitHub Actions
 6. If it succeeds, open a pull request
 7. Follow up politely if there's no feedback after a few days
 
 !!! note
-We recommend testing with multiple Python and Django versions using
-`hatch test --all` before pushing. DBBackup uses a lot of file operations,
-so breaks between versions are possible.
+
+    We recommend testing with multiple Python and Django versions using
+    `hatch test --all` before pushing. DBBackup uses a lot of file operations,
+    so breaks between versions are possible.
 
 ## Test environment configuration
 
@@ -115,7 +120,7 @@ environment variables adjust its behavior:
 
 Database engine to use. See `django.db.backends` for default backends.
 
-**`DB_NAME`** - Default: `/tmp/test_db.sqlite3`
+**`DB_NAME`** - Default: `tmp/test_db.sqlite3`
 
 Database name. Adjust for non-SQLite backends.
 
@@ -131,7 +136,7 @@ Database password
 
 Database host
 
-**`MEDIA_ROOT`** - Default= `tempfile.mkdtemp()`
+**`MEDIA_ROOT`** - Default: `tmp/media/`
 
 Django `MEDIA_ROOT`; override to test media backup from a custom path.
 

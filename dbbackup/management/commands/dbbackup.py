@@ -2,52 +2,33 @@
 Command for backup database.
 """
 
+import json
+
+from django.core.files.base import ContentFile
 from django.core.management.base import CommandError
 
-from ... import settings, utils
-from ...db.base import get_connector
-from ...signals import pre_backup, post_backup
-from ...storage import StorageError, get_storage
-from ._base import BaseDbBackupCommand, make_option
+from dbbackup import settings, utils
+from dbbackup.db.base import get_connector
+from dbbackup.management.commands._base import BaseDbBackupCommand, make_option
+from dbbackup.signals import post_backup, pre_backup
+from dbbackup.storage import StorageError, get_storage
 
 
 class Command(BaseDbBackupCommand):
     help = "Backup a database, encrypt and/or compress."
     content_type = "db"
 
-    option_list = BaseDbBackupCommand.option_list + (
+    option_list = (
+        *BaseDbBackupCommand.option_list,
         make_option(
-            "-c",
-            "--clean",
-            dest="clean",
-            action="store_true",
-            default=False,
-            help="Clean up old backup files",
+            "-c", "--clean", dest="clean", action="store_true", default=False, help="Clean up old backup files"
         ),
         make_option(
-            "-d",
-            "--database",
-            help="Database(s) to backup specified by key separated by commas(default: all)",
+            "-d", "--database", help="Database(s) to backup specified by key separated by commas(default: all)"
         ),
-        make_option(
-            "-s",
-            "--servername",
-            help="Specify server name to include in backup filename",
-        ),
-        make_option(
-            "-z",
-            "--compress",
-            action="store_true",
-            default=False,
-            help="Compress the backup files",
-        ),
-        make_option(
-            "-e",
-            "--encrypt",
-            action="store_true",
-            default=False,
-            help="Encrypt the backup files",
-        ),
+        make_option("-s", "--servername", help="Specify server name to include in backup filename"),
+        make_option("-z", "--compress", action="store_true", default=False, help="Compress the backup files"),
+        make_option("-e", "--encrypt", action="store_true", default=False, help="Encrypt the backup files"),
         make_option("-o", "--output-filename", default=None, help="Specify filename on storage"),
         make_option(
             "-O",
@@ -111,6 +92,30 @@ class Command(BaseDbBackupCommand):
             return [key.strip() for key in self.database.split(",") if key.strip()]
         return settings.DATABASES
 
+    def _save_metadata(self, filename, local=False):
+        """
+        Save metadata file for the backup.
+        """
+        metadata = {
+            "engine": self.connector.connection.settings_dict["ENGINE"],
+            "connector": f"{self.connector.__module__}.{self.connector.__class__.__name__}",
+        }
+        metadata_filename = f"{filename}.metadata"
+
+        # Load custom metadata if configured
+        user_metadata = utils.get_user_metadata(metadata)
+        metadata.update(user_metadata)
+
+        metadata_content = json.dumps(metadata)
+
+        if local:
+            self.logger.info("Writing metadata file to %s", metadata_filename)
+            with open(metadata_filename, "w") as fd:
+                fd.write(metadata_content)
+        else:
+            metadata_file = ContentFile(metadata_content.encode("utf-8"))
+            self.write_to_storage(metadata_file, metadata_filename)
+
     def _save_new_backup(self, database):
         """
         Save a new backup file.
@@ -151,11 +156,14 @@ class Command(BaseDbBackupCommand):
 
         if self.path is None:
             self.write_to_storage(outputfile, filename)
+            self._save_metadata(filename)
         elif self.path.startswith("s3://"):
             # Handle S3 URIs through storage backend
             self.write_to_storage(outputfile, self.path)
+            self._save_metadata(self.path)
         else:
             self.write_local_file(outputfile, self.path)
+            self._save_metadata(self.path, local=True)
 
         # Send post_backup signal
         post_backup.send(

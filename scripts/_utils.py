@@ -6,12 +6,12 @@ strings when running in limited code pages (e.g. Windows cp1252 on some
 GitHub Actions runners) to avoid UnicodeEncodeError crashes.
 
 Usage:
-    from scripts._symbols import get_symbols
+    from scripts._utils import get_symbols
     SYMS = get_symbols()
     print(SYMS['PASS'], 'Test passed')
 
 Provided symbol keys:
-    PASS, FAIL, SUMMARY, TEST, PG, MYSQL
+    PASS, FAIL, SUMMARY, TEST, SKIP, INFO, PG, MYSQL
 
 The ``PG`` key is only used by the PostgreSQL live test; ``MYSQL`` is only
 used by the MySQL live test; others are shared.
@@ -19,8 +19,8 @@ used by the MySQL live test; others are shared.
 
 from __future__ import annotations
 
+import contextlib
 import sys
-from typing import Dict
 
 _EMOJI_SYMBOLS = {
     "PASS": "✅",
@@ -50,14 +50,13 @@ def _can_encode(sample: str) -> bool:
     encoding = getattr(sys.stdout, "encoding", None) or ""
     if not encoding:
         return False
-    try:
+    with contextlib.suppress(Exception):
         sample.encode(encoding)
         return True
-    except Exception:  # pragma: no cover - defensive
-        return False
+    return False
 
 
-def get_symbols() -> Dict[str, str]:  # noqa: D401 - short descriptive name
+def get_symbols() -> dict[str, str]:  # - short descriptive name
     """Return mapping of symbol names to appropriate (emoji or ASCII) strings."""
     if all(_can_encode(sym) for sym in _EMOJI_SYMBOLS.values()):
         return _EMOJI_SYMBOLS

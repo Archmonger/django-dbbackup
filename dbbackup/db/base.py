@@ -8,19 +8,19 @@ import shlex
 from importlib import import_module
 from subprocess import Popen
 from tempfile import SpooledTemporaryFile
+from typing import Any, ClassVar
 
 from django.core.files.base import File
 
 from dbbackup import settings, utils
-
-from . import exceptions
+from dbbackup.db import exceptions
 
 logger = logging.getLogger("dbbackup.command")
 logger.setLevel(logging.DEBUG)
 
 DEFAULT_CONNECTOR = "dbbackup.db.django.DjangoConnector"
 CONNECTOR_MAPPING = {
-    "django.db.backends.sqlite3": "dbbackup.db.sqlite.SqliteConnector",
+    "django.db.backends.sqlite3": "dbbackup.db.sqlite.SqliteBackupConnector",
     "django.db.backends.mysql": "dbbackup.db.mysql.MysqlDumpConnector",
     "django.db.backends.postgresql": "dbbackup.db.postgresql.PgDumpBinaryConnector",
     "django.db.backends.postgresql_psycopg2": "dbbackup.db.postgresql.PgDumpBinaryConnector",
@@ -28,21 +28,28 @@ CONNECTOR_MAPPING = {
     "djongo": "dbbackup.db.mongodb.MongoDumpConnector",
     "django.contrib.gis.db.backends.postgis": "dbbackup.db.postgresql.PgDumpGisConnector",
     "django.contrib.gis.db.backends.mysql": "dbbackup.db.mysql.MysqlDumpConnector",
-    "django.contrib.gis.db.backends.spatialite": "dbbackup.db.sqlite.SqliteConnector",
+    "django.contrib.gis.db.backends.spatialite": "dbbackup.db.sqlite.SqliteBackupConnector",
     "django_prometheus.db.backends.postgresql": "dbbackup.db.postgresql.PgDumpBinaryConnector",
-    "django_prometheus.db.backends.sqlite3": "dbbackup.db.sqlite.SqliteConnector",
+    "django_prometheus.db.backends.sqlite3": "dbbackup.db.sqlite.SqliteBackupConnector",
     "django_prometheus.db.backends.mysql": "dbbackup.db.mysql.MysqlDumpConnector",
     "django_prometheus.db.backends.postgis": "dbbackup.db.postgresql.PgDumpGisConnector",
-    "django_s3_sqlite": "dbbackup.db.sqlite.SqliteConnector",
+    "django_s3_sqlite": "dbbackup.db.sqlite.SqliteBackupConnector",
 }
 
 if settings.CUSTOM_CONNECTOR_MAPPING:
     CONNECTOR_MAPPING.update(settings.CUSTOM_CONNECTOR_MAPPING)
 
 
-def get_connector(database_name=None):
+def get_connector(database_name: str | None = None, *, connector_path: str | None = None):
     """
     Get a connector from its database key in settings.
+
+    :param database_name: Database alias from ``DATABASES``, defaults to Django's default alias.
+    :param connector_path: Dotted path to the connector class to instantiate, for when the
+        connector is already known (e.g. from a backup's metadata file). When omitted it is
+        resolved from ``DBBACKUP_CONNECTORS[database_name]["CONNECTOR"]``, falling back to the
+        engine mapping. Either way the connector is always instantiated with the
+        ``DBBACKUP_CONNECTORS[database_name]`` options applied.
     """
     from django.db import DEFAULT_DB_ALIAS, connections
 
@@ -53,7 +60,8 @@ def get_connector(database_name=None):
     connector_settings = settings.CONNECTORS.get(database_name, {})
 
     # Use Django connector as fallback for unmapped engines
-    connector_path = connector_settings.get("CONNECTOR", CONNECTOR_MAPPING.get(engine, DEFAULT_CONNECTOR))
+    if not connector_path:
+        connector_path = connector_settings.get("CONNECTOR", CONNECTOR_MAPPING.get(engine, DEFAULT_CONNECTOR))
 
     connector_module_path = ".".join(connector_path.split(".")[:-1])
     module = import_module(connector_module_path)
@@ -69,7 +77,13 @@ class BaseDBConnector:
     """
 
     extension = "dump"
-    exclude = []
+    exclude: ClassVar[list[Any]] = []
+
+    #: Attributes which either hold a mutable class default or are bound to the very
+    #: list/dict objects the user put in ``DBBACKUP_CONNECTORS``. They are copied per
+    #: instance so mutating one connector can neither leak into another connector nor
+    #: into the user's settings.
+    MUTABLE_ATTRIBUTES: ClassVar[tuple[str, ...]] = ("exclude", "schemas", "env", "dump_env", "restore_env")
 
     def __init__(self, database_name=None, **kwargs):
         from django.db import DEFAULT_DB_ALIAS, connections
@@ -78,6 +92,12 @@ class BaseDBConnector:
         self.connection = connections[self.database_name]
         for attr, value in kwargs.items():
             setattr(self, attr.lower(), value)
+        for attr in self.MUTABLE_ATTRIBUTES:
+            value = getattr(self, attr, None)
+            if isinstance(value, list):
+                setattr(self, attr, list(value))
+            elif isinstance(value, dict):
+                setattr(self, attr, dict(value))
 
     @property
     def settings(self):
@@ -98,7 +118,8 @@ class BaseDBConnector:
         """
         Override this method to define dump creation.
         """
-        raise NotImplementedError("_create_dump not implemented")
+        msg = "_create_dump not implemented"
+        raise NotImplementedError(msg)
 
     def restore_dump(self, dump):
         """
@@ -113,7 +134,24 @@ class BaseDBConnector:
         :param dump: Dump file
         :type dump: file
         """
-        raise NotImplementedError("_restore_dump not implemented")
+        msg = "_restore_dump not implemented"
+        raise NotImplementedError(msg)
+
+
+def _split_command(command):
+    r"""
+    Split a command line into arguments like :func:`shlex.split`.
+
+    On Windows a backslash is the path separator, not an escape character, so
+    it is kept. Otherwise a ``DUMP_CMD`` such as ``C:\pgsql\bin\pg_dump.exe``
+    would be run as ``C:pgsqlbinpg_dump.exe``.
+    """
+    lexer = shlex.shlex(command, posix=True)
+    lexer.whitespace_split = True
+    lexer.commenters = ""
+    if os.name == "nt":
+        lexer.escape = ""
+    return list(lexer)
 
 
 class BaseCommandDBConnector(BaseDBConnector):
@@ -127,9 +165,9 @@ class BaseCommandDBConnector(BaseDBConnector):
     restore_suffix = ""
 
     use_parent_env = True
-    env = {}
-    dump_env = {}
-    restore_env = {}
+    env: ClassVar[dict[str, Any]] = {}
+    dump_env: ClassVar[dict[str, Any]] = {}
+    restore_env: ClassVar[dict[str, Any]] = {}
 
     def run_command(self, command, stdin=None, env=None):
         """
@@ -145,95 +183,49 @@ class BaseCommandDBConnector(BaseDBConnector):
         :rtype: file
         """
         logger.debug(command)
-        # On Windows many POSIX utilities (env, cat, echo) used in tests may not
-        # exist. Provide minimal shims so the generic tests still exercise the
-        # logic. We only do this translation for the simple commands used in
-        # the test-suite so that real database tooling invocations are not
-        # altered.
         original_command = command
-        # We implement simple builtins internally for portability.
-        is_echo = original_command.startswith("echo")
-        is_env = original_command == "env"
-        is_cat = original_command == "cat"
-        if os.name == "nt":  # pragma: win32
-            # No external translation needed now; we'll handle in-process.
-            pass
-        cmd = shlex.split(command)
+        cmd = _split_command(command)
         stdout = SpooledTemporaryFile(max_size=settings.TMP_FILE_MAX_SIZE, dir=settings.TMP_DIR)
         stderr = SpooledTemporaryFile(max_size=settings.TMP_FILE_MAX_SIZE, dir=settings.TMP_DIR)
         full_env = os.environ.copy() if self.use_parent_env else {}
         full_env.update(self.env)
         full_env.update(env or {})
         try:
-            if isinstance(stdin, File):
-                process = Popen(
-                    cmd,
-                    stdin=stdin.open("rb"),
-                    stdout=stdout,
-                    stderr=stderr,
-                    env=full_env,
-                    shell=False,
-                )
-            else:
+            # On Windows many POSIX utilities (env, cat, echo) used in tests may not
+            # exist. Provide minimal shims so the generic tests still exercise the
+            # logic. We only do this translation for the simple commands used in
+            # the test-suite so that real database tooling invocations are not
+            # altered.
+            if not isinstance(stdin, File):
                 # Builtin env
-                if is_env:
-                    result_env = {}
-                    if self.use_parent_env:
-                        result_env.update(os.environ)
-                    result_env.update(self.env)
-                    if env:
-                        result_env.update(env)
-                    # When parent env disabled we only output vars coming from
-                    # self.env or method override env param.
-                    if not self.use_parent_env:
-                        filtered = {}
-                        filtered.update(self.env)
-                        if env:
-                            filtered.update(env)
-                        for k, v in filtered.items():
-                            stdout.write(f"{k}={v}\n".encode())
-                    else:
-                        for k, v in result_env.items():
-                            stdout.write(f"{k.lower()}={v}\n".encode())
-                    stdout.seek(0)
-                    stderr.seek(0)
-                    return stdout, stderr
+                if original_command == "env":
+                    return self._env_shim(stdout, stderr, env)
                 # Builtin echo
-                if is_echo:
-                    parts = original_command.split(" ", 1)
-                    text = parts[1] if len(parts) > 1 else ""
-                    stdout.write(f"{text}\n".encode())
-                    stdout.seek(0)
-                    stderr.seek(0)
-                    return stdout, stderr
+                if original_command.startswith("echo"):
+                    return self._echo_shim(stdout, stderr, original_command)
                 # Builtin cat (only used with stdin)
-                if is_cat:
-                    data = stdin.read() if stdin else b""
-                    if isinstance(data, str):
-                        data = data.encode()
-                    stdout.write(data)
-                    stdout.seek(0)
-                    stderr.seek(0)
-                    return stdout, stderr
-                process = Popen(
-                    cmd,
-                    stdin=stdin,
-                    stdout=stdout,
-                    stderr=stderr,
-                    env=full_env,
-                    shell=False,
-                )
+                if original_command == "cat":
+                    return self._cat_shim(stdout, stderr, stdin)
+
+            process = Popen(
+                cmd,
+                stdin=stdin.open("rb") if isinstance(stdin, File) else stdin,
+                stdout=stdout,
+                stderr=stderr,
+                env=full_env,
+                shell=False,
+            )
             process.wait()
             if process.poll():
                 stderr.seek(0)
-                raise exceptions.CommandConnectorError(f"Error running: {command}\n{stderr.read().decode('utf-8')}")
-            stdout.seek(0)
-            stderr.seek(0)
-            return stdout, stderr
+                msg = f"Error running: {command}\n{stderr.read().decode('utf-8')}"
+                raise exceptions.CommandConnectorError(msg)
+            return self._reset_streams(stdout, stderr)
+
         except OSError as err:
             # Check if this is a "command not found" error (errno 2)
             if err.errno == 2:  # No such file or directory
-                cmd_name = shlex.split(command)[0] if command else "command"
+                cmd_name = _split_command(command)[0] if command else "command"
                 error_msg = (
                     f"Database command '{cmd_name}' not found. "
                     f"Please ensure the required database client tools are installed.\n\n"
@@ -243,7 +235,48 @@ class BaseCommandDBConnector(BaseDBConnector):
                     f"Alternatively, you can specify custom command paths using these settings:\n"
                     f"- DUMP_CMD: Path to the dump command\n"
                     f"- RESTORE_CMD: Path to the restore command\n\n"
-                    f"Original error: {str(err)}"
+                    f"Original error: {err!s}"
                 )
-                raise exceptions.CommandConnectorError(error_msg)
-            raise exceptions.CommandConnectorError(f"Error running: {command}\n{str(err)}")
+                raise exceptions.CommandConnectorError(error_msg) from err
+            msg = f"Error running: {command}\n{err!s}"
+            raise exceptions.CommandConnectorError(msg) from err
+
+    def _env_shim(self, stdout, stderr, env):
+        result_env = {}
+        if self.use_parent_env:
+            result_env.update(os.environ)
+        result_env.update(self.env)
+        if env:
+            result_env.update(env)
+        # When parent env disabled we only output vars coming from
+        # self.env or method override env param.
+        if not self.use_parent_env:
+            filtered = {}
+            filtered.update(self.env)
+            if env:
+                filtered.update(env)
+            for k, v in filtered.items():
+                stdout.write(f"{k}={v}\n".encode())
+        else:
+            for k, v in result_env.items():
+                stdout.write(f"{k.lower()}={v}\n".encode())
+        return self._reset_streams(stdout, stderr)
+
+    def _echo_shim(self, stdout, stderr, original_command):
+        parts = original_command.split(" ", 1)
+        text = parts[1] if len(parts) > 1 else ""
+        stdout.write(f"{text}\n".encode())
+        return self._reset_streams(stdout, stderr)
+
+    def _cat_shim(self, stdout, stderr, stdin):
+        data = stdin.read() if stdin else b""
+        if isinstance(data, str):
+            data = data.encode()
+        stdout.write(data)
+        return self._reset_streams(stdout, stderr)
+
+    @staticmethod
+    def _reset_streams(*streams: SpooledTemporaryFile):
+        for stream in streams:
+            stream.seek(0)
+        return streams

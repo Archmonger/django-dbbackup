@@ -2,25 +2,38 @@
 Utility functions for dbbackup.
 """
 
+from __future__ import annotations
+
+import copy
 import gzip
+import json
 import logging
 import os
 import re
 import sys
 import tempfile
 import traceback
+import warnings
 from datetime import datetime
 from functools import wraps
 from getpass import getpass
-from shlex import quote
+from importlib import import_module
 from shutil import copyfileobj
 
+import django
+from django.core.exceptions import ImproperlyConfigured
 from django.core.mail import EmailMultiAlternatives
 from django.db import connection
 from django.http import HttpRequest
 from django.utils import timezone
+from django.utils.functional import Promise
 
-from . import settings
+from dbbackup import settings
+
+try:
+    from django.utils.deprecation import RemovedInDjango2028Warning
+except ImportError:  # Django < 6.0
+    RemovedInDjango2028Warning = None
 
 FAKE_HTTP_REQUEST = HttpRequest()
 FAKE_HTTP_REQUEST.META["SERVER_NAME"] = ""
@@ -48,7 +61,7 @@ class DecryptionError(Exception):
     pass
 
 
-def bytes_to_str(byteVal, decimals=1):
+def bytes_to_str(byte_val, decimals=1):
     """
     Convert bytes to a human readable string.
 
@@ -62,11 +75,11 @@ def bytes_to_str(byteVal, decimals=1):
     :rtype: str
     """
     for unit, byte in BYTES:
-        if byteVal >= byte:
+        if byte_val >= byte:
             if decimals == 0:
-                return f"{int(round(byteVal / byte, 0))} {unit}"
-            return f"{round(byteVal / byte, decimals)} {unit}"
-    return f"{byteVal} B"
+                return f"{int(round(byte_val / byte, 0))} {unit}"
+            return f"{round(byte_val / byte, decimals)} {unit}"
+    return f"{byte_val} B"
 
 
 def handle_size(filehandle):
@@ -86,15 +99,56 @@ def handle_size(filehandle):
     return bytes_to_str(filehandle.tell())
 
 
+def _get_admin_addresses(admins):
+    """Return the email addresses from an ADMINS-style setting."""
+    if not isinstance(admins, (list, tuple)):
+        msg = "The admin recipients setting must be a list of email address strings or (name, address) pairs."
+        raise ImproperlyConfigured(msg)
+
+    addresses = []
+    for admin in admins:
+        if isinstance(admin, (list, tuple)):
+            if len(admin) != 2:
+                msg = "Each admin recipient must be an email address string or a (name, address) pair."
+                raise ImproperlyConfigured(msg)
+            address = admin[1]
+        else:
+            address = admin
+
+        if not isinstance(address, (str, Promise)):
+            msg = "Each admin recipient must be an email address string or a (name, address) pair."
+            raise ImproperlyConfigured(msg)
+        addresses.append(address)
+
+    return addresses
+
+
+def _warn_if_tuple_admins(admins):
+    """Warn when admin recipients use the deprecated (name, address) format."""
+    if RemovedInDjango2028Warning is None or django.VERSION < (6, 0):
+        return
+    if not isinstance(admins, (list, tuple)):
+        return
+    if any(isinstance(admin, (list, tuple)) and len(admin) == 2 for admin in admins):
+        warnings.warn(
+            "Using (name, address) pairs for admin email recipients is deprecated."
+            " Replace with a list of email address strings.",
+            RemovedInDjango2028Warning,
+            stacklevel=2,
+        )
+
+
 def mail_admins(subject, message, fail_silently=False, connection=None, html_message=None):
     """Sends a message to the admins, as defined by the DBBACKUP_ADMINS setting."""
     if not settings.ADMINS:
         return
+    addresses = _get_admin_addresses(settings.ADMINS)
+    _warn_if_tuple_admins(settings.ADMINS)
     mail = EmailMultiAlternatives(
         f"{settings.EMAIL_SUBJECT_PREFIX}{subject}",
         message,
         settings.SERVER_EMAIL,
-        [a[1] for a in settings.ADMINS],
+        addresses,
         connection=connection,
     )
 
@@ -106,9 +160,10 @@ def mail_admins(subject, message, fail_silently=False, connection=None, html_mes
 def email_uncaught_exception(func):
     """
     Function decorator for send email with uncaught exceptions to admins.
-    Email is sent to ``settings.DBBACKUP_FAILURE_RECIPIENTS``
-    (``settings.ADMINS`` if not defined). The message contains a traceback
-    of error.
+    Email is sent to ``settings.DBBACKUP_ADMINS``. The legacy
+    ``settings.DBBACKUP_ADMIN`` spelling is also accepted, and
+    ``settings.ADMINS`` is used if neither is defined. The message contains a
+    traceback of error.
     """
 
     @wraps(func)
@@ -119,8 +174,8 @@ def email_uncaught_exception(func):
             logger = logging.getLogger("dbbackup")
             exc_type, exc_value, tb = sys.exc_info()
             tb_str = "".join(traceback.format_tb(tb))
-            msg = f"{exc_type.__name__}: {exc_value}\n{tb_str}"
-            logger.error(msg)
+            msg = f"{getattr(exc_type, '__name__', str(exc_type) or 'Exception')}: {exc_value}\n{tb_str}"
+            logger.exception(msg)
             raise
         finally:
             connection.close()
@@ -151,7 +206,19 @@ def create_spooled_temporary_file(filepath=None, fileobj=None):
     return spooled_file
 
 
-def encrypt_file(inputfile, filename):
+def _gpg_encrypt_file(inputfile, filepath, recipients, always_trust):
+    import gnupg
+
+    g = gnupg.GPG()
+    return g.encrypt_file(
+        inputfile,
+        output=filepath,
+        recipients=recipients,
+        always_trust=always_trust,
+    )
+
+
+def encrypt_file(inputfile, filename):  # sourcery skip: extract-method
     """
     Encrypt input file using GPG and remove .gpg extension to its name.
 
@@ -164,24 +231,17 @@ def encrypt_file(inputfile, filename):
     :returns: Tuple with file and new file's name
     :rtype: :class:`tempfile.SpooledTemporaryFile`, ``str``
     """
-    import gnupg
-
     tempdir = tempfile.mkdtemp(dir=settings.TMP_DIR)
     try:
         filename = f"{filename}.gpg"
         filepath = os.path.join(tempdir, filename)
         if "b" not in inputfile.mode:
-            raise ValueError("Input file must be opened in binary mode.")
+            msg = "Input file must be opened in binary mode."
+            raise ValueError(msg)
         try:
             inputfile.seek(0)
-            always_trust = settings.GPG_ALWAYS_TRUST
-            g = gnupg.GPG()
-            result = g.encrypt_file(
-                inputfile,
-                output=filepath,
-                recipients=settings.GPG_RECIPIENT,
-                always_trust=always_trust,
-            )
+            always_trust = bool(settings.GPG_ALWAYS_TRUST)
+            result = _gpg_encrypt_file(inputfile, filepath, settings.GPG_RECIPIENT, always_trust)
             inputfile.close()
             if not result:
                 msg = f"Encryption failed; status: {result.status}"
@@ -230,7 +290,8 @@ def unencrypt_file(inputfile, filename, passphrase=None):
                 output=temp_filename,
             )
             if not result:
-                raise DecryptionError("Decryption failed; status: %s" % result.status)
+                msg = f"Decryption failed; status: {result.status}"
+                raise DecryptionError(msg)
             outputfile = create_spooled_temporary_file(temp_filename)
         finally:
             if os.path.exists(temp_filename):
@@ -364,8 +425,7 @@ def filename_to_datestring(filename, datefmt=None):
     datefmt = datefmt or settings.DATE_FORMAT
     regex = datefmt_to_regex(datefmt)
     search = regex.search(filename)
-    if search:
-        return search.groups()[0]
+    return search.groups()[0] if search else None
 
 
 def filename_to_date(filename, datefmt=None):
@@ -381,8 +441,7 @@ def filename_to_date(filename, datefmt=None):
     """
     datefmt = datefmt or settings.DATE_FORMAT
     datestring = filename_to_datestring(filename, datefmt)
-    if datestring is not None:
-        return datetime.strptime(datestring, datefmt)
+    return None if datestring is None else datetime.strptime(datestring, datefmt)
 
 
 def filename_generate(extension, database_name="", servername=None, content_type="db", wildcard=None):
@@ -430,9 +489,95 @@ def filename_generate(extension, database_name="", servername=None, content_type
     else:
         filename = template.format(**params)
         filename = REG_FILENAME_CLEAN.sub("-", filename)
-        filename = filename[1:] if filename.startswith("-") else filename
+        filename = filename.removeprefix("-")
     return filename
 
 
-def get_escaped_command_arg(arg):
-    return quote(arg)
+def _get_function_from_path(func_or_path):
+    """
+    Load a callable from a dotted path or return the callable itself.
+
+    :param func_or_path: Dotted path to callable or callable itself
+    :type func_or_path: str | callable
+
+    :returns: Callable object
+    :rtype: callable
+    """
+    if callable(func_or_path):
+        return func_or_path
+
+    path = func_or_path
+    module_path, func_name = path.rsplit(".", 1)
+    try:
+        module = import_module(module_path)
+    except ImportError as e:
+        msg = f"Could not import module '{module_path}': {e}"
+        raise ImportError(msg) from e
+    func = getattr(module, func_name)
+    if not callable(func):
+        msg = f"The object at '{path}' is not callable."
+        raise TypeError(msg)
+    return func
+
+
+def get_user_metadata(metadata: dict | None = None) -> dict:
+    """
+    Get user generated metadata from the user's custom metadata setter.
+
+    :returns: Custom metadata dictionary
+    :rtype: dict
+    """
+    user_metadata = {}
+    setter_setting = settings.BACKUP_METADATA_SETTER
+    if setter_setting:
+        setter_function = _get_function_from_path(setter_setting)
+        try:
+            # We pass a copy to avoid side effects
+            user_metadata = setter_function(copy.deepcopy(metadata))
+        except Exception:
+            logger = logging.getLogger("dbbackup")
+            logger.exception("Error loading custom metadata: %s")
+
+        if user_metadata is None:
+            user_metadata = {}
+
+        if not isinstance(user_metadata, dict):
+            msg = "DBBACKUP_BACKUP_METADATA_SETTER must return a dictionary."
+            raise ValueError(msg)
+
+        # Validate that we can serialize the provided data
+        try:
+            json.dumps(user_metadata)
+        except Exception as e:
+            msg = f"Custom metadata is not JSON serializable: {e}"
+            raise ValueError(msg) from e
+    return user_metadata
+
+
+def validate_user_metadata(metadata) -> bool | None:
+    """
+    Validate custom metadata using a callable defined in `settings.py`.
+    Raise a CommandError to provide custom feedback if validation fails.
+
+    :param metadata: Metadata dictionary to validate
+    :type metadata: dict
+
+    :returns: True if validation passes (or None), False otherwise
+    :rtype: Optional[bool]
+    """
+    validator_setting = settings.RESTORE_METADATA_VALIDATOR
+    if validator_setting:
+        validator_function = _get_function_from_path(validator_setting)
+        try:
+            # We pass a copy to avoid side effects
+            user_metadata = validator_function(copy.deepcopy(metadata))
+        except Exception as e:
+            msg = f"Error during custom metadata validation: {e}"
+            raise ValueError(msg) from e
+        if user_metadata is None:
+            return None
+        if not isinstance(user_metadata, bool):
+            msg = "DBBACKUP_RESTORE_METADATA_VALIDATOR must return a boolean or None."
+            raise TypeError(msg)
+        return user_metadata
+    return True

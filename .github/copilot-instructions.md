@@ -17,14 +17,14 @@ Bootstrap, build, and test the repository:
 - `hatch run functional:all` – end-to-end functional (SQLite + PostgreSQL live scripts) (≈10–15s) **NEVER CANCEL.**
   - `hatch run functional:sqlite --all` – only SQLite functional cycle
   - `hatch run functional:postgres --all` – only PostgreSQL functional cycle
-- `hatch run lint:check` – lint (ruff + pylint) (≈5s)
+- `hatch fmt --check` – lint (ruff) (≈5s)
 - `hatch run docs:build` – build documentation (≈2s, strict)
 - `hatch run docs:serve` – local docs server (http://localhost:8000)
 - `hatch run docs:linkcheck` – validate internal/external links & spelling
 
 **Interactive Development Shell:**
 
-- `hatch shell [ENV_NAME]` - Enter an interactive shell environment with all dependencies installed. ENV_NAME is optional and defaults to the main environment. Use `hatch shell functional` for the functional test environment, `hatch shell lint` for the linting environment, etc.
+- `hatch shell [ENV_NAME]` - Enter an interactive shell environment with all dependencies installed. ENV_NAME is optional and defaults to the main environment. Use `hatch shell functional` for the functional test environment.
 
 Build documentation:
 
@@ -40,8 +40,7 @@ Run tests in multiple configurations:
 - `hatch run functional:all -v` – functional backup/restore (SQLite + PostgreSQL)
 - `hatch run functional:sqlite --all -v` – functional (SQLite only)
 - `hatch run functional:postgres --all -v` – functional (PostgreSQL only)
-- `hatch run lint:check` – linting
-- `hatch run lint:format` – auto-format (Ruff)
+- `hatch fmt --check` – Python formatting and linting using ruff
 
 Expected test results:
 
@@ -91,7 +90,6 @@ Always test backup and restore functionality after making changes using function
 ## Troubleshooting Known Issues
 
 - **Network Timeouts**: Package installations may timeout due to network connectivity. Retry commands if needed.
-- **SQLite Restore Warnings**: Warnings about "UNIQUE constraint failed" during restore operations are normal for test scenarios
 - **Memory Database Issues**: If you see "no such table" errors, ensure you run migrations first in the appropriate environment
 - **Linting Temporarily Disabled**: CI linting checks are temporarily set to pass (marked with `|| true`) pending resolution in future PR
 - **Environment Isolation**: Each hatch environment is isolated - dependencies are automatically managed per environment
@@ -103,17 +101,17 @@ Modern development process using Hatch:
 1. **Bootstrap environment**: `pip install --upgrade pip hatch uv`
 2. **Make your changes** to the codebase
 3. **Run unit tests**: `hatch test` (≈30s) **All must pass - failures are never expected or allowed.**
-4. **Run functional tests**: `hatch run functional:all` (≈15–25s)
+4. **Run functional tests**: `hatch run functional:all -v` (≈10–15s)
    - Includes SQLite, PostgreSQL, and MySQL live tests
-   - MySQL tests are automatically skipped if MySQL server is not available
-5. **Run linting**: `hatch run lint:check` (5 seconds)
-6. **Auto-format code**: `hatch run lint:format` (2 seconds)
+   - MySQL tests are skipped when no MySQL server is available locally
+5. **Run linting**: `hatch fmt --check` (2 seconds)
+6. **Auto-format code**: `hatch fmt` (2 seconds)
 7. **Test documentation**: `hatch run docs:build` (2 seconds)
 8. **Update documentation** when making changes to Python source code (required)
 9. **Add changelog entry** for all significant changes (bug fixes, new features, breaking changes) to `CHANGELOG.md` under the "Unreleased" section.
 10. **Lint the changelog** by running `python scripts/validate_changelog.py` (or inside any hatch shell) to ensure format correctness
 
-Always run `hatch run lint:check` before committing. The CI (.github/workflows/build.yml) includes comprehensive checks across all supported Python/Django combinations.
+Always run `hatch fmt --check` before committing. The CI (.github/workflows/ci.yml) includes comprehensive checks across all supported Python/Django combinations.
 
 **IMPORTANT**: Documentation must be updated whenever changes are made to Python source code. This is enforced as part of the development workflow.
 
@@ -140,7 +138,7 @@ Key directories and files:
 
 Key configuration files:
 
-- `pyproject.toml` – all tool configuration (Hatch, Ruff, PyLint, PyTest, Coverage)
+- `pyproject.toml` – all tool configuration (Hatch, Ruff, PyTest, Coverage)
 - `.pre-commit-config.yaml` – git pre-commit hooks
 - `tests/settings.py` – Django test settings (locmem email backend)
 
@@ -153,13 +151,12 @@ The following are key commands for daily development:
 ```bash
 hatch test                           # Run all tests across matrix
 hatch test --python 3.12             # Test specific Python version subset
-hatch run functional:all             # Functional tests (SQLite + PostgreSQL)
+hatch run functional:all             # Functional tests (SQLite + PostgreSQL + MySQL)
 hatch run functional:sqlite --all    # Functional tests (SQLite only)
 hatch run functional:postgres --all  # Functional tests (PostgreSQL only)
 hatch run functional:mysql --all     # Functional tests (MySQL only)
-hatch run lint:check                 # Lint (ruff + pylint)
-hatch run lint:format                # Auto-format
-hatch run lint:format-check          # Format check only
+hatch fmt --check                    # Check formatting and linting
+hatch fmt                            # Auto-format and lint
 hatch run docs:build                 # Build documentation (strict)
 hatch run docs:serve                 # Serve docs locally
 hatch run precommit:check            # Run all pre-commit hooks
@@ -173,8 +170,6 @@ hatch build                          # Build distribution packages
 hatch env show                       # Show all environments
 hatch shell                          # Default dev shell
 hatch shell functional               # Functional env shell
-hatch shell lint                     # Lint env shell
-hatch run --env lint ruff --version  # Run command in lint env
 hatch python install 3.13            # (Optional) Install Python 3.13 via Hatch
 ```
 
@@ -189,7 +184,6 @@ Modern isolated environments configured in pyproject.toml:
 
 ### Development Environments
 
-- **lint**: Code quality (ruff, pylint)
 - **docs**: Documentation building (mkdocs-material)
 - **precommit**: Git hooks management
 
@@ -230,13 +224,13 @@ Core runtime dependency:
 Development dependencies (managed by hatch):
 
 - **Testing**: coverage, django-storages, psycopg2-binary, mysqlclient, python-gnupg, testfixtures, python-dotenv
-- **Linting**: ruff, pylint
+- **Linting**: ruff
 - **Documentation**: mkdocs, mkdocs-material, mkdocs-git-revision-date-localized-plugin, mkdocs-include-markdown-plugin, mkdocs-spellcheck[all], mkdocs-git-authors-plugin, mkdocs-minify-plugin, mike, linkcheckmd
 - **Pre-commit**: pre-commit
 
 ## CI/CD Pipeline
 
-Modern GitHub Actions workflow (.github/workflows/build.yml):
+Modern GitHub Actions workflow (.github/workflows/ci.yml):
 
 - **Lint Python**: Code quality checks (temporarily set to pass)
 - **Test Python**: Matrix testing across Python 3.9-3.13 with coverage
@@ -252,7 +246,7 @@ Modern GitHub Actions workflow (.github/workflows/build.yml):
 - **Backup/restore functionality** works with all Django-compatible databases and various storage backends
 - **All builds and tests run quickly** - if something takes more than 60 seconds, investigate network connectivity
 - **Hatch environments provide full isolation** - no need to manage virtual environments manually
-- **The functional test environment (functional) is the gold standard** - performs real backup/restore cycles (SQLite + PostgreSQL)
+- **The functional test environment (functional) is the gold standard** - performs real backup/restore cycles (SQLite + PostgreSQL + MySQL)
 - **Documentation updates are required** when making changes to Python source code
 - **Always update this file** when making changes to the development workflow, build process, or repository structure
 - **Tests use a repository-local tmp/ directory** instead of system /tmp for portability (especially on Windows) and cleaner CI artifacts.
