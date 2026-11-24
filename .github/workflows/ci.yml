@@ -112,8 +112,54 @@ jobs:
               with:
                   mysql-version: "8.4"
                   root-password: "mysql"
-            - name: Setup postgres
+            - name: Setup postgres (Ubuntu)
+              if: runner.os == 'Linux'
               uses: ikalnytskyi/action-setup-postgres@v9
+
+            - name: Setup postgres (Windows, preinstalled)
+              if: runner.os == 'Windows'
+              shell: pwsh
+              run: |
+                  $ErrorActionPreference = "Stop"
+                  $pgRoot = Get-ChildItem "C:\Program Files\PostgreSQL" -Directory |
+                      Where-Object { $_.Name -match '^\d+$' } |
+                      Sort-Object { [int]$_.Name } -Descending |
+                      Select-Object -First 1
+                  if (-not $pgRoot) { throw "PostgreSQL installation not found" }
+
+                  $pgBin = Join-Path $pgRoot.FullName "bin"
+                  $serviceName = "postgresql-x64-$($pgRoot.Name)"
+                  $service = Get-Service -Name $serviceName -ErrorAction SilentlyContinue
+                  if (-not $service) {
+                      $service = Get-Service -Name "postgresql*" | Select-Object -First 1
+                  }
+                  if (-not $service) { throw "PostgreSQL service not found" }
+
+                  if ($service.Status -ne "Running") {
+                      Set-Service -Name $service.Name -StartupType Manual
+                      Start-Service -Name $service.Name
+                      (Get-Service -Name $service.Name).WaitForStatus("Running", "00:01:00")
+                  }
+
+                  $env:PGPASSWORD = "root"
+                  & "$pgBin\psql.exe" -U postgres -h localhost -p 5432 -d postgres -c "ALTER USER postgres PASSWORD 'postgres';"
+                  Remove-Item Env:\PGPASSWORD
+
+                  $serviceDir = Join-Path $env:APPDATA "postgresql"
+                  New-Item -ItemType Directory -Force -Path $serviceDir | Out-Null
+                  $serviceFile = Join-Path $serviceDir ".pg_service.conf"
+                  @"
+                  [postgres]
+                  host=localhost
+                  port=5432
+                  user=postgres
+                  password=postgres
+                  dbname=postgres
+                  "@ | Set-Content -Path $serviceFile -Encoding ASCII
+
+                  Add-Content -Path $env:GITHUB_PATH -Value $pgBin
+                  Add-Content -Path $env:GITHUB_ENV -Value "PGSERVICEFILE=$serviceFile"
+
             - run: psql postgresql://postgres:postgres@localhost:5432/postgres -c "SELECT 1"
             - run: psql service=postgres -c "SELECT 1"
             - run: psql -c "SELECT 1"
