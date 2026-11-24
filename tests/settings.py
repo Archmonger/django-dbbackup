@@ -5,6 +5,7 @@ Configuration and launcher for dbbackup tests.
 import os
 import sys
 
+import django
 from dotenv import load_dotenv
 
 test = len(sys.argv) <= 1 or sys.argv[1] == "test"
@@ -22,7 +23,10 @@ os.makedirs(REPO_TMP_DIR, exist_ok=True)
 TESTAPP_DIR = os.path.join(BASE_DIR, "testapp/")
 BLOB_DIR = os.path.join(TESTAPP_DIR, "blobs/")
 
-ADMINS = (("ham", "foo@bar"),)
+if django.VERSION >= (6, 0):
+    ADMINS = ("foo@bar",)
+else:
+    ADMINS = (("ham", "foo@bar"),)
 ALLOWED_HOSTS = ["*"]
 MIDDLEWARE_CLASSES = ()
 ROOT_URLCONF = "tests.testapp.urls"

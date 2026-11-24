@@ -13,18 +13,27 @@ import re
 import sys
 import tempfile
 import traceback
+import warnings
 from datetime import datetime
 from functools import wraps
 from getpass import getpass
 from importlib import import_module
 from shutil import copyfileobj
 
+import django
+from django.core.exceptions import ImproperlyConfigured
 from django.core.mail import EmailMultiAlternatives
 from django.db import connection
 from django.http import HttpRequest
 from django.utils import timezone
+from django.utils.functional import Promise
 
 from dbbackup import settings
+
+try:
+    from django.utils.deprecation import RemovedInDjango2028Warning
+except ImportError:  # Django < 6.0
+    RemovedInDjango2028Warning = None
 
 FAKE_HTTP_REQUEST = HttpRequest()
 FAKE_HTTP_REQUEST.META["SERVER_NAME"] = ""
@@ -90,15 +99,56 @@ def handle_size(filehandle):
     return bytes_to_str(filehandle.tell())
 
 
+def _get_admin_addresses(admins):
+    """Return the email addresses from an ADMINS-style setting."""
+    if not isinstance(admins, (list, tuple)):
+        msg = "The admin recipients setting must be a list of email address strings or (name, address) pairs."
+        raise ImproperlyConfigured(msg)
+
+    addresses = []
+    for admin in admins:
+        if isinstance(admin, (list, tuple)):
+            if len(admin) != 2:
+                msg = "Each admin recipient must be an email address string or a (name, address) pair."
+                raise ImproperlyConfigured(msg)
+            address = admin[1]
+        else:
+            address = admin
+
+        if not isinstance(address, (str, Promise)):
+            msg = "Each admin recipient must be an email address string or a (name, address) pair."
+            raise ImproperlyConfigured(msg)
+        addresses.append(address)
+
+    return addresses
+
+
+def _warn_if_tuple_admins(admins):
+    """Warn when admin recipients use the deprecated (name, address) format."""
+    if RemovedInDjango2028Warning is None or django.VERSION < (6, 0):
+        return
+    if not isinstance(admins, (list, tuple)):
+        return
+    if any(isinstance(admin, (list, tuple)) and len(admin) == 2 for admin in admins):
+        warnings.warn(
+            "Using (name, address) pairs for admin email recipients is deprecated."
+            " Replace with a list of email address strings.",
+            RemovedInDjango2028Warning,
+            stacklevel=2,
+        )
+
+
 def mail_admins(subject, message, fail_silently=False, connection=None, html_message=None):
     """Sends a message to the admins, as defined by the DBBACKUP_ADMINS setting."""
     if not settings.ADMINS:
         return
+    addresses = _get_admin_addresses(settings.ADMINS)
+    _warn_if_tuple_admins(settings.ADMINS)
     mail = EmailMultiAlternatives(
         f"{settings.EMAIL_SUBJECT_PREFIX}{subject}",
         message,
         settings.SERVER_EMAIL,
-        [a[1] for a in settings.ADMINS],
+        addresses,
         connection=connection,
     )
 
@@ -110,9 +160,10 @@ def mail_admins(subject, message, fail_silently=False, connection=None, html_mes
 def email_uncaught_exception(func):
     """
     Function decorator for send email with uncaught exceptions to admins.
-    Email is sent to ``settings.DBBACKUP_FAILURE_RECIPIENTS``
-    (``settings.ADMINS`` if not defined). The message contains a traceback
-    of error.
+    Email is sent to ``settings.DBBACKUP_ADMINS``. The legacy
+    ``settings.DBBACKUP_ADMIN`` spelling is also accepted, and
+    ``settings.ADMINS`` is used if neither is defined. The message contains a
+    traceback of error.
     """
 
     @wraps(func)
