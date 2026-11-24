@@ -40,7 +40,11 @@ CUSTOM_CONNECTOR_MAPPING = getattr(settings, "DBBACKUP_CONNECTOR_MAPPING", {})
 DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 SEND_EMAIL = getattr(settings, "DBBACKUP_SEND_EMAIL", True)
 SERVER_EMAIL = getattr(settings, "DBBACKUP_SERVER_EMAIL", settings.SERVER_EMAIL)
-ADMINS = getattr(settings, "DBBACKUP_ADMIN", settings.ADMINS)
+ADMINS = getattr(
+    settings,
+    "DBBACKUP_ADMINS",
+    getattr(settings, "DBBACKUP_ADMIN", settings.ADMINS),
+)
 EMAIL_SUBJECT_PREFIX = getattr(settings, "DBBACKUP_EMAIL_SUBJECT_PREFIX", "[dbbackup] ")
 BACKUP_METADATA_SETTER = getattr(settings, "DBBACKUP_BACKUP_METADATA_SETTER", None)
 RESTORE_METADATA_VALIDATOR = getattr(settings, "DBBACKUP_RESTORE_METADATA_VALIDATOR", None)

@@ -10,6 +10,7 @@ from unittest.mock import patch
 import django
 import pytest
 from django.core import mail
+from django.core.exceptions import ImproperlyConfigured
 from django.test import TestCase, override_settings
 
 from dbbackup import settings, utils
@@ -54,7 +55,7 @@ class MailAdminsTest(TestCase):
 
         sent_mail = mail.outbox[0]
         expected_subject = f"{settings.EMAIL_SUBJECT_PREFIX}{subject}"
-        expected_to = settings.ADMINS[0][1]
+        expected_to = settings.ADMINS[0] if django.VERSION >= (6, 0) else settings.ADMINS[0][1]
         expected_from = settings.SERVER_EMAIL
 
         assert sent_mail.subject == expected_subject
@@ -72,6 +73,42 @@ class MailAdminsTest(TestCase):
     @patch("dbbackup.settings.ADMINS", ["foo@bar"])
     def test_admins_as_strings(self):
         utils.mail_admins("foo subject", "bar message")
+        assert mail.outbox[0].to == ["foo@bar"]
+
+    @patch("dbbackup.settings.ADMINS", ["foo@bar", ("Name", "baz@qux")])
+    def test_admins_mixed_formats(self):
+        if django.VERSION >= (6, 0):
+            from django.utils.deprecation import RemovedInDjango2028Warning
+
+            with pytest.warns(RemovedInDjango2028Warning):
+                utils.mail_admins("foo subject", "bar message")
+        else:
+            utils.mail_admins("foo subject", "bar message")
+        assert mail.outbox[0].to == ["foo@bar", "baz@qux"]
+
+    @patch("dbbackup.settings.ADMINS", "foo@bar")
+    def test_admins_as_bare_string_raises(self):
+        with pytest.raises(ImproperlyConfigured):
+            utils.mail_admins("foo subject", "bar message")
+
+    @patch("dbbackup.settings.ADMINS", [("Name", "foo@bar", "extra")])
+    def test_admins_with_invalid_pair_raises(self):
+        with pytest.raises(ImproperlyConfigured):
+            utils.mail_admins("foo subject", "bar message")
+
+    @patch("dbbackup.settings.ADMINS", [("Name", 123)])
+    def test_admins_with_non_string_address_raises(self):
+        with pytest.raises(ImproperlyConfigured):
+            utils.mail_admins("foo subject", "bar message")
+
+    @patch("dbbackup.settings.ADMINS", [("Name", "foo@bar")])
+    def test_tuple_admins_warns_on_django_6(self):
+        if django.VERSION < (6, 0):
+            pytest.skip("Tuple admin recipients are only deprecated on Django 6.0+")
+        from django.utils.deprecation import RemovedInDjango2028Warning
+
+        with pytest.warns(RemovedInDjango2028Warning):
+            utils.mail_admins("foo subject", "bar message")
         assert mail.outbox[0].to == ["foo@bar"]
 
 
@@ -106,8 +143,7 @@ class EmailUncaughtExceptionTest(TestCase):
             utils.email_uncaught_exception(func)()
         assert len(mail.outbox) == 1
         error_mail = mail.outbox[0]
-        # The recipients might be processed differently, so let's be more flexible
-        assert len(error_mail.to) > 0  # Just ensure someone gets the email
+        assert error_mail.to == ["foo@bar"]
         assert 'Exception("Foo")' in error_mail.subject
         if django.VERSION >= (1, 7):
             assert 'Exception("Foo")' in error_mail.body

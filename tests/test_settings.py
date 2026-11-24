@@ -5,18 +5,47 @@ from django.test import TestCase, override_settings
 
 
 class SettingsTest(TestCase):
-    @override_settings(DBBACKUP_ADMIN=["admin@example.com"])
     def test_admins_setting(self):
-        """Test that ADMINS is set to DBBACKUP_ADMIN"""
+        """Test that ADMINS is set to DBBACKUP_ADMINS"""
         import importlib
 
         import dbbackup.settings
 
-        # Reload the module to trigger the settings evaluation
-        importlib.reload(dbbackup.settings)
+        try:
+            with override_settings(DBBACKUP_ADMINS=["admin@example.com"]):
+                importlib.reload(dbbackup.settings)
+                assert dbbackup.settings.ADMINS == ["admin@example.com"]
+        finally:
+            importlib.reload(dbbackup.settings)
 
-        # Check that ADMINS is set to DBBACKUP_ADMIN
-        assert dbbackup.settings.ADMINS == ["admin@example.com"]
+    def test_admins_singular_alias_setting(self):
+        """Test that the legacy DBBACKUP_ADMIN spelling is still honored."""
+        import importlib
+
+        import dbbackup.settings
+
+        try:
+            with override_settings(DBBACKUP_ADMIN=["alias@example.com"]):
+                importlib.reload(dbbackup.settings)
+                assert dbbackup.settings.ADMINS == ["alias@example.com"]
+        finally:
+            importlib.reload(dbbackup.settings)
+
+    def test_admins_plural_setting_takes_precedence(self):
+        """Test that DBBACKUP_ADMINS wins when both spellings are set."""
+        import importlib
+
+        import dbbackup.settings
+
+        try:
+            with override_settings(
+                DBBACKUP_ADMINS=["admin@example.com"],
+                DBBACKUP_ADMIN=["alias@example.com"],
+            ):
+                importlib.reload(dbbackup.settings)
+                assert dbbackup.settings.ADMINS == ["admin@example.com"]
+        finally:
+            importlib.reload(dbbackup.settings)
 
     @override_settings(DBBACKUP_GPG_RECIPIENT="test@test", DBBACKUP_GPG_ALWAYS_TRUST=False)
     def test_gpg_always_trust_setting(self):

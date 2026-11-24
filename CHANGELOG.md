@@ -14,9 +14,18 @@ Don't forget to remove deprecated code on each major release!
 
 ## [Unreleased]
 
+### Added
+
+- The `DBBACKUP_ADMIN` setting is now accepted as an alias for `DBBACKUP_ADMINS` due to previously conflicting spelling in the documentation versus the source code.
+
+### Deprecated
+
+- Admin recipients configured as `(name, address)` pairs now emit Django's `RemovedInDjango2028Warning` on Django 6.0 and later. Use a list of email address strings instead.
+
 ### Fixed
 
 - Failure emails no longer go to the second character of each address when `ADMINS` lists plain email address strings, the format Django 6.0 documents.
+- Invalid `ADMINS` or `DBBACKUP_ADMINS` values now raise `ImproperlyConfigured` instead of silently sending failure emails to mangled recipients.
 
 ## [5.4.1] - 2026-11-14
 

@@ -195,7 +195,8 @@ Default: `django.conf.settings.SERVER_EMAIL`
 A list of recipients that receive error emails when `DEBUG=False` and an
 unhandled exception occurs in a DBBackup command. Follows Django's standard
 `ADMINS` structure: `['email@example.com', ...]`, or the older
-`(('Full Name', 'email@example.com'), ...)` pairs.
+`(('Full Name', 'email@example.com'), ...)` pairs. The legacy singular spelling
+`DBBACKUP_ADMIN` is also accepted.
 
 Default: `django.conf.settings.ADMINS`
 
