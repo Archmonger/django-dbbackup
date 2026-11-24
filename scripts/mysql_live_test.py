@@ -61,10 +61,9 @@ class MySQLTestRunner:
         # Password used for the dedicated test user we create
         self.password = os.getenv("MYSQL_TEST_PASSWORD", "mysql")
         # Force TCP by default (127.0.0.1) to avoid relying on a Unix domain
-        # socket path that varies across distros (/var/run vs /run) and to
-        # work with Docker/remote services. A user can still supply the
-        # classic 'localhost' or a remote hostname via env var.
-        self.host = os.getenv("MYSQL_HOST", "localhost")
+        # socket path that varies across distros and CI MySQL setups. Set
+        # MYSQL_HOST=localhost only if you need socket authentication.
+        self.host = os.getenv("MYSQL_HOST", "127.0.0.1")
         self.port = int(os.getenv("MYSQL_PORT", "3306"))
         # Superuser used to bootstrap the test DB & user. Allow empty password
         # (common with auth_socket); we'll attempt multiple auth modes.
