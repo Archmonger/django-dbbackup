@@ -107,6 +107,11 @@ jobs:
                   cache: pip
             - name: Install dependencies
               run: python -m pip install --upgrade pip hatch uv
+            - name: Setup MySQL
+              uses: shogo82148/actions-setup-mysql@v1
+              with:
+                  mysql-version: "8.4"
+                  root-password: "mysql"
             - name: Setup postgres
               uses: ikalnytskyi/action-setup-postgres@v9
             - run: psql postgresql://postgres:postgres@localhost:5432/postgres -c "SELECT 1"

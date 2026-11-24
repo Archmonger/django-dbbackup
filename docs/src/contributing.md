@@ -33,6 +33,11 @@ cd django-dbbackup
 | `hatch test -k test_backup_filter`    | Run only a specific test                                        |
 | `hatch run functional:sqlite --all`   | Run end-to-end SQLite backup and restore tests                  |
 | `hatch run functional:postgres --all` | Run end-to-end PostgreSQL tests using all compatible connectors |
+| `hatch run functional:mysql --all`    | Run end-to-end MySQL tests using all compatible connectors      |
+
+!!! note
+
+    The MySQL functional tests require a running MySQL server. If no server is available, they are skipped locally. On Linux, `mysqlclient` also requires MySQL client development headers (for example, `default-libmysqlclient-dev` on Debian/Ubuntu) so the functional environment can be created.
 
 ??? question "What other arguments are available to me?"
 
@@ -115,7 +120,7 @@ environment variables adjust its behavior:
 
 Database engine to use. See `django.db.backends` for default backends.
 
-**`DB_NAME`** - Default: `:memory:`
+**`DB_NAME`** - Default: `tmp/test_db.sqlite3`
 
 Database name. Adjust for non-SQLite backends.
 

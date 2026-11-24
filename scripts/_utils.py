@@ -6,14 +6,15 @@ strings when running in limited code pages (e.g. Windows cp1252 on some
 GitHub Actions runners) to avoid UnicodeEncodeError crashes.
 
 Usage:
-    from scripts._symbols import get_symbols
+    from scripts._utils import get_symbols
     SYMS = get_symbols()
     print(SYMS['PASS'], 'Test passed')
 
 Provided symbol keys:
-    PASS, FAIL, SUMMARY, TEST, PG
+    PASS, FAIL, SUMMARY, TEST, SKIP, INFO, PG, MYSQL
 
-The ``PG`` key is only used by the PostgreSQL live test; others are shared.
+The ``PG`` key is only used by the PostgreSQL live test; ``MYSQL`` is only
+used by the MySQL live test; others are shared.
 """
 
 from __future__ import annotations
@@ -26,8 +27,10 @@ _EMOJI_SYMBOLS = {
     "FAIL": "❌",
     "SUMMARY": "📊",
     "TEST": "📋",
+    "SKIP": "⏭️",
+    "INFO": "ℹ️",
     "PG": "🐘",
-    "SKIP": "⚠️",
+    "MYSQL": "🐬",
 }
 
 _ASCII_SYMBOLS = {
@@ -35,8 +38,10 @@ _ASCII_SYMBOLS = {
     "FAIL": "FAIL:",
     "SUMMARY": "SUMMARY:",
     "TEST": "TEST:",
-    "PG": ">>",
     "SKIP": "SKIP:",
+    "INFO": "INFO:",
+    "PG": ">>",
+    "MYSQL": ">>",
 }
 
 
