@@ -14,6 +14,10 @@ Don't forget to remove deprecated code on each major release!
 
 ## [Unreleased]
 
+- Nothing (yet)!
+
+## [5.4.2] - 2026-11-24
+
 ### Added
 
 - The `DBBACKUP_ADMIN` setting is now accepted as an alias for `DBBACKUP_ADMINS` due to previously conflicting spelling in the documentation versus the source code.
@@ -408,7 +412,8 @@ Don't forget to remove deprecated code on each major release!
 
 - Miscellaneous maintenance and minor bug fixes.
 
-[Unreleased]: https://github.com/Archmonger/django-dbbackup/compare/5.4.1...HEAD
+[Unreleased]: https://github.com/Archmonger/django-dbbackup/compare/5.4.2...HEAD
+[5.4.2]: https://github.com/Archmonger/django-dbbackup/compare/5.4.1...5.4.2
 [5.4.1]: https://github.com/Archmonger/django-dbbackup/compare/5.4.0...5.4.1
 [5.4.0]: https://github.com/Archmonger/django-dbbackup/compare/5.3.1...5.4.0
 [5.3.1]: https://github.com/Archmonger/django-dbbackup/compare/5.3.0...5.3.1
